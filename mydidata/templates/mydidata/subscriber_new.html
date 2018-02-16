@@ -1,0 +1,67 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Signup{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <div class="side-p">
+            <form id="user-reg-form" action="." method="post">
+                {% csrf_token %}
+                {# Username & Password Section #}
+                <h5 class="sn-sh">Crie uma conta de estudante</h5>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <th>Primeiro Nome</th>
+                            <th>Último Nome</th>
+                        </tr>
+                        <tr>
+                            <td>{{ form.first_name }}</td>
+                            <td>{{ form.last_name }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.first_name.errors }}</td>
+                            <td>{{ form.last_name.errors }}</td>
+                        </tr>
+                        <tr>
+                            <th>Nome de Usuário</th>
+                            <th>{{ form.email.label }}</th>
+                        </tr>
+                        <tr>
+                            <td>{{ form.username }}</td>
+                            <td>{{ form.email }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.username.errors }}</td>
+                            <td>{{ form.email.errors }}</td>
+                        </tr>
+                        <tr>
+                            <th>Senha</th>
+                            <th>Confirmar Senha</th>
+                        </tr>
+                        <tr>
+                            <td>{{ form.password1 }}</td>
+                            <td>{{ form.password2 }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.password1.errors }}</td>
+                            <td>{{ form.password2.errors }}</td>
+                        </tr>
+                        <tr>
+                            <th>Disciplinas</th>
+                        <tr>
+                            <td>{{ form.disciplines }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ form.password1.errors }}</td>
+                            <td>{{ form.password2.errors }}</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+                {# Billing Address Section #}
+                <input class="btn btn-primary" type="submit" value="submit">
+            </form>
+            {# Credit Card Section #}
+        </div>
+    </div>
+{% endblock content %}

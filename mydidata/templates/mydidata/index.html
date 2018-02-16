@@ -1,0 +1,10 @@
+{% if question_list %}
+    <ul>
+    {% for question in question_list %}
+        <li><a href="{% url 'mydidata:detail' question.id %}">{{ question.question_text }}</a></li>
+        <li><a href="/polls/{{ question.id }}/">{{ question.question_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Não há questões cadastradas</p>
+{% endif %}

@@ -1,0 +1,23 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Disciplinas{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <div id="al-container" class="side-p">
+            <div id="al-control">
+                <h3 class="ad-mh">Disiciplinas</h3>
+                {# Account Search Form #}
+            </div>
+            {# List of Accounts #}
+            <ul id="al-group" class="strip-list">
+                {% for discipline in disciplines %}
+                    <li class="al-item">
+                        <a href="{{ discipline.get_absolute_url }}"><h4 class="al-name">{{ discipline.name }}</h4></a>
+                        
+                    </li>
+                {% endfor %}
+            </ul>
+            {# Pagination Section #}
+        </div>
+    </div>
+{% endblock content %}

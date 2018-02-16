@@ -1,0 +1,35 @@
+{% extends 'mydidata/base.html' %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <div >
+            <div id="gi-container" class="ad-container2">
+                {% include 'mydidata/topic_item_view.html' %}
+            </div>
+        </div>
+        {# List Questions #}
+        <div id="cd-container" class="ad-container">
+            <div class="ad-headers">
+                <h4 class="ad-mh m-none">Questões</h4>
+            </div>
+            <div id="cd-body" class="row">
+                <table id="cd-table" class="table table-hover">
+                    <tbody>
+                        <tr></tr>
+                        {% for question in questions %}
+                            {% include 'mydidata/question_item_view.html' %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {# New Contact Link #}
+                <a id="new-question"
+                   class="btn btn-link p-r-none"
+                   href="{% url 'mydidata:test_new' topic.id %}">
+                   Fazer Avaliação</a>
+            </div>
+        </div>
+
+        {# List Communications #}
+    </div>
+
+{% endblock %}

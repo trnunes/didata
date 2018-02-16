@@ -1,0 +1,45 @@
+{% extends 'mydidata/base.html' %}
+
+{% block content %}
+    {% load question_extras %}
+    {% load answer_extras %}
+    <div id="content-container" class="container p-none">
+        {%for topic in topics %}
+            <h1>{{topic.topic_title}}</h1>
+            <table id="cd-table" class="table table-hover">
+                <tbody>
+                    <tr>
+                        <th>Aluno</th>
+                        {% for question in topic.question_set.all %}
+                            <th>Question {{ forloop.counter }}</th>
+                        {% endfor %}
+                    </tr>
+                    {% for student in students%}
+                        <tr>
+                            <td>{{student.first_name}}</td>
+                            
+                            {%for question in topic.question_set.all%}
+                                {% get_answers question student as answers%}
+                                {%if answers%}
+                                    {%for answer in answers%}
+                                        {%get_specific_answer answer as specific_answer%}
+                                        <td>
+                                            {%if specific_answer.is_correct%}
+                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-ok"></span></a>
+                                            {%else%}
+                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-remove"></span></a>
+                                            {%endif%}
+                                        </td>
+                                        
+                                    {%endfor%}
+                                {%else%}
+                                    <td><span class="badge">?</span></a><br></td>
+                                {%endif%}
+                            {%endfor%}
+                        </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        {%endfor%}
+    </div>
+{% endblock %}

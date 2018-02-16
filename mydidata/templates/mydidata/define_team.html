@@ -1,0 +1,25 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Trabalhando em Grupo{% endblock %}
+
+{% block content %}
+    
+    <div id="content-container" class="container p-none">
+        <div class="lgn-container col-lg-8">
+            <h2 class="ad-mh">Monte seu Grupo/Dupla</h2>
+            <form id="pairing-form" method="post" 
+                  action="{% url 'mydidata:define_team' %}">
+                {% csrf_token %}
+                
+                
+                <h4 class="ad-mh">Alunos</h4>
+                <select class="form-control" name="selStudent1">
+                    {%for student in studentList%}
+                        <option value='{{student.id}}'>{{student.first_name}} {{student.last_name}}<option>
+                    {%endfor%}
+                </select>
+                <button id="addMemberBtn" type="button" class="btn btn-link">Adicionar Membro</button>
+               <input type="submit" value="Salvar Grupo" />
+            </form>
+        </div>
+    </div>
+{% endblock content %}

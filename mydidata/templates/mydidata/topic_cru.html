@@ -1,0 +1,10 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Tópico{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <div class="side-p">
+            {% include 'mydidata/topic_item_form.html' %}
+        </div>
+    </div>
+{% endblock content %}
