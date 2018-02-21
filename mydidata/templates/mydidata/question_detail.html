@@ -1,0 +1,15 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Questões{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <div id="cd-body" class="row">
+            <h4 class="ad-mh">Contact Details</h4>
+            <table id="cd-table" class="table">
+                <tbody>
+                    {% include 'mydidata/question_item_view.html' %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,27 @@
+<form id="contact-form"
+      {# POST Destination #}
+      action="{% if question.uuid %}
+      {% url 'mydidata:question_update' question.uuid %}{% else %}{% url 'mydidata:question_new' %}{% endif %}"
+      method="post">
+    {% csrf_token %}
+    <div id="gi-h-w">
+        <p>{{ form.question_text | safe}}</p>
+        <span>{{ form.question_text.errors }}</span>
+    </div>
+    <div class="row">
+        <div class="col-md-9">
+            <p>{{ form.difficulty_level }}</p>
+            <span>{{ form.difficulty_level.errors }}</span>
+        </div>
+        <div class="col-md-9">
+            <p>{{ form.question_type }}</p>
+            <span>{{ form.question_type.errors }}</span>
+        </div>
+    </div>
+    
+    <input id="id_topic" name="topic"
+           type="hidden"
+           value="{% if request.GET.topic %}
+           {{ request.GET.topic }}{% else %}{{ topic.id }}{% endif %}"/>
+    <input id="contact-submit" class="btn btn-primary m-r-none" type="submit" value="Salvar"/>
+</form>

@@ -1,0 +1,35 @@
+{% extends 'mydidata/base.html' %}
+
+{% block content %}
+{%load question_extras%}
+    <div id="content-container" class="container p-none">
+        <div >
+            <div id="gi-container" class="ad-container2">
+                <div class="gi-header">
+                    <h3 class="ad-mh">Estudante:
+                        <span>{{answer.student.first_name}}&nbsp{{answer.student.last_name}}</span>
+                    </h3>
+                </div>
+                <div class="row gi-body">
+                    <div class="col-md-9">
+                        <h3 class="gi-sh">Questão</h3>
+                        <p>{{ answer.question.question_text | safe}}</p>
+                    </div>
+                    
+                    <div class="col-md-9">
+                        <h3 class="gi-sh">Resposta</h3>
+                            
+                            {% for choice in answer.question.choice_set.all %}
+                                
+                                <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" checked = "{%is_selected choice answer%}"/>
+                                
+                                <label class = "{%get_choice_label_class answer choice%}" for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br />
+                            {% endfor %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

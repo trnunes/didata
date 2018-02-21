@@ -1,0 +1,18 @@
+<p>{{ question.question_text | safe}}</p>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form enctype="multipart/form-data" action="{% url 'mydidata:discursive_answer' question.uuid %}" method="post">
+{% csrf_token %}
+    
+{{ form.media }}
+{{ form.as_p }}
+
+{%if test%}
+    <input id="test" name="test"
+           type="hidden"
+           value="{{ test.id}}"/>
+{%endif%}
+
+<input type="submit" value="Enviar" />
+</form>

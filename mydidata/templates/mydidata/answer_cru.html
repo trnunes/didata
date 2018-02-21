@@ -1,0 +1,13 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Resposta{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <h2 class="ad-mh">Questão {{question.index}}</h2>
+        {%if question.is_discursive%}
+            {% include 'mydidata/discursive_answer_item_form.html' %}
+        {%else%}
+            {% include 'mydidata/multiple_choice_answer_item_form.html' %}
+        {%endif%}
+    </div>
+{% endblock content %}

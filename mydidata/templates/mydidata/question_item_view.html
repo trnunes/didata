@@ -1,0 +1,21 @@
+{% load question_extras %}
+<tr>
+    <td class="ci-td-p-l"><a href="{{ question.get_answer_url }}">Questão {{ question.index}}</a></td>
+    <td>{% get_question_status question user%}</td>
+    <td class="con-cntrl">
+        {# Question Edit Link #}
+        
+        {%if test%}
+            <a class="pen"
+           href="{% url 'mydidata:answer_test' question.uuid test.uuid%}"></a>
+        
+        
+        {%else%}
+            <a class="pen"
+               href="{{ question.get_answer_url }}"></a>
+        
+        {%endif%}
+        
+    </td>
+    
+</tr>
