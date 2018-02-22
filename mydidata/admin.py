@@ -6,6 +6,7 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 from .models import Question, Discipline
 from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, DiscursiveAnswer, Classroom
+from django.utils.safestring import mark_safe
 
 class MultipleChoiceAnswerInline(admin.TabularInline):
     model = MultipleChoiceAnswer
@@ -25,10 +26,10 @@ class QuestionInline(admin.TabularInline):
     readonly_fields = ('question_link',) 
     def question_link(self, obj):
         question_url = "/admin/mydidata/question/"+str(obj.id)+"/change/"
-        return '<a href="%s">%s</a>' % (question_url, "visualizar")
+        return mark_safe('<a href="%s">%s</a>' % (question_url, "visualizar"))
     question_link.allow_tags = True
     extra = 1
-
+    
 class QuestionAdminForm(forms.ModelForm):
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
     class Meta:

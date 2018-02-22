@@ -8,6 +8,7 @@ from ckeditor_uploader.fields import RichTextUploadingField
 from django import template
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
+from django.utils.translation import gettext as _
 
 # Create your models here.
 class Greeting(models.Model):
@@ -19,12 +20,12 @@ class Greeting(models.Model):
 
 class Discipline(models.Model):
     uuid = ShortUUIDField(unique=True)
-    name = models.CharField(max_length=255)
-    students = models.ManyToManyField(User)
+    name = models.CharField(max_length=255, verbose_name=_("Name"),)
+    students = models.ManyToManyField(User, verbose_name=_("Students"),)
     class Meta:
         verbose_name_plural = 'Disciplinas'
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s" % self.name
         
     @models.permalink
@@ -39,7 +40,7 @@ class Classroom(models.Model):
     class Meta:
         verbose_name_plural = 'Turmas'
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s" % self.name
 
 class Topic(models.Model):
@@ -52,7 +53,7 @@ class Topic(models.Model):
     class Meta:
         verbose_name_plural = 'Tópicos'
 
-    def __unicode__(self):
+    def __str__(self):
         return u"%s" % self.topic_title
 
     @models.permalink
@@ -89,7 +90,7 @@ class Question(models.Model):
     class Meta:
         verbose_name_plural = 'Questões'
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s' % self.question_text
 
     @models.permalink
@@ -119,7 +120,7 @@ class Choice(models.Model):
     class Meta:
         verbose_name_plural = 'Alternativas'
         
-    def __unicode__(self):
+    def __str__(self):
         return u'%s' % self.choice_text
 
 class Test(models.Model):
@@ -182,7 +183,7 @@ class DiscursiveAnswer(Answer):
     class Meta:
         verbose_name_plural = 'Respostas Discursivas'
 
-    def __unicode__(self):
+    def __str__(self):
         return str(self.question.index)
         
     @models.permalink
