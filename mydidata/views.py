@@ -347,6 +347,7 @@ def define_team(request):
         if not request.session.get('teams', False):
                 request.session['teams'] = {}
         request.session['teams'][str(request.user.id)] = []
+        
         while request.POST.get('selStudent' + str(index), False):
             studentID = request.POST['selStudent' + str(index)]
             member = User.objects.get(pk=studentID);
@@ -364,6 +365,9 @@ def define_team(request):
 
         classrooms = Classroom.objects.filter(students__id = request.user.id)
         studentsToSelect = [student for classroom in classrooms for student in classroom.students.all()]
+        print("Session data")
+        print(request.session['teams'])
+        print("SELECTED MEMBERS: ")
         print(selectedMembers)
         return render(request, 
                 'mydidata/define_team.html', 

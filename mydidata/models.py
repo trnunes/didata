@@ -67,6 +67,9 @@ class Topic(models.Model):
     @models.permalink
     def get_delete_url(self):
         return 'mydidata:topic_delete', [self.uuid]
+    
+    def get_ordered_questions(self):
+        return self.question_set.all().order_by('index')
         
 
 class Question(models.Model):
@@ -170,7 +173,7 @@ class OverwriteStorage(FileSystemStorage):
     Muda o comportamento padrão do Django e o faz sobrescrever arquivos de
     mesmo nome que foram carregados pelo usuário ao invés de renomeá-los.
     '''
-    def get_available_name(self, name):
+    def get_available_name(self, name,  max_length=None):
         if self.exists(name):
             os.remove(os.path.join(settings.MEDIA_ROOT, name))
         return name
