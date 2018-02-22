@@ -346,25 +346,28 @@ def define_team(request):
         index = 1;
         if not request.session.get('teams', False):
                 request.session['teams'] = {}
-        request.session['teams'][request.user.id] = []
+        request.session['teams'][str(request.user.id)] = []
         while request.POST.get('selStudent' + str(index), False):
             studentID = request.POST['selStudent' + str(index)]
             member = User.objects.get(pk=studentID);
-            if not member in request.session['teams'][request.user.id]:
-                request.session['teams'][request.user.id].append(member.id)
+            if not member in request.session['teams'][str(request.user.id)]:
+                request.session['teams'][str(request.user.id)].append(member.id)
 
 
             index += 1
-            request.session.modified = True
+        request.session.modified = True
         return HttpResponseRedirect(reverse('mydidata:disciplines'))
     else:
+        selectedMembers = []
+        if request.session.get('teams', False) and request.session['teams'].get(str(request.user.id), False):
+            selectedMembers = [get_object_or_404(User, pk=student_id) for student_id in request.session['teams'][str(request.user.id)]]
+
         classrooms = Classroom.objects.filter(students__id = request.user.id)
-
         studentsToSelect = [student for classroom in classrooms for student in classroom.students.all()]
-
+        print(selectedMembers)
         return render(request, 
                 'mydidata/define_team.html', 
-                {'studentList': studentsToSelect}
+                {'studentList': studentsToSelect, 'selectedMembers': selectedMembers,}
         )
     
     

@@ -160,13 +160,22 @@ $(document).ready(function() {
         e.preventDefault();
         $('#gi-container').load($(this).attr('href'));
     });
-    var membersCount = 1;
+    var membersCount = 0;
+	if ($('select').last().attr('data-index')){
+		membersCount = parseInt($('select').last().attr('data-index'));
+		
+	}
     $('#addMemberBtn').click(function(){
         membersCount++;
-        var clonedSel = $('[name=selStudent1]').clone();
+        var clonedSel = $('[name=template_select]').clone();
         
         $(clonedSel).attr('name', "selStudent" + membersCount);
         $('select').last().after(clonedSel);
+		$(clonedSel).show();
     });
+	$('#rmMembersBtn').click(function(){
+		$('select').not('[name=template_select]').remove();
+		
+	});
     
 });
