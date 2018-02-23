@@ -32,7 +32,7 @@ class TopicList(ListView):
         
         return topic_list
 
-    @method_decorator(login_required)
+
     def dispatch(self, *args, **kwargs):
         return super(TopicList, self).dispatch(*args, **kwargs)
         
@@ -49,7 +49,7 @@ class DisciplineList(ListView):
 
         return discipline_list
         
-    @method_decorator(login_required)
+
     def dispatch(self, *args, **kwargs):
         return super(DisciplineList, self).dispatch(*args, **kwargs)
 
@@ -222,7 +222,7 @@ def multiple_choice_answer(request, question_uuid):
         context['form'] = form
         return render(request, 'mydidata/answer_cru.html', context)
         
-@login_required()
+
 def topic_detail(request, uuid):
     topic = Topic.objects.get(uuid=uuid)
     topic.topic_content = topic.topic_content.replace("<iframe", "<iframe allowfullscreen=\"allowfullscreen\"")

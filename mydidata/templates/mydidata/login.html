@@ -4,6 +4,8 @@
 {% block content %}
     <div id="content-container" class="container p-none">
         <div class="lgn-container col-lg-8">
+			<!-- <a href="/mydidata/signup">Ainda não tenho cadastro</a> -->
+			
             <form id="login-form" method="post" 
                   action="{% url 'mydidata:login' %}">
                 {% csrf_token %}
@@ -31,6 +33,9 @@
                        class="btn btn-primary pull-right" />
                 <input type="hidden" name="next" value="{{ next }}" />
             </form>
+
+			
         </div>
+		
     </div>
 {% endblock content %}

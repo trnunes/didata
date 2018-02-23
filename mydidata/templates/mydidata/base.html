@@ -63,7 +63,8 @@
                                        class="p-r-none">Meu Progresso</a></li>
                             {% else %}
                                 <li><a href="/mydidata/login/">Login</a></li>
-                            
+								<li><a href="{% url 'mydidata:disciplines' %}"
+                                   class="p-r-none">Disciplinas</a></li>
                             {% endif %}
                         </ul>
                     </div>
