@@ -366,7 +366,7 @@ def define_team(request):
         classrooms = Classroom.objects.filter(students__id = request.user.id)
         studentsToSelect = [student for classroom in classrooms for student in classroom.students.all()]
         print("Session data")
-        print(request.session['teams'])
+
         print("SELECTED MEMBERS: ")
         print(selectedMembers)
         return render(request, 
