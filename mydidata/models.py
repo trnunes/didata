@@ -189,7 +189,14 @@ class DiscursiveAnswer(Answer):
 
     def __str__(self):
         return str(self.question.index)
-        
+ 
+    def file_link(self):
+         if self.assignment_file:
+             return "<a href='%s' target=\"_blank\">Baixar o Arquivo</a>" % (self.assignment_file.url,)
+         else:
+             return "No attachment"
+    file_link.allow_tags = True
+             
     @models.permalink
     def get_detail_url(self):
         return "mydidata:discursive_answer_detail", [self.id]

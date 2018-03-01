@@ -18,9 +18,7 @@
                     <div class="col-md-9">
                         <h3 class="gi-sh">Resposta</h3>
                         <p>{{ answer.answer_text | safe}}</p>
-                        {%if answer.assignment_file %}
-                            <a href="/media/{{ answer.assignment_file}}"> Arquivo </a>
-                        {%endif%}
+                        {{ answer.file_link | safe }}                            
                     </div>
                 </div>
             </div>
