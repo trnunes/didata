@@ -9,6 +9,7 @@ from django import template
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from django.utils.translation import gettext as _
+from mydidata.storage_backends import PublicMediaStorage
 
 # Create your models here.
 class Greeting(models.Model):
@@ -180,7 +181,7 @@ class OverwriteStorage(FileSystemStorage):
         
 class DiscursiveAnswer(Answer):
     answer_text = RichTextUploadingField(null=True, blank=True)
-    assignment_file = models.FileField(upload_to='uploads/assignments/%Y/%m/%d', null=True, blank=True, storage=OverwriteStorage())
+    assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage())
     is_correct = models.BooleanField(default=False)
     
     class Meta:

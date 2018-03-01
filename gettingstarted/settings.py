@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'mydidata',
     'ckeditor',
     'ckeditor_uploader',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -186,8 +187,20 @@ CKEDITOR_CONFIGS = {
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+AWS_QUERYSTRING_AUTH = False
+
+AWS_STORAGE_BUCKET_NAME = 'mydidata'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+
+UPLOAD_URL = "https://%s" % (AWS_S3_CUSTOM_DOMAIN)
+
+MEDIA_ROOT = "%s/media" % (UPLOAD_URL)
 MEDIA_URL = '/media/'
 CKEDITOR_UPLOAD_PATH = 'uploads/'
 LOGIN_REDIRECT_URL = '/mydidata/disciplines'
+
+S3_BUCKET = os.environ.get('S3_BUCKET')
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+DEFAULT_FILE_STORAGE = 'mydidata.storage_backends.PublicMediaStorage'
 django_heroku.settings(locals())
