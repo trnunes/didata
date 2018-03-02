@@ -6,34 +6,43 @@
     <div id="content-container" class="container p-none">
         <div class="lgn-container col-lg-8">
             <h2 class="ad-mh">Monte seu Grupo/Dupla</h2>
-            <form id="pairing-form" method="post" 
-                  action="{% url 'mydidata:define_team' %}">
-                {% csrf_token %}
-			    <h4 class="ad-mh">Alunos</h4>
-                <select class="form-control" name="template_select" style="display: none">
-                    {%for student in studentList%}
-						<option value='{{student.id}}'>{{student.first_name}} {{student.last_name}}<option>
-                    {%endfor%}
-                </select>
-            
-				{% for member in selectedMembers%}
-
-	                <select class="form-control" name="selStudent{{forloop.counter}}" data-index = "{{forloop.counter}}">
+			{%if errorMessages%}
+				{%for errormsg in errorMessages%}
+					<div class="alert alert-danger" role="alert">
+					  {{errormsg}}
+					</div>
+				{%endfor%}
+			{%else%}
+	            <form id="pairing-form" method="post" 
+	                  action="{% url 'mydidata:define_team' %}">
+	                {% csrf_token %}
+				    <h4 class="ad-mh">Alunos</h4>
+	                <select class="form-control" name="template_select" style="display: none">
 	                    {%for student in studentList%}
-							{%if student.id == member.id%}
-		                        <option selected="selected" value='{{student.id}}'>{{student.first_name}} {{student.last_name}}<option>
-							{% else %}
-								<option value='{{student.id}}'>{{student.first_name}} {{student.last_name}}<option>
-							{% endif %}
+							<option value='{{student.id}}'>{{student.first_name}} {{student.last_name}}<option>
 	                    {%endfor%}
 	                </select>
-				{%endfor%}
+            
+					{% for member in selectedMembers%}
+
+		                <select class="form-control" name="selStudent{{forloop.counter}}" data-index = "{{forloop.counter}}">
+		                    {%for student in studentList%}
+								{%if student.id == member.id%}
+			                        <option selected="selected" value='{{student.id}}'>{{student.first_name}} {{student.last_name}}<option>
+								{% else %}
+									<option value='{{student.id}}'>{{student.first_name}} {{student.last_name}}<option>
+								{% endif %}
+		                    {%endfor%}
+		                </select>
+					{%endfor%}
 
                 
-                <button id="addMemberBtn" type="button" class="btn btn-link">Adicionar Membro</button>
-				<button id="rmMembersBtn" type="button" class="btn btn-link">Remover Membros</button>
-               <input type="submit" value="Salvar Grupo" />
-            </form>
+	                <button id="addMemberBtn" type="button" class="btn btn-link">Adicionar Membro</button>
+					<button id="rmMembersBtn" type="button" class="btn btn-link">Remover Membros</button>
+	               <input type="submit" value="Salvar Grupo" />
+	            </form>
+			
+			{%endif%}
         </div>
     </div>
 {% endblock content %}

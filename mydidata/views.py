@@ -11,6 +11,7 @@ from .forms import SubscriberForm, TopicForm, QuestionForm, DiscursiveAnswerForm
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
+from django.conf import settings
     
 class HomePage(TemplateView):
     """
@@ -340,6 +341,12 @@ def discipline_detail(request, uuid=None):
 
 @login_required()
 def define_team(request):
+    if not settings.ENABLE_TEAM_LINK:
+        return render(request, 
+                'mydidata/define_team.html', 
+                {'errorMessages': ["Não é possível definir equipes no momento"],})
+        
+    
     if request.POST:
 
 
