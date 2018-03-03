@@ -199,7 +199,7 @@ MEDIA_URL = '/media/'
 CKEDITOR_UPLOAD_PATH = 'uploads/'
 LOGIN_REDIRECT_URL = '/mydidata/disciplines'
 
-S3_BUCKET = os.environ.get('S3_BUCKET')
+S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 DEFAULT_FILE_STORAGE = 'mydidata.storage_backends.PublicMediaStorage'

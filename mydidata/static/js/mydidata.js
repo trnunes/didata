@@ -160,6 +160,7 @@ $(document).ready(function() {
         e.preventDefault();
         $('#gi-container').load($(this).attr('href'));
     });
+	
     var membersCount = 0;
 	if ($('select').last().attr('data-index')){
 		membersCount = parseInt($('select').last().attr('data-index'));

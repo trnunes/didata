@@ -12,7 +12,8 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.conf import settings
-    
+import boto3
+ 
 class HomePage(TemplateView):
     """
     Because our needs are so simple, all we have to do is
@@ -380,26 +381,35 @@ def define_team(request):
                 'mydidata/define_team.html', 
                 {'studentList': studentsToSelect, 'selectedMembers': selectedMembers,}
         )
-    
-    
-# from django.shortcuts import render
-# from django.http import HttpResponse
-#
-# from .models import Greeting
-# import requests
-#
-# # Create your views here.
-# def index(request):
-#     r = requests.get('http://httpbin.org/status/418')
 
-#     return HttpResponse('<pre>' + r.text + '</pre>')
+# def download_s3(request, answer_id):
+# answer = Answer.objects.get(pk=343)
+# session = boto3.Session(
+#     aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+#     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+# )
+# conn = boto3.resource('s3')
+# bucket = conn.Bucket(settings.S3_BUCKET)
 #
-# def db(request):
+# conn = boto3.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
+# bucket = conn.get_bucket(settings.S3_BUCKET)
 #
-#     greeting = Greeting()
-#     greeting.save()
+#     answer = get_object_or_404(Answer, pk=answer_id)
+#     print str(answer.discursiveanswer.assignment_file.url)
 #
-#     greetings = Greeting.objects.all()
+# output_filename = answer.discursiveanswer.assignment_file.url.split('/https')[0].split('/')[-1]
+# output_fileextension = output_filename.split('.')[-1]
 #
-#     return render(request, 'db.html', {'greetings': greetings})
-#
+#     s3_file_path = bucket.get_key(answer.discursiveanswer.assignment_file.url)
+#     download_url = k.generate_url(
+#         expires_in=60,
+#         response_headers={
+#             'response-content-disposition': 'attachment; filename={}'.format(
+#                 output_filename),
+#         }
+#     )
+#     return HttpResponseRedirect(url)
+#     response = HttpResponse("read your file here ie. abc.dat", mimetype="application/msword")
+#     response['Content-Disposition'] = 'attachment; filename=%s' % ("xyz.doc")
+#     return response
+     
