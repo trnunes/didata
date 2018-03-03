@@ -8,10 +8,6 @@ class PublicMediaStorage(S3Boto3Storage):
         return name
 
     def _normalize_name(self, name):
-        if not name.endswith('/'):
-            name += "/"
-
-        name += self.location
         return name
 
     

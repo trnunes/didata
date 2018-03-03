@@ -390,26 +390,13 @@ def define_team(request):
 # )
 # conn = boto3.resource('s3')
 # bucket = conn.Bucket(settings.S3_BUCKET)
-#
-# conn = boto3.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
-# bucket = conn.get_bucket(settings.S3_BUCKET)
-#
-#     answer = get_object_or_404(Answer, pk=answer_id)
-#     print str(answer.discursiveanswer.assignment_file.url)
-#
+# file_name = answer.discursiveanswer.assignment_file.name
 # output_filename = answer.discursiveanswer.assignment_file.url.split('/https')[0].split('/')[-1]
-# output_fileextension = output_filename.split('.')[-1]
 #
-#     s3_file_path = bucket.get_key(answer.discursiveanswer.assignment_file.url)
-#     download_url = k.generate_url(
-#         expires_in=60,
-#         response_headers={
-#             'response-content-disposition': 'attachment; filename={}'.format(
-#                 output_filename),
-#         }
-#     )
+# conn.Object(settings.S3_BUCKET, file_name).download_file('/media/%s' %(output_filename))
+#
 #     return HttpResponseRedirect(url)
 #     response = HttpResponse("read your file here ie. abc.dat", mimetype="application/msword")
 #     response['Content-Disposition'] = 'attachment; filename=%s' % ("xyz.doc")
 #     return response
-     
+#
