@@ -192,7 +192,7 @@ class DiscursiveAnswer(Answer):
  
     def file_link(self):
          if self.assignment_file:
-             file_name = urllib.quote(self.assignment_file.url.split('/')[-1], safe='')
+             file_name = urllib.parse.quote(self.assignment_file.url.split('/')[-1], safe='')
              encoded_url = '/'.join(self.assignment_file.url.split('/')[1:-1]) + file_name
              return "<a href='%s' target=\"_blank\">Baixar o Arquivo</a>" % (encoded_url,)
          else:
