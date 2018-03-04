@@ -10,7 +10,7 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from django.utils.translation import gettext as _
 from mydidata.storage_backends import PublicMediaStorage
-
+import urllib
 # Create your models here.
 class Greeting(models.Model):
     when = models.DateTimeField('date created', auto_now_add=True)
