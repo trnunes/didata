@@ -118,6 +118,18 @@ def my_progress(request):
     for discipline in Discipline.objects.filter(students__id = request.user.id):
         topics.extend(discipline.topic_set.all())
     return render(request, 'mydidata/progress.html', {'students': [student], 'topics':topics,})
+
+@login_required 
+def class_progress(request, class_id):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    discipline_list = classroom.disciplines.all()
+    topics = []
+    students = classroom.students.all()
+    
+    for discipline in discipline_list:
+        topics.extend(discipline.topic_set.all())
+
+    return render(request, 'mydidata/progress.html', {'students': students, 'topics':topics,})
     
 @login_required()
 def discursive_answer_detail(request, answer_id):
