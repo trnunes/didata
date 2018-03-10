@@ -15,6 +15,7 @@ django-storages = "*"
 shortuuid = "*"
 django-shortuuidfield = "*"
 "boto3" = "*"
+unidecode = "*"
 
 
 [requires]
