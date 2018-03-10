@@ -16,6 +16,7 @@ shortuuid = "*"
 django-shortuuidfield = "*"
 "boto3" = "*"
 unidecode = "*"
+pillow = "*"
 
 
 [requires]
