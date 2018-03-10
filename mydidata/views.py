@@ -118,6 +118,7 @@ def my_progress(request):
     for discipline in Discipline.objects.filter(students__id = request.user.id):
         topics.extend(discipline.topic_set.all())
     return render(request, 'mydidata/progress.html', {'students': [student], 'topics':topics,})
+    
 
 @login_required 
 def class_progress(request, class_id):
