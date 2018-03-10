@@ -14,6 +14,7 @@ django-ckeditor = "*"
 django-storages = "*"
 shortuuid = "*"
 django-shortuuidfield = "*"
+"boto3" = "*"
 
 
 [requires]
