@@ -13,6 +13,7 @@ requests = "*"
 django-ckeditor = "*"
 django-storages = "*"
 shortuuid = "*"
+django-shortuuidfield = "*"
 
 
 [requires]
