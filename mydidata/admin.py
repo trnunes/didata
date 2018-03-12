@@ -8,6 +8,7 @@ from .models import Question, Discipline
 from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, DiscursiveAnswer, Classroom
 from django.utils.safestring import mark_safe
 
+
 class MultipleChoiceAnswerInline(admin.TabularInline):
     model = MultipleChoiceAnswer
     extra = 1
@@ -30,6 +31,15 @@ class QuestionInline(admin.TabularInline):
     question_link.allow_tags = True
     extra = 1
     
+class TopicInline(admin.TabularInline):
+    model = Topic
+    exclude = ('topic_content',)
+    readonly_fields = ('edit_link', )
+    def edit_link(self, obj):
+        return mark_safe('<a href="%s">%s</a>'%(obj.get_admin_url(), obj.topic_title))
+    edit_link.allow_tags = True
+    extra = 1
+            
 class QuestionAdminForm(forms.ModelForm):
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
     class Meta:
@@ -43,6 +53,9 @@ class ClassroomAdmin(admin.ModelAdmin):
 class DisciplineAdmin(admin.ModelAdmin):
     model = Discipline
     filter_horizontal = ('students',)
+    inlines = [
+        TopicInline,
+    ]
     
     
 class QuestionAdmin(admin.ModelAdmin):

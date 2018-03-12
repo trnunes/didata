@@ -11,6 +11,18 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from mydidata.storage_backends import PublicMediaStorage
 import urllib
+from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
+
+class AdminURLMixin(object):
+    def get_admin_url(self):
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        return reverse("admin:%s_%s_change" % (
+            content_type.app_label,
+            content_type.model),
+            args=(self.id,))
+
+
 # Create your models here.
 class Greeting(models.Model):
     when = models.DateTimeField('date created', auto_now_add=True)
@@ -19,7 +31,7 @@ class Greeting(models.Model):
 # class User(models.Model):
 #     user_name = models.CharField(max_length=200)
 
-class Discipline(models.Model):
+class Discipline(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     name = models.CharField(max_length=255, verbose_name=_("Name"),)
     students = models.ManyToManyField(User, verbose_name=_("Students"),)
@@ -44,10 +56,10 @@ class Classroom(models.Model):
     def __str__(self):
         return u"%s" % self.name
 
-class Topic(models.Model):
+class Topic(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     topic_title = models.CharField(max_length=200)
-    topic_content = RichTextUploadingField()
+    topic_content = RichTextUploadingField(blank=True, null=True)
     order = models.IntegerField()
     owner = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     discipline = models.ForeignKey(Discipline, null=True, on_delete=models.DO_NOTHING)
