@@ -387,7 +387,7 @@ def define_team(request):
 
         classrooms = Classroom.objects.filter(students__id = request.user.id)
         studentsToSelect = [student for classroom in classrooms for student in classroom.students.all()]
-        studentsToSelect.sort(lambda student: student.first_name)
+        studentsToSelect.sort(key=lambda student: student.first_name)
         print("Session data")
 
         print("SELECTED MEMBERS: ")
