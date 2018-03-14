@@ -39,6 +39,7 @@ class TopicInline(admin.TabularInline):
         return mark_safe('<a href="%s">%s</a>'%(obj.get_admin_url(), obj.topic_title))
     edit_link.allow_tags = True
     extra = 1
+    ordering = ('order',)
             
 class QuestionAdminForm(forms.ModelForm):
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
