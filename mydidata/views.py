@@ -105,7 +105,7 @@ def detail(request, question_id):
 def progress(request, discipline_name):
     
     discipline = Discipline.objects.get(name=discipline_name)
-    students = discipline.students.all().order_by('first_name');
+    students = discipline.students.all().order_by('first_name')
     topics = discipline.topic_set.all()
     return render(request, 'mydidata/progress.html', {'students': students, 'topics':topics,})
 
@@ -117,7 +117,8 @@ def my_progress(request):
     
     for discipline in Discipline.objects.filter(students__id = request.user.id):
         topics.extend(discipline.topic_set.all())
-    return render(request, 'mydidata/progress.html', {'students': [student], 'topics':topics,})
+    topics.sort(key=lambda topic: topic.order)
+    return render(request, 'mydidata/progress.html', {'students': [student], 'topics': topics,})
     
 
 @login_required 
@@ -125,11 +126,11 @@ def class_progress(request, class_id):
     classroom = get_object_or_404(Classroom, pk=class_id)
     discipline_list = classroom.disciplines.all()
     topics = []
-    students = classroom.students.all()
+    students = classroom.students.all().order_by('first_name');
     
     for discipline in discipline_list:
         topics.extend(discipline.topic_set.all())
-
+    topics.sort(key=lambda topic: topic.order)
     return render(request, 'mydidata/progress.html', {'students': students, 'topics':topics,})
     
 @login_required()
@@ -386,6 +387,7 @@ def define_team(request):
 
         classrooms = Classroom.objects.filter(students__id = request.user.id)
         studentsToSelect = [student for classroom in classrooms for student in classroom.students.all()]
+        studentsToSelect.sort(lambda student: student.first_name)
         print("Session data")
 
         print("SELECTED MEMBERS: ")
