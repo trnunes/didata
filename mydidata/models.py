@@ -53,6 +53,14 @@ class Classroom(models.Model):
     class Meta:
         verbose_name_plural = 'Turmas'
 
+    @models.permalink
+    def get_absolute_url(self):
+        return 'mydidata:class_progress', [self.id]
+        
+    @models.permalink
+    def get_signup_link(self):
+        return 'mydidata:sub_new', [self.id]
+
     def __str__(self):
         return u"%s" % self.name
 

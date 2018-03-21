@@ -1,7 +1,7 @@
 from django.conf.urls import url, include
 from mydidata import views
 from django.contrib.auth import views as auth_views
-from mydidata.views import HomePage, TopicList, DisciplineList
+from mydidata.views import HomePage, TopicList, DisciplineList, ClassList
 
 app_name = 'mydidata'
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^login/$', auth_views.login, {'template_name': 'mydidata/login.html'}, name='login'),
     url(r'^logout/$', auth_views.logout, {'next_page': '/mydidata/login/'}, name='logout'),
     url(r'^topics$', TopicList.as_view(), name="topics"),
+    url(r'^classes$', ClassList.as_view(), name="classes"),
     url(r'^disciplines/$', DisciplineList.as_view(), name="disciplines"),
     url(r'^topic_detail/(?P<uuid>[\w-]+)/$', views.topic_detail, name='topic_detail'),
     url(r'^discipline_detail/(?P<uuid>[\w-]+)/$', views.discipline_detail, name='discipline_detail'),

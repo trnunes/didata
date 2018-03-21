@@ -4,8 +4,13 @@
     {% load question_extras %}
     {% load answer_extras %}
     <div id="content-container" class="container p-none">
+		{% if classroom %}
+			<h1>{{classroom.name}}</h1>
+			<p>Compartilhe esse link com seus alunos para inscrição: https://mydidata.herokuapp.com{{classroom.get_signup_link}} </p>
+		{%endif%}
+		
         {%for topic in topics %}
-            <h1>{{topic.topic_title}}</h1>
+            <h2>{{topic.topic_title}}</h2>
             <table id="cd-table" class="table table-hover">
                 <tbody>
                     <tr>

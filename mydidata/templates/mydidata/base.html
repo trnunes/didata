@@ -61,10 +61,15 @@
                                        class="p-r-none">Disciplinas</a></li>
                                 <li><a href="{% url 'mydidata:my_progress' %}"
                                        class="p-r-none">Meu Progresso</a></li>
+								{% if user.is_superuser%}
+									<li><a href="{% url 'mydidata:classes' %}"
+	                                   class="p-r-none">Turmas</a></li>
+								{% endif %}
                             {% else %}
                                 <li><a href="/mydidata/login/">Login</a></li>
 								<li><a href="{% url 'mydidata:disciplines' %}"
                                    class="p-r-none">Disciplinas</a></li>
+							
                             {% endif %}
                         </ul>
                     </div>

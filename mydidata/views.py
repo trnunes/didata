@@ -8,7 +8,7 @@ import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
 from .forms import SubscriberForm, TopicForm, QuestionForm, DiscursiveAnswerForm
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.conf import settings
@@ -21,6 +21,20 @@ class HomePage(TemplateView):
     in the next lesson.
     """
     template_name = 'mydidata/home.html'
+
+
+class ClassList(ListView):
+    model = Classroom
+    template_name = 'mydidata/class_list.html'
+    context_object_name = 'class_list'
+    
+    def get_queryset(self):        
+        return Classroom.objects.all()
+        
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def dispatch(self, *args, **kwargs):
+        return super(ClassList, self).dispatch(*args, **kwargs)
+        
 
 class TopicList(ListView):
     model = Topic
@@ -131,7 +145,7 @@ def class_progress(request, class_id):
     for discipline in discipline_list:
         topics.extend(discipline.topic_set.all())
     topics.sort(key=lambda topic: topic.order)
-    return render(request, 'mydidata/progress.html', {'students': students, 'topics':topics,})
+    return render(request, 'mydidata/progress.html', {'classroom': classroom, 'students': students, 'topics':topics,})
     
 @login_required()
 def discursive_answer_detail(request, answer_id):
