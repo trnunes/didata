@@ -82,9 +82,13 @@ WSGI_APPLICATION = 'gettingstarted.wsgi.application'
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
 DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#    }
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'db_mydidata',
     }
 }
 
@@ -188,9 +192,9 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 AWS_QUERYSTRING_AUTH = False
+S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
-AWS_STORAGE_BUCKET_NAME = 'mydidata'
-AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % S3_BUCKET
 
 UPLOAD_URL = "https://%s" % (AWS_S3_CUSTOM_DOMAIN)
 
@@ -199,7 +203,7 @@ MEDIA_URL = '/media/'
 CKEDITOR_UPLOAD_PATH = 'uploads/'
 LOGIN_REDIRECT_URL = '/mydidata/disciplines'
 
-S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
+
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 DEFAULT_FILE_STORAGE = 'mydidata.storage_backends.PublicMediaStorage'
