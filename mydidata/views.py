@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.conf import settings
 import boto3
+import re
  
 class HomePage(TemplateView):
     """
@@ -256,7 +257,18 @@ def multiple_choice_answer(request, question_uuid):
 def topic_detail(request, uuid):
     topic = Topic.objects.get(uuid=uuid)
     topic.topic_content = topic.topic_content.replace("<iframe", "<iframe allowfullscreen=\"allowfullscreen\"")
+    urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', topic.topic_content)
+    for url in urls:
+        if url.find("upload"):
+            new_url = settings.UPLOAD_URL + "/uploads" + url.split("uploads")[-1]
+            #TODO remove this replace
+            new_url = new_url.replace("/https%3A//mydidata.s3.amazonaws.com", "")
+
+            topic.topic_content = topic.topic_content.replace(url, new_url)
+
+
     questions = Question.objects.filter(topic=topic).order_by('index')
+
     context = {
         'topic': topic,
         'questions': questions,
@@ -318,6 +330,12 @@ def topic_cru(request, uuid=None):
 def question_detail(request, uuid):
 
     question = Question.objects.get(uuid=uuid)
+    print("MY QUESTION", question.question_text)
+    urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))', question.question_text)
+    for url in urls:
+        if url.find("upload"):
+            new_url = settings.UPLOAD_URL + "/uploads/" + url.split("uploads")[-1]
+            question.question_text = question.question_text.replace(url, new_url)
 
     return render(request, 
                 'mydidata/question_detail.html', 
