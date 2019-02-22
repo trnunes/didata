@@ -261,7 +261,7 @@ def topic_detail(request, uuid):
     topic.topic_content = topic.topic_content.replace("<iframe", "<iframe allowfullscreen=\"allowfullscreen\"")
     urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', topic.topic_content)
     for url in urls:
-        if url.find("upload"):
+        if url.find("upload") >= 0 :
             new_url = settings.UPLOAD_URL + "/uploads" + url.split("uploads")[-1]
             #TODO remove this replace
             new_url = new_url.replace("/https%3A//mydidata.s3.amazonaws.com", "")
