@@ -176,6 +176,8 @@ def discursive_answer(request, question_uuid):
         answer_form = DiscursiveAnswerForm(request.POST, request.FILES, instance=answer)
         
         if answer_form.is_valid():
+            import pdb; pdb.set_trace();
+        
             answer_form.save()
 
 
