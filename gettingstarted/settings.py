@@ -202,6 +202,7 @@ LOGIN_REDIRECT_URL = '/mydidata/disciplines'
 
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 DEFAULT_FILE_STORAGE = 'mydidata.storage_backends.PublicMediaStorage'
 ENABLE_TEAM_LINK = os.environ.get('ENABLE_TEAM_LINK') in ["True", "true"]
 django_heroku.settings(locals())
