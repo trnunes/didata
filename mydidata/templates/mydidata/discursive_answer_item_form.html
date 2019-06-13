@@ -1,8 +1,17 @@
+<h2 class="ad-mh">Resposta: {{answer.student.first_name}}&nbsp;{{answer.student.last_name}}</h2>
 <p>{{ question.question_text | safe}}</p>
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
-<form enctype="multipart/form-data" action="{% url 'mydidata:discursive_answer' question.uuid %}" method="post">
+{% if answer.feedback %}
+    <h3 class="gi-sh">Correções Solicitadas</h3>
+    <p><font color='red'>{{ answer.feedback | safe}}</font></p>
+{% endif %}
+
+
+
+<form enctype="multipart/form-data" action="{{ action_url }}" method="post">
+
 {% csrf_token %}
     
 {{ form.media }}
@@ -16,3 +25,6 @@
 
 <input type="submit" value="Enviar" />
 </form>
+{% if user.is_superuser %}
+    <a href='{{ classroom.get_absolute_url }}'>Voltar para Progresso da Turma</a>
+{%endif%}

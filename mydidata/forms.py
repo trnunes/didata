@@ -74,14 +74,42 @@ class QuestionForm(forms.ModelForm):
             ),
         }
 class DiscursiveAnswerForm(forms.ModelForm):
-    
+
+
     class Meta:
         model = DiscursiveAnswer
-        fields = ('answer_text', 'assignment_file',)
+        fields = ['assignment_file','answer_text',]
+
         widgets = {
             'answer_text' : forms.CharField(widget=CKEditorUploadingWidget(), label="Resposta", required=False),
         }
-    
+        labels = {
+            'answer_text': 'Digite sua Resposta Aqui',
+            'assignment_file': 'Arquivo da Resposta',
+        }
     def is_valid(self):
         return True;
-        
+
+
+class SuperuserDiscursiveAnswerForm(forms.ModelForm):
+
+    class Meta:
+        model = DiscursiveAnswer
+        fields = ['answer_text', 'assignment_file']
+
+        widgets = {
+            'answer_text': forms.CharField(widget=CKEditorUploadingWidget(), label="Resposta", required=False),
+        }
+        labels = {
+            'answer_text': 'Resposta Aqui',
+        }
+
+        fields += ['feedback', 'is_correct']
+        widgets['feedback'] = forms.CharField(widget=CKEditorUploadingWidget(), label="Correções",
+                                              required=False)
+        labels['feedback'] = 'Correções Aqui'
+        labels['is_correct'] = "Está Correta?"
+
+    def is_valid(self):
+        return True;
+

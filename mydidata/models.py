@@ -203,6 +203,7 @@ class DiscursiveAnswer(Answer):
     answer_text = RichTextUploadingField(null=True, blank=True)
     assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage())
     is_correct = models.BooleanField(default=False)
+    feedback = RichTextUploadingField(null=True, blank=True)
     
     class Meta:
         verbose_name_plural = 'Respostas Discursivas'
@@ -212,7 +213,7 @@ class DiscursiveAnswer(Answer):
  
     def file_link(self):
          if self.assignment_file:
-             return "<a href='%s' target=\"_blank\">Baixar o Arquivo</a>" % (self.assignment_file.url,)
+             return "<a href='%s' target=\"_blank\">Baixar o Arquivo da Resposta</a>" % (self.assignment_file.url,)
          else:
              return "No attachment"
     file_link.allow_tags = True

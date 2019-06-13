@@ -7,7 +7,7 @@ from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
-from .forms import SubscriberForm, TopicForm, QuestionForm, DiscursiveAnswerForm
+from .forms import SubscriberForm, TopicForm, QuestionForm, DiscursiveAnswerForm, SuperuserDiscursiveAnswerForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -136,7 +136,7 @@ def my_progress(request):
     return render(request, 'mydidata/progress.html', {'students': [student], 'topics': topics,})
     
 
-@login_required 
+@login_required
 def class_progress(request, class_id):
     classroom = get_object_or_404(Classroom, pk=class_id)
     discipline_list = classroom.disciplines.all()
@@ -151,13 +151,64 @@ def class_progress(request, class_id):
 @login_required()
 def discursive_answer_detail(request, answer_id):
     answer = DiscursiveAnswer.objects.get(pk=answer_id)
-    return render(request, 'mydidata/discursive_answer_detail.html', {'answer':answer,})
+
+    return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, })
+
+
+
+
 
 @login_required()
 def multiple_choice_answer_detail(request, answer_id):
     answer = MultipleChoiceAnswer.objects.get(pk=answer_id)
     return render(request, 'mydidata/multiple_choice_answer_detail.html', {'answer':answer,})
-    
+
+@login_required()
+def feedback(request, answer_id):
+    answer = get_object_or_404(DiscursiveAnswer, pk=answer_id)
+    question = answer.question
+    form = SuperuserDiscursiveAnswerForm(instance=answer)
+    classroom = Classroom.objects.filter(students__id=answer.student.id).first()
+
+    if request.POST:
+        form = SuperuserDiscursiveAnswerForm(request.POST, instance=answer)
+
+        form.save()
+
+        students = classroom.students.all().order_by('first_name');
+
+        next_student_found = False
+        student_index = 1
+
+        for student in students:
+            if next_student_found:
+                next_answer = DiscursiveAnswer.objects.filter(student=student, question=question).first()
+                if next_answer:
+                    form = SuperuserDiscursiveAnswerForm(instance=next_answer)
+                    context = {
+                        'question': question,
+                        'form': form,
+                        'answer': next_answer,
+                        'classroom': classroom,
+                        'action_url': reverse('mydidata:feedback', args=(next_answer.id,)),
+                    }
+                    return render(request, 'mydidata/answer_cru.html', context)
+
+            if student.id == answer.student.id and student_index < students.count(): next_student_found = True
+            student_index += 1
+
+        return render(request, reverse('mydidata:class_progress', args= {classroom.id,}))
+
+
+    context = {
+        'question': question,
+        'form': form,
+        'action_url': reverse('mydidata:feedback', args=(answer_id,)),
+    }
+    return render(request, 'mydidata/answer_cru.html', context)
+
+
+
 @login_required()
 def discursive_answer(request, question_uuid):
     question = get_object_or_404(Question, uuid=question_uuid)
@@ -212,16 +263,19 @@ def discursive_answer(request, question_uuid):
         else:
             context = {  
                 'question': question,
+                'answer': answer,
+                'form': answer_form,
             }
-            context['form'] = answer_form
+
             return render(request, 'mydidata/answer_cru.html', context) 
     else:
-        context = {  
-            'question': question,
-        }
-        
         form = DiscursiveAnswerForm(instance=answer)
-        context['form'] = form
+        context = {
+            'question': question,
+            'answer': answer,
+            'form': form,
+        }
+
         return render(request, 'mydidata/answer_cru.html', context)
     
 @login_required()

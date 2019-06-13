@@ -5,8 +5,8 @@
         <div >
             <div id="gi-container" class="ad-container2">
                 <div class="gi-header">
-                    <h3 class="ad-mh">Estudante:
-                        <span>{{answer.student.first_name}}&nbsp{{answer.student.last_name}}</span>
+                    <h3 class="ad-mh">
+                        <span>{{answer.student.username}}:&nbsp{{answer.student.first_name}}&nbsp{{answer.student.last_name}}</span>
                     </h3>
                 </div>
                 <div class="row gi-body">
@@ -18,8 +18,21 @@
                     <div class="col-md-9">
                         <h3 class="gi-sh">Resposta</h3>
                         <p>{{ answer.answer_text | safe}}</p>
-                        {{ answer.file_link | safe }}                            
+                        <p>{{ answer.file_link | safe }}</p>
                     </div>
+                    <div class="col-md-9">
+                        <h3 class="gi-sh">Correções</h3>
+                        <p>{{ answer.feedback | safe}}</p>
+                    </div>
+                    {% if user.is_superuser %}
+                        <div class="col-md-9"> <a href="{% url 'mydidata:feedback' answer.id %}"
+                                                  class="p-r-none">Fornecer Feedback</a>
+                    {% else %}
+                        <div class="col-md-9"> <a href="{{ answer.question.get_answer_url }}"
+                          class="p-r-none">Mudar Resposta</a>
+                    {% endif%}
+                    </div>
+
                 </div>
             </div>
         </div>

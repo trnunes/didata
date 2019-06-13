@@ -89,8 +89,12 @@ DATABASES = {
     }
 }
 import dj_database_url
-DATABASES['default'] =  dj_database_url.config()
+env = os.environ.copy()
+db_url = env.get('DATABASE_URL', False)
 
+if db_url != False:
+    import dj_database_url
+    DATABASES['default'] =  dj_database_url.config()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Allow all host headers
