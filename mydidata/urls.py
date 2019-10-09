@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^feedback/(?P<answer_id>[0-9]+)$',views.feedback, name='feedback'),
     url(r'^test/new/(?P<topic_id>[\w-]+)/$',views.test_new, name='test_new'),
     url(r'^progress/(?P<discipline_name>[\w|\W]+)/$',views.progress, name='progress'),
+    url(r'^percentage_progress/(?P<class_id>[\w-]+)/$',views.percentage_progress, name='percentage_progress'),
     url(r'^my_progress/$',views.my_progress, name='my_progress'),
     url(r'^class_progress/(?P<class_id>[\w-]+)/$',views.class_progress, name='class_progress'),
     url(r'^define_team/$',views.define_team, name='define_team'),

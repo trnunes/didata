@@ -56,7 +56,11 @@ class Classroom(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:class_progress', [self.id]
-        
+
+    @models.permalink
+    def get_percentage_progress_url(self):
+        return 'mydidata:percentage_progress', [self.id]
+
     @models.permalink
     def get_signup_link(self):
         return 'mydidata:sub_new', [self.id]

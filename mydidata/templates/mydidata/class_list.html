@@ -18,7 +18,10 @@
                 {% for classroom in class_list %}
                     <li class="al-item">
                         <a href="{{ classroom.get_absolute_url }}"><h4 class="al-name">{{ classroom.name }}</h4></a>
-                        
+                        &nbsp
+                        |
+                        &nbsp
+                        <a style="color: #3371b7;" href="{{ classroom.get_percentage_progress_url }}"><h4 class="al-name">Ver progresso(%)</h4></a>
                     </li>
                 {% endfor %}
             </ul>

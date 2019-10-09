@@ -30,7 +30,7 @@ class ClassList(ListView):
     context_object_name = 'class_list'
     
     def get_queryset(self):        
-        return Classroom.objects.all()
+        return Classroom.objects.all().order_by('name')
         
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
     def dispatch(self, *args, **kwargs):
@@ -147,7 +147,28 @@ def class_progress(request, class_id):
         topics.extend(discipline.topic_set.all())
     topics.sort(key=lambda topic: topic.order)
     return render(request, 'mydidata/progress.html', {'classroom': classroom, 'students': students, 'topics':topics,})
+
+@login_required
+def percentage_progress(request, class_id):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    discipline_list = classroom.disciplines.all()
+    topics = []
+    student_list = classroom.students.all().order_by('first_name');
     
+    for discipline in discipline_list:
+        topics.extend(discipline.topic_set.all())
+    topics.sort(key=lambda topic: topic.order)
+    student_by_topic_percentage = {}
+    for student in student_list:
+        student_by_topic_percentage[student] = []
+        for topic in topics:
+            answers = [DiscursiveAnswer.objects.filter(student=student, question=q).first() for q in topic.question_set.all()]
+            answers = [a for a in answers if a]
+            percentage = len(answers)/len(topic.question_set.all()) if len(topic.question_set.all()) else 0
+            student_by_topic_percentage[student].append([topic,  "{:2.1f}".format(percentage*100)])
+       
+    return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_percentage})
+
 @login_required()
 def discursive_answer_detail(request, answer_id):
     answer = DiscursiveAnswer.objects.get(pk=answer_id)
