@@ -207,7 +207,8 @@ UPLOAD_URL = "https://%s" % (AWS_S3_CUSTOM_DOMAIN)
 
 MEDIA_ROOT = "%s/media" % (UPLOAD_URL)
 MEDIA_URL = '/media/'
-CKEDITOR_UPLOAD_PATH = 'uploads/'
+CKEDITOR_UPLOAD_PREFIX = MEDIA_ROOT
+CKEDITOR_UPLOAD_PATH = '/uploads/'
 LOGIN_REDIRECT_URL = '/mydidata/disciplines'
 
 

@@ -13,6 +13,7 @@ from mydidata.storage_backends import PublicMediaStorage
 import urllib
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
+from django.core.validators import FileExtensionValidator
 
 class AdminURLMixin(object):
     def get_admin_url(self):
@@ -102,6 +103,9 @@ class Question(models.Model):
     index = models.PositiveSmallIntegerField()
     question_text = RichTextUploadingField()
     is_discursive = models.BooleanField(default=False)
+    file_types_accepted = models.CharField(max_length=255, verbose_name=_("Types"), null=True, blank="True")
+    text_required = models.BooleanField(default=False)
+
     DIFFICULTY_LIST = (
         (1, 'Difícil'),
         (2, 'Médio'),

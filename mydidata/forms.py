@@ -3,7 +3,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import Topic, Question, DiscursiveAnswer, Discipline
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
-
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 class SubscriberForm(UserCreationForm):
     first_name = forms.CharField(
@@ -87,8 +88,34 @@ class DiscursiveAnswerForm(forms.ModelForm):
             'answer_text': 'Digite sua Resposta Aqui',
             'assignment_file': 'Arquivo da Resposta',
         }
-    def is_valid(self):
-        return True;
+    def clean_assignment_file(self):
+
+        file = self.cleaned_data.get("assignment_file")
+        question = self.instance.question
+        if not file and not question.file_types_accepted:
+            return file
+
+        if not file and question.file_types_accepted:
+            raise ValidationError(_("Você deve enviar um arquivo como anexo a esta questão! Clique no botão \"Escolher Arquivo\" e depois envie a resposta."))
+
+        print("FILE: ", file)
+        file_type = file.name.split(".")[-1]
+        if question.file_types_accepted and not file_type in question.file_types_accepted and not "todos" in question.file_types_accepted:
+            raise ValidationError(_("Arquivo de resposta inválido para esta questão. Apenas os tipos %(tipos)s são aceitos!"), 
+                params = {'tipos': str(question.file_types_accepted)},
+            )        
+        return file
+    
+    def clean_answer_text(self):
+        question = self.instance.question
+        text = self.cleaned_data.get("answer_text")
+        print("TEXTO: ", text)
+        if question.text_required and not text:
+            raise ValidationError(_("Sua resposta não pode ser em branco! Por favor, escreva a sua reposta na caixa de texto abaixo."))
+        return text
+
+
+
 
 
 class SuperuserDiscursiveAnswerForm(forms.ModelForm):

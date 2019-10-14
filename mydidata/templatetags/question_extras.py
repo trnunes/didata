@@ -4,6 +4,10 @@ register = template.Library()
 
 @register.simple_tag
 def get_answers(question, student):
+    answers = question.answer_set.filter(student=student)
+    if student.first_name == "Marcela":
+        print(student, ": ", question.topic.topic_title, " : ", question.question_text)
+        print(" Answers: ", set(answers))
     return question.answer_set.filter(student=student)
     
 @register.simple_tag
