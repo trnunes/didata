@@ -105,6 +105,13 @@ class Classroom(models.Model):
     def topic_is_closed(self, topic):
         return topic in self.closed_topics.all()
 
+class ResourceRoom(models.Model):
+    uuid = ShortUUIDField(unique=True)
+    name = models.CharField(max_length=255)
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
+    students = models.ManyToManyField(User, null=True)
+    topics = models.ManyToManyField(Topic, null=True)
+
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
     index = models.PositiveSmallIntegerField()
@@ -187,6 +194,8 @@ class Answer(models.Model):
     
     def get_answer_file_id(self):
         return self.student.first_name + "__" + self.student.last_name + "__" + str(self.student.id) + "__" + self.question.uuid
+
+
 
 class MultipleChoiceAnswer(Answer):
     choice = models.ForeignKey(Choice, null=True, on_delete=models.DO_NOTHING)

@@ -136,9 +136,16 @@ def detail(request, question_id):
 def progress(request, discipline_name):
     
     discipline = Discipline.objects.get(name=discipline_name)
-    students = discipline.students.all().order_by('first_name')
     topics = discipline.topic_set.all()
-    return render(request, 'mydidata/progress.html', {'students': students, 'topics':topics,})
+    return render(request, 'mydidata/progress.html', {'topics':topics,})
+
+@login_required
+def topic_progress(request, topic_uuid, class_id):
+    klass = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    discipline = topic.discipline
+    students = discipline.students.all().order_by('first_name')    
+    return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
 
 @login_required 
 def my_progress(request):
