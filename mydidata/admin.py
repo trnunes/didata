@@ -5,7 +5,7 @@ from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 from .models import Question, Discipline
-from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, DiscursiveAnswer, Classroom
+from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, DiscursiveAnswer, Classroom, ResourceRoom
 from django.utils.safestring import mark_safe
 
 
@@ -51,6 +51,10 @@ class ClassroomAdmin(admin.ModelAdmin):
     model = Classroom
     filter_horizontal = ('students', 'disciplines', 'closed_topics',)
 
+class ResourceRoomAdmin(admin.ModelAdmin):
+    model = ResourceRoom
+    filter_horizontal = ('students', 'topics',)
+
 class DisciplineAdmin(admin.ModelAdmin):
     model = Discipline
     filter_horizontal = ('students',)
@@ -86,6 +90,7 @@ admin.site.register(MultipleChoiceAnswer)
 admin.site.register(DiscursiveAnswer)
 admin.site.register(Discipline, DisciplineAdmin)
 admin.site.register(Classroom, ClassroomAdmin)
+admin.site.register(ResourceRoom, ResourceRoomAdmin)
 admin.site.register(Topic, TopicAdmin)
 admin.site.register(Test)
 

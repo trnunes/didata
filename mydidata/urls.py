@@ -1,7 +1,7 @@
 from django.conf.urls import url, include
 from mydidata import views
 from django.contrib.auth import views as auth_views
-from mydidata.views import HomePage, TopicList, DisciplineList, ClassList
+from mydidata.views import HomePage, TopicList, DisciplineList, ClassList, ResourceRoomList
 
 app_name = 'mydidata'
 urlpatterns = [
@@ -13,9 +13,11 @@ urlpatterns = [
     url(r'^logout/$', auth_views.logout, {'next_page': '/mydidata/login/'}, name='logout'),
     url(r'^topics$', TopicList.as_view(), name="topics"),
     url(r'^classes$', ClassList.as_view(), name="classes"),
+    url(r'^resource_rooms$', ResourceRoomList.as_view(), name="resource_rooms"),
     url(r'^disciplines/$', DisciplineList.as_view(), name="disciplines"),
     url(r'^topic_detail/(?P<uuid>[\w-]+)/$', views.topic_detail, name='topic_detail'),
     url(r'^discipline_detail/(?P<uuid>[\w-]+)/$', views.discipline_detail, name='discipline_detail'),
+    url(r'^resource_room_topics/(?P<uuid>[\w-]+)/(?P<resource_room_only>[\w-]+)$', views.resource_room_topics, name='resource_room_topics'),    
     url(r'^topic/new/$',views.topic_cru, name='topic_new'),
     url(r'^topic/close/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_close, name='topic_close'),
     url(r'^topic/open/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_open, name='topic_open'),

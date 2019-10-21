@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from .models import Question, Choice, DiscursiveAnswer, MultipleChoiceAnswer, Topic, Test, Discipline, Classroom
+from .models import Question, Choice, DiscursiveAnswer, MultipleChoiceAnswer, Topic, Test, Discipline, Classroom, ResourceRoom
 from django.template import loader
 from django.http import Http404
 from django.urls import reverse
@@ -36,6 +36,17 @@ class ClassList(ListView):
     def dispatch(self, *args, **kwargs):
         return super(ClassList, self).dispatch(*args, **kwargs)
         
+class ResourceRoomList(ListView):
+    model = Classroom
+    template_name = 'mydidata/class_list.html'
+    context_object_name = 'class_list'
+    
+    def get_queryset(self):        
+        return ResourceRoom.objects.all().order_by('name')
+        
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def dispatch(self, *args, **kwargs):
+        return super(ResourceRoomList, self).dispatch(*args, **kwargs)
 
 class TopicList(ListView):
     model = Topic
@@ -44,12 +55,11 @@ class TopicList(ListView):
 
     def get_queryset(self):
         discipline_id = self.request.GET.get('discipline', None)
+        resource_room_only = self.request.GET.get('resource_room_only', False) == "True"
         discipline = Discipline.objects.get(uuid=discipline_id)
-        topic_list = Topic.objects.filter(discipline=discipline).order_by('order')
+        topic_list = Topic.objects.filter(discipline=discipline, is_resource=resource_room_only).order_by('order')
         
         return topic_list
-
-
     def dispatch(self, *args, **kwargs):
         return super(TopicList, self).dispatch(*args, **kwargs)
         
@@ -141,10 +151,13 @@ def progress(request, discipline_name):
 
 @login_required
 def topic_progress(request, topic_uuid, class_id):
+    user = request.user
+    students = [user]
     klass = get_object_or_404(Classroom, pk=class_id)
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     discipline = topic.discipline
-    students = klass.students.all().order_by('first_name')    
+    if user.is_superuser:
+        students = klass.students.all().order_by('first_name')
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
 
 @login_required 
@@ -155,9 +168,11 @@ def my_progress(request):
     
     for discipline in Discipline.objects.filter(students__id = request.user.id):
         topics.extend(discipline.topic_set.all())
-    topics.sort(key=lambda topic: topic.order)
-    return render(request, 'mydidata/progress.html', {'students': [student], 'topics': topics,})
     
+    klass = Classroom.objects.filter(students__id = request.user.id).first()
+    topics.sort(key=lambda topic: topic.order)
+
+    return render(request, 'mydidata/progress.html', {'classroom': klass, 'students': [student], 'topics': topics,})
 
 @login_required
 def class_progress(request, class_id):
@@ -486,6 +501,11 @@ def question_cru(request, uuid=None, topic=None):
 
 def discipline_detail(request, uuid=None):
     return HttpResponseRedirect('/mydidata/topics?discipline=' + uuid)
+
+def resource_room_topics(request, uuid=None, resource_room_only = None):
+    r_room = get_object_or_404(ResourceRoom, uuid=uuid)
+    discipline = r_room.topics.all().first().discipline
+    return HttpResponseRedirect('/mydidata/topics?discipline=' + discipline.uuid + '&resource_room_only=' + resource_room_only)
 
 @login_required()
 def define_team(request):

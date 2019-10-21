@@ -2,10 +2,16 @@
 {% block title %}Tópicos{% endblock title %}
 
 {% block content %}
+{%load student_extras%}
     <div id="content-container" class="container p-none">
         <div id="al-container" class="side-p">
             <div id="al-control">
-                <h3 class="ad-mh">Tópicos
+                <h3 class="ad-mh">
+                    {% if topics and not topics.first.is_resource%}
+                        Tópicos
+                    {%else%}
+                        Tópicos de Reforço
+                    {%endif%}
                     <span class="pull-right">
                         <a href=""
                            class="btn btn-link p-r-none">+ Criar Tópico</a>
@@ -21,6 +27,16 @@
                         
                     </li>
                 {% endfor %}
+                {%is_on_resource_room user as is_on_resource%}
+                {% if topics and not topics.first.is_resource%}
+                    {%if is_on_resource %}
+                        {%get_resource_room_url user as rroom_url%}
+                        <a href="{{rroom_url}}"><h4 class="al-name">Reforço</h4></a>
+                    {%endif%}
+                {%else%}
+                    <a href="{{ topics.first.discipline.get_absolute_url }}">Voltar para programa da disciplina</a>
+
+                {%endif%}
             </ul>
             {# Pagination Section #}
         </div>

@@ -52,7 +52,9 @@ class Topic(models.Model, AdminURLMixin):
     topic_content = RichTextUploadingField(blank=True, null=True)
     order = models.IntegerField()
     owner = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    discipline = models.ForeignKey(Discipline, null=True, on_delete=models.DO_NOTHING)
+    discipline = models.ForeignKey(Discipline, null=True, on_delete=models.DO_NOTHING)    
+    is_resource = models.BooleanField(default=False)
+
     class Meta:
         verbose_name_plural = 'Tópicos'
 
@@ -111,6 +113,8 @@ class ResourceRoom(models.Model):
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
     students = models.ManyToManyField(User, null=True)
     topics = models.ManyToManyField(Topic, null=True)
+    class Meta:
+        verbose_name_plural = 'Turmas de Reforço'
 
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
