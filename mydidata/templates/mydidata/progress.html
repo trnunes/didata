@@ -3,6 +3,7 @@
 {% block content %}
     {% load question_extras %}
     {% load answer_extras %}
+    {% load classroom_extras %}
     <div id="content-container" class="container p-none">
 		{% if classroom %}
 			<h1>{{classroom.name}}</h1>
@@ -10,7 +11,18 @@
 		{%endif%}
 		
         {%for topic in topics %}
-            <h2>{{topic.topic_title}}</h2>
+            {% get_close_url classroom topic as close_url %}
+            {% get_open_url classroom topic as open_url %}
+            {% is_topic_closed classroom topic as topic_closed %}
+            
+            {% if topic_closed%}
+                <h2>{{topic.topic_title}} (Fechado)</h2>
+                <h4><a href="{{open_url}}">Abrir</a></h4>
+            {%else%}
+                <h2>{{topic.topic_title}}</h2>
+                <h4><a href="{{close_url}}">Fechar</a></h4>
+            {%endif%}
+            
             <table id="cd-table" class="table table-hover">
                 <tbody>
                     <tr>
@@ -29,10 +41,15 @@
                                     {%for answer in answers%}
                                         {%get_specific_answer answer as specific_answer%}
                                         <td>
-                                            {%if specific_answer.is_correct%}
-                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-ok"></span></a>
+                                            {%if specific_answer.is_sent%}
+                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-send"></span></a>
                                             {%else%}
-                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-remove"></span></a>
+                                                {%if specific_answer.is_correct%}
+                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-ok"></span></a>
+                                                
+                                                 {%else%}
+                                                     <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-remove"></span></a>
+                                                 {%endif%}
                                             {%endif%}
                                         </td>
                                         

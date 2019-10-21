@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Topic, Question, DiscursiveAnswer, Discipline
+from .models import Topic, Question, DiscursiveAnswer, Discipline, Classroom
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -107,31 +107,34 @@ class DiscursiveAnswerForm(forms.ModelForm):
         return file
     
     def clean_answer_text(self):
+        student = self.instance.student
+        classrooms = Classroom.objects.filter(students__id = student.id).all()
         question = self.instance.question
+        topic = question.topic
+        c_list = [classroom for classroom in classrooms if topic in classroom.closed_topics.all()]
+        if c_list:
+            raise ValidationError(_("Questão fechada para envio de respostas!"))
         text = self.cleaned_data.get("answer_text")
         print("TEXTO: ", text)
         if question.text_required and not text:
             raise ValidationError(_("Sua resposta não pode ser em branco! Por favor, escreva a sua reposta na caixa de texto abaixo."))
         return text
 
-
-
-
-
 class SuperuserDiscursiveAnswerForm(forms.ModelForm):
-
+    status = forms.MultipleChoiceField(choices=DiscursiveAnswer.STATUS_CHOICES, widget=forms.CheckboxSelectMultiple()),
     class Meta:
         model = DiscursiveAnswer
         fields = ['answer_text', 'assignment_file']
 
         widgets = {
             'answer_text': forms.CharField(widget=CKEditorUploadingWidget(), label="Resposta", required=False),
+
         }
         labels = {
             'answer_text': 'Resposta Aqui',
         }
 
-        fields += ['feedback', 'is_correct']
+        fields += ['feedback', 'is_correct', 'status']
         widgets['feedback'] = forms.CharField(widget=CKEditorUploadingWidget(), label="Correções",
                                               required=False)
         labels['feedback'] = 'Correções Aqui'

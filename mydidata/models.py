@@ -46,29 +46,6 @@ class Discipline(models.Model, AdminURLMixin):
     def get_absolute_url(self):
         return 'mydidata:discipline_detail', [self.uuid]
 
-class Classroom(models.Model):
-    uuid = ShortUUIDField(unique=True)
-    name = models.CharField(max_length=255)
-    students = models.ManyToManyField(User, null=True)
-    disciplines = models.ManyToManyField(Discipline, null=True)
-    class Meta:
-        verbose_name_plural = 'Turmas'
-
-    @models.permalink
-    def get_absolute_url(self):
-        return 'mydidata:class_progress', [self.id]
-
-    @models.permalink
-    def get_percentage_progress_url(self):
-        return 'mydidata:percentage_progress', [self.id]
-
-    @models.permalink
-    def get_signup_link(self):
-        return 'mydidata:sub_new', [self.id]
-
-    def __str__(self):
-        return u"%s" % self.name
-
 class Topic(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     topic_title = models.CharField(max_length=200)
@@ -93,10 +70,40 @@ class Topic(models.Model, AdminURLMixin):
     @models.permalink
     def get_delete_url(self):
         return 'mydidata:topic_delete', [self.uuid]
+
+    @models.permalink
+    def get_close_url(self, klass):
+        return 'mydidata:topic_close', [self.uuid, klass.id]
     
     def get_ordered_questions(self):
         return self.question_set.all().order_by('index')
         
+class Classroom(models.Model):
+    uuid = ShortUUIDField(unique=True)
+    name = models.CharField(max_length=255)
+    students = models.ManyToManyField(User, null=True)
+    disciplines = models.ManyToManyField(Discipline, null=True)
+    closed_topics = models.ManyToManyField(Topic, null=True)
+    class Meta:
+        verbose_name_plural = 'Turmas'
+
+    @models.permalink
+    def get_absolute_url(self):
+        return 'mydidata:class_progress', [self.id]
+
+    @models.permalink
+    def get_percentage_progress_url(self):
+        return 'mydidata:percentage_progress', [self.id]
+
+    @models.permalink
+    def get_signup_link(self):
+        return 'mydidata:sub_new', [self.id]
+
+    def __str__(self):
+        return u"%s" % self.name
+        
+    def topic_is_closed(self, topic):
+        return topic in self.closed_topics.all()
 
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
@@ -208,17 +215,38 @@ class OverwriteStorage(FileSystemStorage):
         return name
         
 class DiscursiveAnswer(Answer):
+    SENT = 1
+    CORRECT = 2
+    INCORRECT = 3
+    UPDATED = 4
+    STATUS_CHOICES = (
+        (SENT, 'Enviada'),
+        (CORRECT, 'Correta'),
+        (INCORRECT, 'Incorreta'),
+        (UPDATED, 'Reenviada'),
+    )
+    status = models.IntegerField(choices=STATUS_CHOICES, default=SENT)
+
     answer_text = RichTextUploadingField(null=True, blank=True)
     assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage())
     is_correct = models.BooleanField(default=False)
     feedback = RichTextUploadingField(null=True, blank=True)
-    
+
     class Meta:
         verbose_name_plural = 'Respostas Discursivas'
 
     def __str__(self):
         return str(self.question.index)
- 
+    
+    def is_ok(self):
+        return self.status == self.CORRECT
+
+    def is_updated(self):
+        return self.status == self.UPDATED
+
+    def is_sent(self):
+        return self.status == self.SENT
+
     def file_link(self):
          if self.assignment_file:
              return "<a href='%s' target=\"_blank\">Baixar o Arquivo da Resposta</a>" % (self.assignment_file.url,)

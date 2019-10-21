@@ -81,13 +81,24 @@ WSGI_APPLICATION = 'gettingstarted.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mydidata_db',
+        'USER': 'thiago',
+        'PASSWORD': '350817',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
+
+#DATABASES = {
+#    'default': {         
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#    }
+#}
+
 import dj_database_url
 env = os.environ.copy()
 db_url = env.get('DATABASE_URL', False)
@@ -96,9 +107,9 @@ if db_url != False:
     import dj_database_url
     DATABASES['default'] =  dj_database_url.config()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
+print("DATABASES: ", DATABASES)
 # Allow all host headers
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']        
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators

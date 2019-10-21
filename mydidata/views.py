@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from .models import Question, Choice, DiscursiveAnswer, MultipleChoiceAnswer, Topic, Test, Discipline, Classroom
 from django.template import loader
@@ -108,6 +108,26 @@ def index(request):
     }
     return render(request, 'mydidata/index.html', context)
 
+def topic_close(request, topic_uuid, class_id):
+    print("CLASS: ", class_id)
+    print("TOPIC: ", topic_uuid)
+    klass = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    klass.closed_topics.add(topic)
+    klass.save()
+
+    return redirect('mydidata:class_progress', class_id=class_id, )
+
+def topic_open(request, topic_uuid, class_id):
+    print("CLASS: ", class_id)
+    print("TOPIC: ", topic_uuid)
+    klass = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    klass.closed_topics.remove(topic)
+    klass.save()
+
+    return redirect('mydidata:class_progress', class_id=class_id, )
+
 def detail(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     return render(request, 'mydidata/detail.html', {'question': question})
@@ -191,7 +211,11 @@ def feedback(request, answer_id):
         form = SuperuserDiscursiveAnswerForm(request.POST, instance=answer)
 
         form.save()
-
+        if answer.is_correct:
+            answer.status = DiscursiveAnswer.CORRECT
+        else:
+            answer.status = DiscursiveAnswer.INCORRECT
+        answer.save()
         students = classroom.students.all().order_by('first_name');
 
         next_student_found = False
@@ -214,7 +238,7 @@ def feedback(request, answer_id):
             if student.id == answer.student.id and student_index < students.count(): next_student_found = True
             student_index += 1
 
-        return render(request, reverse('mydidata:class_progress', args= {classroom.id,}))
+        return redirect('mydidata:class_progress', class_id=classroom.id)
 
 
     context = {
@@ -231,10 +255,10 @@ def discursive_answer(request, question_uuid):
     question = get_object_or_404(Question, uuid=question_uuid)
     answer = question.answer_set.filter(student=request.user).first()
     if not answer:
-        answer = DiscursiveAnswer(student = request.user, question=question)
+        answer = DiscursiveAnswer(student = request.user, question=question)        
     else:
         answer = answer.discursiveanswer
-        
+        answer.status = DiscursiveAnswer.SENT
     if request.POST:
         
         if request.FILES.get('assignment_file', False):
@@ -242,12 +266,10 @@ def discursive_answer(request, question_uuid):
             request.FILES['assignment_file'].name = answer.get_answer_file_id() + "." +  file_name.split(".")[-1]
         
         answer_form = DiscursiveAnswerForm(request.POST, request.FILES, instance=answer)
-        
+
         if answer_form.is_valid():
-
-        
-            answer_form.save()
-
+            
+            answer_form.save()            
 
             if request.session.get('teams', False):
                 if request.session['teams'].get(str(request.user.id), False):
@@ -273,8 +295,6 @@ def discursive_answer(request, question_uuid):
 
 
                         member_answer = question.answer_set.filter(student=member).first()
-
-
                         
             return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(question.topic.uuid,)))
         else:
@@ -292,6 +312,7 @@ def discursive_answer(request, question_uuid):
             'answer': answer,
             'form': form,
         }
+
 
         return render(request, 'mydidata/answer_cru.html', context)
     

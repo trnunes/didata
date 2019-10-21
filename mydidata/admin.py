@@ -49,7 +49,7 @@ class QuestionAdminForm(forms.ModelForm):
         
 class ClassroomAdmin(admin.ModelAdmin):
     model = Classroom
-    filter_horizontal = ('students', 'disciplines',)
+    filter_horizontal = ('students', 'disciplines', 'closed_topics',)
 
 class DisciplineAdmin(admin.ModelAdmin):
     model = Discipline
