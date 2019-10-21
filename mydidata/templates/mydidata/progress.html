@@ -9,7 +9,7 @@
 			<h1>{{classroom.name}}</h1>
 			<p>Compartilhe esse link com seus alunos para inscrição: https://mydidata.herokuapp.com{{classroom.get_signup_link}} </p>
 		{%endif%}
-		
+		,
         <ul id="al-group" class="strip-list">
             {% for topic in topics %}
             {% get_progress_url classroom topic as progress_url%}
@@ -20,12 +20,12 @@
                     {% is_topic_closed classroom topic as topic_closed %}
                     
                     {% if topic_closed%}
-                        <a href="{{ progress_url }}"><h4 class="al-name">{{ topic.topic_title }}(Fechado)</h4></a>                        
-                        <h4><a href="{{open_url}}">Abrir</a></h4>
+                        <a href="{{ progress_url }}"><h4 class="al-name">{{ topic.topic_title }} (Fechado)</h4></a> |                          
+                        <a href="{{open_url}}">Abrir</a>
                     {%else%}
 
-                        <a href="{{ progress_url }}"><h4 class="al-name">{{ topic.topic_title }}</h4></a>                        
-                        <h4><a href="{{close_url}}">Fechar</a></h4>
+                        <a href="{{ progress_url }}"><h4 class="al-name">{{ topic.topic_title }}</h4></a> |                   
+                        <a href="{{close_url}}">Fechar</a>
                     {%endif%}
 
                     
