@@ -160,6 +160,12 @@ def topic_progress(request, topic_uuid, class_id):
         students = klass.students.all().order_by('first_name')
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
 
+@login_required
+def resource_room_progress(request, uuid):
+    r_room = get_object_or_404(ResourceRoom, uuid=uuid)
+    students = r_room.students.all()
+    topics = r_room.topics.all()    
+    return render(request, 'mydidata/topic_progress.html', {'students': students, 'topics':topics,})
 @login_required 
 def my_progress(request):
     student = request.user

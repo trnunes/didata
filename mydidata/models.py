@@ -116,6 +116,15 @@ class ResourceRoom(models.Model):
     class Meta:
         verbose_name_plural = 'Turmas de Reforço'
 
+    @models.permalink
+    def get_absolute_url(self):
+        return 'mydidata:resource_room_progress', [self.uuid]
+
+    @models.permalink
+    def get_percentage_progress_url(self):
+        return 'mydidata:percentage_progress', [self.id]
+
+
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
     index = models.PositiveSmallIntegerField()
