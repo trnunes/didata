@@ -13,7 +13,11 @@ def is_topic_closed(classroom, topic):
 @register.simple_tag
 def get_open_url(classroom, topic):
 	return reverse('mydidata:topic_open', args= (classroom.id, topic.uuid))
-	
+
 @register.simple_tag
 def get_progress_url(classroom, topic):
 	return reverse('mydidata:topic_progress', args = (classroom.id, topic.uuid))
+
+@register.simple_tag
+def get_assess_url(classroom, topic):
+	return reverse('mydidata:topic_assess', args= (classroom.id, topic.uuid))

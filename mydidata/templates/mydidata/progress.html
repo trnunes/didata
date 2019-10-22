@@ -17,6 +17,7 @@
                 <li class="al-item">
                     {% get_close_url classroom topic as close_url %}
                     {% get_open_url classroom topic as open_url %}
+                    {% get_assess_url classroom topic as assess_url %}
                     {% is_topic_closed classroom topic as topic_closed %}
                     {% if topic_closed%}
                         <a href="{{ progress_url }}"><h4 class="al-name">{{ topic.topic_title }} (Fechado)</h4></a> |                          
@@ -26,6 +27,7 @@
                         <a href="{{ progress_url }}"><h4 class="al-name">{{ topic.topic_title }}</h4></a> |                   
                         <a href="{{close_url}}">Fechar</a>
                     {%endif%}
+                    | <a href="{{assess_url}}">Corrigir</a>
                     
                 </li>
             {% endfor %}

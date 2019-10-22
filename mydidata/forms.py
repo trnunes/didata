@@ -134,11 +134,11 @@ class SuperuserDiscursiveAnswerForm(forms.ModelForm):
             'answer_text': 'Resposta Aqui',
         }
 
-        fields += ['feedback', 'is_correct', 'status']
+        fields += ['feedback', 'status']
         widgets['feedback'] = forms.CharField(widget=CKEditorUploadingWidget(), label="Correções",
                                               required=False)
         labels['feedback'] = 'Correções Aqui'
-        labels['is_correct'] = "Está Correta?"
+        
 
     def is_valid(self):
         return True;

@@ -196,15 +196,41 @@ class Test(models.Model):
     difficulty_level = models.PositiveSmallIntegerField(choices=DIFFICULTY_LIST)
   
 class Answer(models.Model):
+    SENT = 1
+    CORRECT = 2
+    INCORRECT = 3
+    UPDATED = 4
+    STATUS_CHOICES = (
+        (SENT, 'Enviada'),
+        (CORRECT, 'Correta'),
+        (INCORRECT, 'Incorreta'),
+        (UPDATED, 'Reenviada'),
+    )
+    status = models.IntegerField(choices=STATUS_CHOICES, default=SENT)
+
     question = models.ForeignKey(Question, on_delete=models.DO_NOTHING)
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING)
     
     class Meta:
         verbose_name_plural = 'Respostas'
-    def is_correct(self):
-        return False
-    
+        
+    def correct(self):
+        self.status = self.CORRECT
+        self.save()
+
+    def is_correct(self):        
+        self.status == self.CORRECT
+
+    def is_ok(self):
+        return self.status == self.CORRECT
+
+    def is_updated(self):
+        return self.status == self.UPDATED
+
+    def is_sent(self):
+        return self.status == self.SENT
+
     def get_answer_file_id(self):
         return self.student.first_name + "__" + self.student.last_name + "__" + str(self.student.id) + "__" + self.question.uuid
 
@@ -214,13 +240,15 @@ class MultipleChoiceAnswer(Answer):
     choice = models.ForeignKey(Choice, null=True, on_delete=models.DO_NOTHING)
     class Meta:
         verbose_name_plural = 'Respostas de Múltipla Escolha'
-        
-    def is_correct(self):
+
+    def correct(self):
         correct_choice = self.question.choice_set.filter(is_correct=True)[0]
         if(correct_choice == self.choice):
-            return True
+            self.status = self.CORRECT
         else:
-            return False
+            self.status = self.INCORRECT
+        self.save()
+
     
     @models.permalink
     def get_detail_url(self):
@@ -237,21 +265,8 @@ class OverwriteStorage(FileSystemStorage):
         return name
         
 class DiscursiveAnswer(Answer):
-    SENT = 1
-    CORRECT = 2
-    INCORRECT = 3
-    UPDATED = 4
-    STATUS_CHOICES = (
-        (SENT, 'Enviada'),
-        (CORRECT, 'Correta'),
-        (INCORRECT, 'Incorreta'),
-        (UPDATED, 'Reenviada'),
-    )
-    status = models.IntegerField(choices=STATUS_CHOICES, default=SENT)
-
     answer_text = RichTextUploadingField(null=True, blank=True)
     assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage())
-    is_correct = models.BooleanField(default=False)
     feedback = RichTextUploadingField(null=True, blank=True)
 
     class Meta:
@@ -259,15 +274,6 @@ class DiscursiveAnswer(Answer):
 
     def __str__(self):
         return str(self.question.index)
-    
-    def is_ok(self):
-        return self.status == self.CORRECT
-
-    def is_updated(self):
-        return self.status == self.UPDATED
-
-    def is_sent(self):
-        return self.status == self.SENT
 
     def file_link(self):
          if self.assignment_file:

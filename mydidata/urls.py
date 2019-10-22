@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^topic/new/$',views.topic_cru, name='topic_new'),
     url(r'^topic/close/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_close, name='topic_close'),
     url(r'^topic/open/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_open, name='topic_open'),
+    url(r'^topic/assess/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_assess, name='topic_assess'),
     url(r'^topic/progress/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_progress, name='topic_progress'),
     url(r'^edit/(?P<uuid>[\w-]+)/$', views.topic_cru, name='topic_update'),
     url(r'^question_detail/$', views.question_detail, name="question_detail"),

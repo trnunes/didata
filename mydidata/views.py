@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from .models import Question, Choice, DiscursiveAnswer, MultipleChoiceAnswer, Topic, Test, Discipline, Classroom, ResourceRoom
+from .models import Question, Choice, DiscursiveAnswer, MultipleChoiceAnswer, Topic, Test, Discipline, Classroom, ResourceRoom, Answer
 from django.template import loader
 from django.http import Http404
 from django.urls import reverse
@@ -138,6 +138,30 @@ def topic_open(request, topic_uuid, class_id):
 
     return redirect('mydidata:class_progress', class_id=class_id, )
 
+def topic_assess(request, topic_uuid, class_id):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    discipline_list = classroom.disciplines.all()
+    topics = []
+    student_list = classroom.students.all().order_by('first_name');
+    
+    for discipline in discipline_list:
+        topics.extend(discipline.topic_set.all())
+    topics.sort(key=lambda topic: topic.order)
+    
+    for student in student_list:
+        for q in topic.question_set.all():
+            answers = Answer.objects.filter(student=student, question=q).all()            
+            for a in answers:
+                a.correct()
+                a.save()
+
+                print(a.is_ok(), " - ", a.status == Answer.CORRECT)
+            
+
+
+    return redirect('mydidata:class_progress', class_id=class_id, )
+
 def detail(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     return render(request, 'mydidata/detail.html', {'question': question})
@@ -223,10 +247,6 @@ def discursive_answer_detail(request, answer_id):
 
     return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, })
 
-
-
-
-
 @login_required()
 def multiple_choice_answer_detail(request, answer_id):
     answer = MultipleChoiceAnswer.objects.get(pk=answer_id)
@@ -243,11 +263,7 @@ def feedback(request, answer_id):
         form = SuperuserDiscursiveAnswerForm(request.POST, instance=answer)
 
         form.save()
-        if answer.is_correct:
-            answer.status = DiscursiveAnswer.CORRECT
-        else:
-            answer.status = DiscursiveAnswer.INCORRECT
-        answer.save()
+        
         students = classroom.students.all().order_by('first_name');
 
         next_student_found = False

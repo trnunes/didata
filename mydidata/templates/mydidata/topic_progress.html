@@ -51,7 +51,7 @@
                                             {%if specific_answer.is_sent%}
                                                  <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-send"></span></a>
                                             {%else%}
-                                                {%if specific_answer.is_correct%}
+                                                {%if specific_answer.is_ok%}
                                                  <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-ok"></span></a>
                                                 
                                                  {%else%}
