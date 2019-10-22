@@ -14,14 +14,18 @@
             {% get_close_url classroom topic as close_url %}
             {% get_open_url classroom topic as open_url %}
             {% is_topic_closed classroom topic as topic_closed %}
-            
-            {% if topic_closed%}
-                <h2>{{topic.topic_title}} (Fechado)</h2>
-                <h4><a href="{{open_url}}">Abrir</a></h4>
+            {% if user.is_superuser%}
+                {% if topic_closed%}
+                    <h2>{{topic.topic_title}} (Fechado)</h2>
+                    <h4><a href="{{open_url}}">Abrir</a></h4>
+                {%else%}
+                    <h2>{{topic.topic_title}}</h2>
+                    <h4><a href="{{close_url}}">Fechar</a></h4>
+                {%endif%}
             {%else%}
                 <h2>{{topic.topic_title}}</h2>
-                <h4><a href="{{close_url}}">Fechar</a></h4>
             {%endif%}
+
             
             <table id="cd-table" class="table table-hover">
                 <tbody>

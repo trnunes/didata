@@ -170,9 +170,13 @@ def my_progress(request):
         topics.extend(discipline.topic_set.all())
     
     klass = Classroom.objects.filter(students__id = request.user.id).first()
+    r_klass = ResourceRoom.objects.filter(students__id = request.user.id).first()
+    print("ResourceClass: ", r_klass)
+    print("TOPICS: ", r_klass.topics.all())
+    topics.extend(r_klass.topics.all())
     topics.sort(key=lambda topic: topic.order)
-
-    return render(request, 'mydidata/progress.html', {'classroom': klass, 'students': [student], 'topics': topics,})
+    return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': [student] , 'topics':topics,})
+    
 
 @login_required
 def class_progress(request, class_id):
