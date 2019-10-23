@@ -83,6 +83,17 @@ class TopicAdmin(admin.ModelAdmin):
     inlines = [
         QuestionInline,
     ]
+class TestAdminForm(forms.ModelForm):    
+    class Meta:
+        model = Test
+        fields = '__all__'
+
+class TestAdmin(admin.ModelAdmin):
+    form = TestAdminForm
+    show_change_link = True
+    inlines = [
+        QuestionInline,
+    ]
     
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Choice)
@@ -92,7 +103,8 @@ admin.site.register(Discipline, DisciplineAdmin)
 admin.site.register(Classroom, ClassroomAdmin)
 admin.site.register(ResourceRoom, ResourceRoomAdmin)
 admin.site.register(Topic, TopicAdmin)
-admin.site.register(Test)
+admin.site.register(Test, TestAdmin)
+
 
 
 # Register your models here.

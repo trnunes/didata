@@ -1,0 +1,74 @@
+{% extends 'mydidata/base.html' %}
+
+{% block content %}
+    {% load question_extras %}
+    {% load answer_extras %}
+    {% load classroom_extras %}
+    <div id="content-container" class="container p-none">
+		{% if classroom %}
+			<h1>{{classroom.name}}</h1>
+			<p>Compartilhe esse link com seus alunos para inscrição: https://mydidata.herokuapp.com{{classroom.get_signup_link}} </p>
+		{%endif%}
+		
+        {%for test in tests %}
+            {%if classroom%}
+                {% get_close_url classroom topic as close_url %}
+                {% get_open_url classroom topic as open_url %}
+                {% is_topic_closed classroom topic as topic_closed %}
+            {%endif%}
+
+            {% if user.is_superuser and classroom%}
+                {% if topic_closed%}
+                    <h2>{{topic.topic_title}} (Fechado)</h2>
+                    <h4><a href="{{open_url}}">Abrir</a></h4>
+                {%else%}
+                    <h2>{{topic.topic_title}}</h2>
+                    <h4><a href="{{close_url}}">Fechar</a></h4>
+                {%endif%}
+            {%else%}
+                <h2>{{topic.topic_title}}</h2>
+            {%endif%}
+
+            
+            <table id="cd-table" class="table table-hover">
+                <tbody>
+                    <tr>
+                        <th>Aluno</th>
+                        {% for question in topic.question_set.all %}
+                            <th>Question {{ forloop.counter }}</th>
+                        {% endfor %}
+                    </tr>
+                    {% for student in students%}
+                        <tr>
+                            <td>{{student.first_name}}</td>
+                            
+                            {%for question in topic.get_ordered_questions %}
+                                {% get_answers question student as answers%}
+                                {%if answers%}
+                                    {%for answer in answers%}
+                                        {%get_specific_answer answer as specific_answer%}
+                                        <td>
+                                            {%if specific_answer.is_sent%}
+                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-send"></span></a>
+                                            {%else%}
+                                                {%if specific_answer.is_ok%}
+                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-ok"></span></a>
+                                                
+                                                 {%else%}
+                                                     <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-remove"></span></a>
+                                                 {%endif%}
+                                            {%endif%}
+                                        </td>
+                                        
+                                    {%endfor%}
+                                {%else%}
+                                    <td><span class="badge">?</span></a><br></td>
+                                {%endif%}
+                            {%endfor%}
+                        </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        {%endfor%}
+    </div>
+{% endblock %}

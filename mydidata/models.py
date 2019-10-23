@@ -54,6 +54,7 @@ class Topic(models.Model, AdminURLMixin):
     owner = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     discipline = models.ForeignKey(Discipline, null=True, on_delete=models.DO_NOTHING)    
     is_resource = models.BooleanField(default=False)
+    is_assessment = models.BooleanField(default=False)
     weight = models.PositiveSmallIntegerField(default=1)
 
     class Meta:
@@ -80,13 +81,44 @@ class Topic(models.Model, AdminURLMixin):
     
     def get_ordered_questions(self):
         return self.question_set.all().order_by('index')
-        
+
+class Test(models.Model, AdminURLMixin):
+    uuid = ShortUUIDField(unique=True)
+    title = models.CharField(max_length=200, default="test")
+    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING)
+
+    class Meta:
+        verbose_name_plural = 'Avaliações'
+
+    def __str__(self):
+        return u"%s" % self.title
+
+    @models.permalink
+    def get_absolute_url(self):
+        return 'mydidata:test_detail', [self.uuid]
+
+    @models.permalink
+    def get_update_url(self):
+        return 'mydidata:test_update', [self.uuid]
+
+    @models.permalink
+    def get_delete_url(self):
+        return 'mydidata:test_delete', [self.uuid]
+
+    @models.permalink
+    def get_close_url(self, klass):
+        return 'mydidata:test_close', [self.uuid, klass.id]
+    
+    def get_ordered_questions(self):
+        return self.question_set.all().order_by('index')
+
 class Classroom(models.Model):
     uuid = ShortUUIDField(unique=True)
     name = models.CharField(max_length=255)
     students = models.ManyToManyField(User, null=True)
     disciplines = models.ManyToManyField(Discipline, null=True)
     closed_topics = models.ManyToManyField(Topic, null=True)
+    closed_tests = models.ManyToManyField(Test, null=True)
     class Meta:
         verbose_name_plural = 'Turmas'
 
@@ -112,6 +144,9 @@ class Classroom(models.Model):
     def topic_is_closed(self, topic):
         return topic in self.closed_topics.all()
 
+    def test_is_closed(self, test):
+        return test in self.closed_tests.all()
+
 class ResourceRoom(models.Model):
     uuid = ShortUUIDField(unique=True)
     name = models.CharField(max_length=255)
@@ -128,7 +163,6 @@ class ResourceRoom(models.Model):
     @models.permalink
     def get_percentage_progress_url(self):
         return 'mydidata:percentage_progress', [self.id]
-
 
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
@@ -152,6 +186,7 @@ class Question(models.Model):
     )
     question_type = models.PositiveSmallIntegerField(choices=TYPE_LIST)
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING)
+    test = models.ForeignKey(Test, on_delete=models.DO_NOTHING, null=True)
     class Meta:
         verbose_name_plural = 'Questões'
 
@@ -176,7 +211,10 @@ class Question(models.Model):
             return 'mydidata:discursive_answer', [self.uuid]
         else:
             return 'mydidata:multiple_choice_answer', [self.uuid]
-
+    
+    @models.permalink
+    def get_test_url(self):
+        return 'mydidata:test_for', [self.uuid]
       
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
@@ -188,19 +226,6 @@ class Choice(models.Model):
     def __str__(self):
         return u'%s' % self.choice_text
 
-class Test(models.Model):
-    uuid = ShortUUIDField(unique=True)
-    student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    questions = models.ManyToManyField(Question)
-    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING)
-    DIFFICULTY_LIST = (
-        (1, 'Difícil'),
-        (2, 'Médio'),
-        (3, 'Fácil'),
-        (4, 'Misto'),
-    )
-    difficulty_level = models.PositiveSmallIntegerField(choices=DIFFICULTY_LIST)
-  
 class Answer(models.Model):
     SENT = 1
     CORRECT = 2
@@ -292,4 +317,3 @@ class DiscursiveAnswer(Answer):
     def get_detail_url(self):
         return "mydidata:discursive_answer_detail", [self.id]
 
-    

@@ -1,0 +1,28 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Avaliações{% endblock title %}
+
+{% block content %}
+{%load student_extras%}
+    <div id="content-container" class="container p-none">
+        <div id="al-container" class="side-p">
+            <div id="al-control">
+                <h3 class="ad-mh">
+                    
+                    Avaliações
+                    
+                    
+                </h3>
+                {# Account Search Form #}
+            </div>
+            {# List of Tests #}
+            <ul id="al-group" class="strip-list">
+                {% for test in tests %}
+                    <li class="al-item">
+                        <a href="{{ test.get_absolute_url }}"><h4 class="al-name">{{ test.title }}</h4></a>
+                    </li>
+                {% endfor %}
+            </ul>
+            {# Pagination Section #}
+        </div>
+    </div>
+{% endblock content %}

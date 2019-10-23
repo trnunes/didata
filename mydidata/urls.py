@@ -1,7 +1,7 @@
 from django.conf.urls import url, include
 from mydidata import views
 from django.contrib.auth import views as auth_views
-from mydidata.views import HomePage, TopicList, DisciplineList, ClassList, ResourceRoomList
+from mydidata.views import HomePage, TopicList, DisciplineList, ClassList, ResourceRoomList, TestList
 
 app_name = 'mydidata'
 urlpatterns = [
@@ -24,7 +24,18 @@ urlpatterns = [
     url(r'^topic/assess/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_assess, name='topic_assess'),
     url(r'^topic/grades/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.calculate_grades, name='calculate_grades'),
     url(r'^topic/grades/(?P<class_id>[0-9]+)/$',views.calculate_grades, name='calculate_grades'),
-    url(r'^topic/progress/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_progress, name='topic_progress'),
+    
+    url(r'^tests$', TestList.as_view(), name="tests"),
+    url(r'^test_detail/(?P<uuid>[\w-]+)/$', views.test_detail, name='test_detail'),
+    url(r'^test/progress/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_progress, name='test_progress'),
+    url(r'^test/close/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_close, name='test_close'),
+    url(r'^test/open/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_open, name='test_open'),
+    url(r'^test/assess/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_assess, name='test_assess'),
+    url(r'^test/grades/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_calculate_grades, name='test_calculate_grades'),
+    url(r'^test/grades/(?P<class_id>[0-9]+)/$',views.calculate_grades, name='test_calculate_grades'),
+    url(r'^test/progress/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_progress, name='test_progress'),
+    url(r'^test_for/(?P<uuid>[\w-]+)/$',views.test_for, name='test_for'),
+
     url(r'^edit/(?P<uuid>[\w-]+)/$', views.topic_cru, name='topic_update'),
     url(r'^question_detail/$', views.question_detail, name="question_detail"),
     url(r'^question/new/$',views.question_cru, name='question_new'),
@@ -39,7 +50,7 @@ urlpatterns = [
     url(r'^percentage_progress/(?P<class_id>[\w-]+)/$',views.percentage_progress, name='percentage_progress'),
     url(r'^my_progress/$',views.my_progress, name='my_progress'),
     url(r'^class_progress/(?P<class_id>[\w-]+)/$',views.class_progress, name='class_progress'),
-    url(r'^resource_room_progress/(?P<uuid>[\w-]+)/$',views.resource_room_progress, name='resource_room_progress'),
+    url(r'^resource_room_progress/(?P<uuid>[\w-]+)/$',views.resource_room_progress, name='resource_room_progress'),    
     url(r'^define_team/$',views.define_team, name='define_team'),
     
 ]

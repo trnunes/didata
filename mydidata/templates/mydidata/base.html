@@ -61,12 +61,16 @@
                                        class="p-r-none">Disciplinas</a></li>
                                 <li><a href="{% url 'mydidata:my_progress' %}"
                                        class="p-r-none">Meu Progresso</a></li>
+                                <li><a href="{% url 'mydidata:tests' %}"
+                                       class="p-r-none">Avaliações</a></li>
 								{% if user.is_superuser%}
 									<li><a href="{% url 'mydidata:classes' %}"
 	                                   class="p-r-none">Turmas</a></li>
                                     <li><a href="{% url 'mydidata:resource_rooms' %}"
                                        class="p-r-none">Turmas de Reforço</a></li>
+                                    
 								{% endif %}
+
                             {% else %}
                                 <li><a href="/mydidata/login/">Login</a></li>
 								<li><a href="{% url 'mydidata:disciplines' %}"

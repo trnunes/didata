@@ -48,6 +48,17 @@ class ResourceRoomList(ListView):
     def dispatch(self, *args, **kwargs):
         return super(ResourceRoomList, self).dispatch(*args, **kwargs)
 
+class TestList(ListView):
+    model = Test
+    template_name = 'mydidata/test_list.html'
+    context_object_name = 'tests'
+
+    def get_queryset(self):        
+        return Test.objects.all().order_by('title')
+    
+    def dispatch(self, *args, **kwargs):
+        return super(TestList, self).dispatch(*args, **kwargs)
+
 class TopicList(ListView):
     model = Topic
     template_name = 'mydidata/topic_list.html'
@@ -57,7 +68,7 @@ class TopicList(ListView):
         discipline_id = self.request.GET.get('discipline', None)
         resource_room_only = self.request.GET.get('resource_room_only', False) == "True"
         discipline = Discipline.objects.get(uuid=discipline_id)
-        topic_list = Topic.objects.filter(discipline=discipline, is_resource=resource_room_only).order_by('order')
+        topic_list = Topic.objects.filter(discipline=discipline, is_resource=resource_room_only, is_assessment=False).order_by('order')
         
         return topic_list
     def dispatch(self, *args, **kwargs):
@@ -162,6 +173,53 @@ def topic_assess(request, topic_uuid, class_id):
 
     return redirect('mydidata:class_progress', class_id=class_id, )
 
+def test_for(request, uuid, class_id):
+    return render()
+
+def test_close(request, uuid, class_id):
+    print("CLASS: ", class_id)
+    print("TOPIC: ", topic_uuid)
+    klass = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    klass.closed_topics.add(topic)
+    klass.save()
+
+    return redirect('mydidata:class_progress', class_id=class_id, )
+
+def test_open(request, uuid, class_id):
+    print("CLASS: ", class_id)
+    print("TOPIC: ", topic_uuid)
+    klass = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    klass.closed_topics.remove(topic)
+    klass.save()
+
+    return redirect('mydidata:class_progress', class_id=class_id, )
+
+def test_assess(request, topic_uuid, class_id):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    discipline_list = classroom.disciplines.all()
+    topics = []
+    student_list = classroom.students.all().order_by('first_name');
+    
+    for discipline in discipline_list:
+        topics.extend(discipline.topic_set.all())
+    topics.sort(key=lambda topic: topic.order)
+    
+    for student in student_list:
+        for q in topic.question_set.all():
+            answers = Answer.objects.filter(student=student, question=q).all()            
+            for a in answers:
+                a.correct()
+                a.save()
+
+                print(a.is_ok(), " - ", a.status == Answer.CORRECT)
+            
+
+
+    return redirect('mydidata:class_progress', class_id=class_id, )
+
 def detail(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     return render(request, 'mydidata/detail.html', {'question': question})
@@ -185,17 +243,27 @@ def topic_progress(request, topic_uuid, class_id):
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
 
 @login_required
+def test_progress(request, uuid, class_id):
+    user = request.user
+    students = [user]
+    klass = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    discipline = topic.discipline
+    if user.is_superuser:
+        students = klass.students.all().order_by('first_name')
+    return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
+
+@login_required
 def resource_room_progress(request, uuid):
     r_room = get_object_or_404(ResourceRoom, uuid=uuid)
     students = r_room.students.all()
     topics = r_room.topics.all()    
     return render(request, 'mydidata/topic_progress.html', {'students': students, 'topics':topics,})
+
 @login_required 
 def my_progress(request):
     student = request.user
     topics = []
-
-    
     for discipline in Discipline.objects.filter(students__id = request.user.id):
         topics.extend(discipline.topic_set.all())
     
@@ -277,6 +345,39 @@ def calculate_grades(request, class_id, topic_uuid=None):
        
     return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_grade})
 
+@login_required
+def test_calculate_grades(request, class_id, uuid=None):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    if topic_uuid:
+        topics = [get_object_or_404(Topic, uuid=topic_uuid)]
+    else:
+        discipline = classroom.disciplines.all().first()
+        topics = classroom.closed_topics.all()
+    
+    student_list = classroom.students.all().order_by('first_name')    
+    student_by_topic_grade = {}
+    for student in student_list:
+        student_by_topic_grade[student] = []
+        sum_topic_weight = 0
+        final_grade = 0
+
+        for topic in topics:
+            sum_grades = 0
+            sum_weights = 0
+            sum_topic_weight += topic.weight
+
+            for q in topic.question_set.all():
+                answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
+                if answer and answer.is_ok(): sum_grades += q.weight
+                sum_weights += q.weight
+            wavg = 0
+            if sum_weights: wavg = sum_grades/sum_weights
+            final_grade += wavg * topic.weight
+            student_by_topic_grade[student].append([topic,  "{:2.1f}".format(wavg*10)])
+        if sum_topic_weight: student_by_topic_grade[student].insert(0,["Nota", "{:2.1f}".format((final_grade/sum_topic_weight)*10)])
+
+       
+    return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_grade})
 
 
 @login_required()
@@ -454,7 +555,16 @@ def topic_detail(request, uuid):
         'questions': questions,
     }
     return render(request, 'mydidata/topic_detail.html', context)
-    
+
+def test_detail(request, uuid):
+    test = get_object_or_404(Test, uuid=uuid)
+    questions = Question.objects.filter(test=test).order_by('index')
+
+    context = {
+        'questions': questions,
+    }
+    return render(request, 'mydidata/test_detail.html', context)
+
 @login_required()
 def test_new(request, topic_id):
     
