@@ -15,18 +15,21 @@
                 <tbody>
                     <tr>
                         <th>Aluno</th>
+                        <th>Nota</th>
+                        
                         {%for topic in topics %}                        
                             <th>{{topic.topic_title}}</th>
                         {%endfor%}
                     </tr>
                     {% for s in topic_dict.keys%}
+                        {% get_topic_percent topic_dict s as percents%}                                            
                         <tr>
                         <td>{{s.first_name}}&nbsp{{s.last_name}}</td>
-                        {% get_topic_percent topic_dict s as percents%}                    
+                        
                         {% for t_p in percents%}
                             {% get_topic t_p  as topic%}
                             {% get_percent t_p  as percent%}                            
-                            <td>{{percent}}%</td>
+                            <td>{{percent}}</td>
                         {%endfor%}
                         </tr>
                     {%endfor%}

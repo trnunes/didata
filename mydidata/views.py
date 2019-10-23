@@ -231,15 +231,53 @@ def percentage_progress(request, class_id):
         topics.extend(discipline.topic_set.all())
     topics.sort(key=lambda topic: topic.order)
     student_by_topic_percentage = {}
+    student_by_topic_grade = {}
     for student in student_list:
         student_by_topic_percentage[student] = []
         for topic in topics:
             answers = [DiscursiveAnswer.objects.filter(student=student, question=q).first() for q in topic.question_set.all()]
             answers = [a for a in answers if a]
-            percentage = len(answers)/len(topic.question_set.all()) if len(topic.question_set.all()) else 0
-            student_by_topic_percentage[student].append([topic,  "{:2.1f}".format(percentage*100)])
+            percentage = len(answers)/len(topic.question_set.all()) if len(topic.question_set.all()) else 0            
+            student_by_topic_percentage[student].append([topic,  "{:2.1f}%".format(percentage*100)])
+
        
     return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_percentage})
+
+@login_required
+def calculate_grades(request, class_id, topic_uuid=None):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    if topic_uuid:
+        topics = [get_object_or_404(Topic, uuid=topic_uuid)]
+    else:
+        discipline = classroom.disciplines.all().first()
+        topics = classroom.closed_topics.all()
+    
+    student_list = classroom.students.all().order_by('first_name')    
+    student_by_topic_grade = {}
+    for student in student_list:
+        student_by_topic_grade[student] = []
+        sum_topic_weight = 0
+        final_grade = 0
+
+        for topic in topics:
+            sum_grades = 0
+            sum_weights = 0
+            sum_topic_weight += topic.weight
+
+            for q in topic.question_set.all():
+                answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
+                if answer and answer.is_ok(): sum_grades += q.weight
+                sum_weights += q.weight
+            wavg = 0
+            if sum_weights: wavg = sum_grades/sum_weights
+            final_grade += wavg * topic.weight
+            student_by_topic_grade[student].append([topic,  "{:2.1f}".format(wavg*10)])
+        if sum_topic_weight: student_by_topic_grade[student].insert(0,["Nota", "{:2.1f}".format((final_grade/sum_topic_weight)*10)])
+
+       
+    return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_grade})
+
+
 
 @login_required()
 def discursive_answer_detail(request, answer_id):

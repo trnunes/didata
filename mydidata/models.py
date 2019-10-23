@@ -54,6 +54,7 @@ class Topic(models.Model, AdminURLMixin):
     owner = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     discipline = models.ForeignKey(Discipline, null=True, on_delete=models.DO_NOTHING)    
     is_resource = models.BooleanField(default=False)
+    weight = models.PositiveSmallIntegerField(default=1)
 
     class Meta:
         verbose_name_plural = 'Tópicos'
@@ -98,6 +99,10 @@ class Classroom(models.Model):
         return 'mydidata:percentage_progress', [self.id]
 
     @models.permalink
+    def get_grades_url(self):
+        return 'mydidata:calculate_grades', [self.id]
+
+    @models.permalink
     def get_signup_link(self):
         return 'mydidata:sub_new', [self.id]
 
@@ -132,6 +137,7 @@ class Question(models.Model):
     is_discursive = models.BooleanField(default=False)
     file_types_accepted = models.CharField(max_length=255, verbose_name=_("Types"), null=True, blank="True")
     text_required = models.BooleanField(default=False)
+    weight = models.PositiveSmallIntegerField(default=1)
 
     DIFFICULTY_LIST = (
         (1, 'Difícil'),
@@ -150,7 +156,7 @@ class Question(models.Model):
         verbose_name_plural = 'Questões'
 
     def __str__(self):
-        return u'%s' % self.question_text
+        return u'%s ...' % self.question_text[0:100]
 
     @models.permalink
     def get_absolute_url(self):
@@ -214,7 +220,7 @@ class Answer(models.Model):
     
     class Meta:
         verbose_name_plural = 'Respostas'
-        
+
     def correct(self):
         self.status = self.CORRECT
         self.save()

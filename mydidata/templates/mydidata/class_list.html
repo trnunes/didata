@@ -1,6 +1,7 @@
 {% extends 'mydidata/base.html' %}
 {% block title %}Tópicos{% endblock title %}
 
+
 {% block content %}
     <div id="content-container" class="container p-none">
         <div id="al-container" class="side-p">
@@ -22,6 +23,7 @@
                         |
                         &nbsp
                         <a style="color: #3371b7;" href="{{ classroom.get_percentage_progress_url }}">Ver progresso(%)</a>
+                        | <a href="{{ classroom.get_grades_url }}">Notas para Tópicos Fechados</a>
                     </li>
                 {% endfor %}
             </ul>
