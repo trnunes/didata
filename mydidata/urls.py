@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^resource_rooms$', ResourceRoomList.as_view(), name="resource_rooms"),
     url(r'^disciplines/$', DisciplineList.as_view(), name="disciplines"),
     url(r'^topic_detail/(?P<uuid>[\w-]+)/$', views.topic_detail, name='topic_detail'),
+    url(r'^topic_progress/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$', views.topic_progress, name='topic_progress'),
     url(r'^discipline_detail/(?P<uuid>[\w-]+)/$', views.discipline_detail, name='discipline_detail'),
     url(r'^resource_room_topics/(?P<uuid>[\w-]+)/(?P<resource_room_only>[\w-]+)$', views.resource_room_topics, name='resource_room_topics'),    
     url(r'^topic/new/$',views.topic_cru, name='topic_new'),
