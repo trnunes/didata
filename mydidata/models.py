@@ -117,8 +117,8 @@ class Classroom(models.Model):
     name = models.CharField(max_length=255)
     students = models.ManyToManyField(User, null=True)
     disciplines = models.ManyToManyField(Discipline, null=True)
-    closed_topics = models.ManyToManyField(Topic, null=True)
-    closed_tests = models.ManyToManyField(Test, null=True)
+    closed_topics = models.ManyToManyField(Topic, null=True, blank=True)
+    closed_tests = models.ManyToManyField(Test, null=True, blank=True)
     class Meta:
         verbose_name_plural = 'Turmas'
 
