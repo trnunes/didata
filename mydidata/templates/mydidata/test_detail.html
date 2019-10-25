@@ -1,8 +1,11 @@
 {% extends 'mydidata/base.html' %}
-
+{%load classroom_extras}
 {% block content %}
     <div id="content-container" class="container p-none">
         {# List Questions #}
+        {%is_test_closed classroom test%}
+            <a href={{}}>Resultados disponíveis aqui!</a>        
+        {%endif%}
         <div id="cd-container" class="ad-container">
             <div class="ad-headers">
                 <h4 class="ad-mh m-none">Questões</h4>
@@ -14,6 +17,7 @@
                         {% for question in questions %}
                             {% include 'mydidata/question_item_view.html' %}
                         {% endfor %}
+
                     </tbody>
                 </table>
             </div>

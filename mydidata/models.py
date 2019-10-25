@@ -185,8 +185,8 @@ class Question(models.Model):
         (3, "Prova")
     )
     question_type = models.PositiveSmallIntegerField(choices=TYPE_LIST)
-    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING)
-    test = models.ForeignKey(Test, on_delete=models.DO_NOTHING, null=True)
+    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, null=True, blank=True)
+    test = models.ForeignKey(Test, on_delete=models.DO_NOTHING, null=True, blank=True)
     class Meta:
         verbose_name_plural = 'Questões'
 

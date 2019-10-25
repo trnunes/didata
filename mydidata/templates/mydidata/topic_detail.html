@@ -19,6 +19,9 @@
                         {% for question in questions %}
                             {% include 'mydidata/question_item_view.html' %}
                         {% endfor %}
+                        {%if topic.test_enabled%}
+                            <tr><a href="{{topic.test_enabled.get_absolute_url}}">Fazer Avaliação</a></tr>
+                        {%endif%}
                     </tbody>
                 </table>
             </div>

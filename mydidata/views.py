@@ -53,8 +53,13 @@ class TestList(ListView):
     template_name = 'mydidata/test_list.html'
     context_object_name = 'tests'
 
-    def get_queryset(self):        
-        return Test.objects.all().order_by('title')
+    def get_queryset(self):
+    	user = self.request.user
+    	tests = []
+    	if user.is_superuser:
+    		tests = Test.objects.all().order_by('title')
+
+        return tests
     
     def dispatch(self, *args, **kwargs):
         return super(TestList, self).dispatch(*args, **kwargs)
@@ -269,9 +274,8 @@ def my_progress(request):
     
     klass = Classroom.objects.filter(students__id = request.user.id).first()
     r_klass = ResourceRoom.objects.filter(students__id = request.user.id).first()
-    print("ResourceClass: ", r_klass)
-    print("TOPICS: ", r_klass.topics.all())
-    topics.extend(r_klass.topics.all())
+    if r_klass:
+    	topics.extend(r_klass.topics.all())
     topics.sort(key=lambda topic: topic.order)
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': [student] , 'topics':topics,})
     
