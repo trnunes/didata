@@ -7,16 +7,8 @@
     <td class="con-cntrl">
         {# Question Edit Link #}
         
-        {%if test%}
-            <a class="pen"
-           href="{% url 'mydidata:answer_test' question.uuid test.uuid%}"></a>
-        
-        
-        {%else%}
             <a class="pen"
                href="{{ question.get_answer_url }}"></a>
-        
-        {%endif%}
         
     </td>
     

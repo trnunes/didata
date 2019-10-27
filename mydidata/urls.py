@@ -32,8 +32,6 @@ urlpatterns = [
     url(r'^test/close/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_close, name='test_close'),
     url(r'^test/open/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_open, name='test_open'),
     url(r'^test/assess/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_assess, name='test_assess'),
-    url(r'^test/grades/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_calculate_grades, name='test_calculate_grades'),
-    url(r'^test/grades/(?P<class_id>[0-9]+)/$',views.calculate_grades, name='test_calculate_grades'),
     url(r'^test/progress/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_progress, name='test_progress'),
     url(r'^test_for/(?P<uuid>[\w-]+)/$',views.test_for, name='test_for'),
 
@@ -48,6 +46,7 @@ urlpatterns = [
     url(r'^feedback/(?P<answer_id>[0-9]+)$',views.feedback, name='feedback'),
     url(r'^test/new/(?P<topic_id>[\w-]+)/$',views.test_new, name='test_new'),
     url(r'^progress/(?P<discipline_name>[\w|\W]+)/$',views.progress, name='progress'),
+    url(r'^test_progress/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_progress, name='test_progress'),
     url(r'^percentage_progress/(?P<class_id>[\w-]+)/$',views.percentage_progress, name='percentage_progress'),
     url(r'^my_progress/$',views.my_progress, name='my_progress'),
     url(r'^class_progress/(?P<class_id>[\w-]+)/$',views.class_progress, name='class_progress'),

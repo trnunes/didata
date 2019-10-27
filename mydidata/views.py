@@ -54,7 +54,16 @@ class TestList(ListView):
     context_object_name = 'tests'
 
     def get_queryset(self):
-        return Test.objects.all().order_by('title')
+    	user = self.request.user
+    	classes = Classroom.objects.all().order_by('name').all()
+    	tests = []
+    	
+    	if not user.is_superuser:
+    		[tests.extend(c.tests.all()) for c in classes]
+    	else:
+    		tests = Test.objects.all().order_by('title')
+    	return tests
+
     
     def dispatch(self, *args, **kwargs):
         return super(TestList, self).dispatch(*args, **kwargs)
@@ -196,29 +205,18 @@ def test_open(request, uuid, class_id):
 
     return redirect('mydidata:class_progress', class_id=class_id, )
 
-def test_assess(request, topic_uuid, class_id):
+def test_assess(request, uuid, class_id):
     classroom = get_object_or_404(Classroom, pk=class_id)
-    topic = get_object_or_404(Topic, uuid=topic_uuid)
-    discipline_list = classroom.disciplines.all()
-    topics = []
-    student_list = classroom.students.all().order_by('first_name');
-    
-    for discipline in discipline_list:
-        topics.extend(discipline.topic_set.all())
-    topics.sort(key=lambda topic: topic.order)
-    
+    test = get_object_or_404(Test, uuid=uuid)
+    student_list = classroom.students.all().order_by('first_name')
     for student in student_list:
-        for q in topic.question_set.all():
-            answers = Answer.objects.filter(student=student, question=q).all()            
+        for q in test.question_set.all():
+            answers = []
+            answers.extend(DiscursiveAnswer.objects.filter(student=student, question=q).all())
+            answers.extend(MultipleChoiceAnswer.objects.filter(student=student, question=q).all())
             for a in answers:
                 a.correct()
-                a.save()
-
-                print(a.is_ok(), " - ", a.status == Answer.CORRECT)
-            
-
-
-    return redirect('mydidata:class_progress', class_id=class_id, )
+    return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
 
 def detail(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
@@ -226,7 +224,6 @@ def detail(request, question_id):
 
 @login_required
 def progress(request, discipline_name):
-    
     discipline = Discipline.objects.get(name=discipline_name)
     topics = discipline.topic_set.all()
     return render(request, 'mydidata/progress.html', {'topics':topics,})
@@ -251,6 +248,7 @@ def test_progress(request, uuid, class_id):
     discipline = topic.discipline
     if user.is_superuser:
         students = klass.students.all().order_by('first_name')
+
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
 
 @login_required
@@ -344,39 +342,6 @@ def calculate_grades(request, class_id, topic_uuid=None):
        
     return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_grade})
 
-@login_required
-def test_calculate_grades(request, class_id, uuid=None):
-    classroom = get_object_or_404(Classroom, pk=class_id)
-    if topic_uuid:
-        topics = [get_object_or_404(Topic, uuid=topic_uuid)]
-    else:
-        discipline = classroom.disciplines.all().first()
-        topics = classroom.closed_topics.all()
-    
-    student_list = classroom.students.all().order_by('first_name')    
-    student_by_topic_grade = {}
-    for student in student_list:
-        student_by_topic_grade[student] = []
-        sum_topic_weight = 0
-        final_grade = 0
-
-        for topic in topics:
-            sum_grades = 0
-            sum_weights = 0
-            sum_topic_weight += topic.weight
-
-            for q in topic.question_set.all():
-                answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
-                if answer and answer.is_ok(): sum_grades += q.weight
-                sum_weights += q.weight
-            wavg = 0
-            if sum_weights: wavg = sum_grades/sum_weights
-            final_grade += wavg * topic.weight
-            student_by_topic_grade[student].append([topic,  "{:2.1f}".format(wavg*10)])
-        if sum_topic_weight: student_by_topic_grade[student].insert(0,["Nota", "{:2.1f}".format((final_grade/sum_topic_weight)*10)])
-
-       
-    return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_grade})
 
 
 @login_required()
@@ -503,7 +468,37 @@ def discursive_answer(request, question_uuid):
         return render(request, 'mydidata/answer_cru.html', context)
     
 @login_required()
+def test_progress(request, class_id, uuid):
+    test = get_object_or_404(Test, uuid=uuid)
+    students = [request.user]
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    if request.user.is_superuser:
+        students = classroom.students.all().order_by('first_name')
+    student_grade = {}
+    if test.is_closed(classroom):
+        
+        for student in students:
+            total_weight = 0
+            sum_weights = 0
+            final_grade = 0
+            for q in test.question_set.all():
+                answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
+                if not answer:
+                    answer = MultipleChoiceAnswer.objects.filter(student=student, question=q).first()
+                if answer and answer.is_ok(): sum_weights += q.weight
+                total_weight += q.weight
+            final_grade = 0
+            if sum_weights: final_grade = sum_weights/total_weight
+
+            student_grade[student] = "{:2.1f}".format(final_grade*10)
+        
+
+    return render(request, 'mydidata/test_progress.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
+
+
+@login_required()
 def multiple_choice_answer(request, question_uuid):
+
     question = get_object_or_404(Question, uuid=question_uuid)
     answer = question.answer_set.filter(student=request.user).first()
     if not answer:
@@ -512,18 +507,36 @@ def multiple_choice_answer(request, question_uuid):
         answer = answer.multiplechoiceanswer
         
     if request.POST:
+        test = question.test
+        classroom = Classroom.objects.filter(students__id=request.user.id).first()
+        if test and test in classroom.closed_tests.all():
+            context = {
+                'question': question,
+                'test': test,
+                'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
+            }
+
+            return render(request, 'mydidata/answer_cru.html', context)
         try:
             selected_choice = question.choice_set.get(pk=request.POST['choice'])
             answer.choice = selected_choice
+            answer.status = Answer.SENT
         except (KeyError, Choice.DoesNotExist):
             context = {
+                'test': test,
                 'question': question,
                 'error_message': "You didn't select a choice.",
             }
             return render(request, 'mydidata/answer_cru.html', context)
         else:
             answer.save()
-            return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(question.topic.uuid,)))
+            
+            if test:
+                redirect_url = reverse('mydidata:test_detail', args=(test.uuid,))
+            else:
+                redirect_url = reverse('mydidata:topic_detail', args=(question.topic.uuid,))
+
+            return HttpResponseRedirect(redirect_url)
     else:
         context = {  
             'question': question,
@@ -557,10 +570,14 @@ def topic_detail(request, uuid):
 
 def test_detail(request, uuid):
     test = get_object_or_404(Test, uuid=uuid)
-    questions = Question.objects.filter(test=test).order_by('index')
 
+    classroom = Classroom.objects.filter(students__id=request.user.id).first()    
+    questions = Question.objects.filter(test=test).order_by('index')
     context = {
         'questions': questions,
+        'classroom': classroom,
+        'test': test,
+
     }
     return render(request, 'mydidata/test_detail.html', context)
 

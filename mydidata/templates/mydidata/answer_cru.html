@@ -17,7 +17,8 @@
 		        </div>
 		    {% endfor %}
 		{% endif %}
-        <h2 class="ad-mh">Questão {{question.index}}</h2>
+		
+        <h2 class="ad-mh">Questão {{question.index}}: {{user.first_name}}&nbsp;{{user.last_name}}</h2>
 
         {%if question.is_discursive%}
             {% include 'mydidata/discursive_answer_item_form.html' %}

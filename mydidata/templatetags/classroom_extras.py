@@ -11,7 +11,7 @@ def is_topic_closed(classroom, topic):
 	return topic in classroom.closed_topics.all()
 
 @register.simple_tag
-def is_test_closed(classroom, test):
+def test_is_closed(classroom, test):
 	return test in classroom.closed_tests.all()
 	
 @register.simple_tag
@@ -29,3 +29,8 @@ def get_assess_url(classroom, topic):
 @register.simple_tag
 def get_grades_url(classroom, topic):	
 	return reverse('mydidata:calculate_grades', args=(classroom.id, topic.uuid))
+
+@register.simple_tag
+def get_test_progress(classroom, test):
+	print(classroom, ": ", test)
+	return reverse('mydidata:test_progress', args=(classroom.id, test.uuid))

@@ -93,6 +93,8 @@ class Test(models.Model, AdminURLMixin):
     def __str__(self):
         return u"%s" % self.title
 
+    def is_closed(self, classroom):
+        return self in classroom.closed_tests.all()
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:test_detail', [self.uuid]
@@ -108,6 +110,10 @@ class Test(models.Model, AdminURLMixin):
     @models.permalink
     def get_close_url(self, klass):
         return 'mydidata:test_close', [self.uuid, klass.id]
+
+    @models.permalink
+    def get_progress_url(self, klass):
+        return 'mydidata:test_progress', [self.uuid, klass.id]
     
     def get_ordered_questions(self):
         return self.question_set.all().order_by('index')
@@ -118,7 +124,9 @@ class Classroom(models.Model):
     students = models.ManyToManyField(User, null=True)
     disciplines = models.ManyToManyField(Discipline, null=True)
     closed_topics = models.ManyToManyField(Topic, null=True, blank=True)
-    closed_tests = models.ManyToManyField(Test, null=True, blank=True)
+    closed_tests = models.ManyToManyField(Test, null=True, blank=True, related_name="closed_tests")
+    tests = models.ManyToManyField(Test, null=True, blank=True)
+
     class Meta:
         verbose_name_plural = 'Turmas'
 
@@ -144,8 +152,11 @@ class Classroom(models.Model):
     def topic_is_closed(self, topic):
         return topic in self.closed_topics.all()
 
-    def test_is_closed(self, test):
+    def is_test_closed(self, test):
         return test in self.closed_tests.all()
+
+    def in_class(self, test):
+        return test in self.tests.all()
 
 class ResourceRoom(models.Model):
     uuid = ShortUUIDField(unique=True)
@@ -219,7 +230,7 @@ class Question(models.Model):
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     choice_text = models.CharField(max_length=200)
-    is_correct = models.BooleanField(default=True)
+    is_correct = models.BooleanField(default=False)
     class Meta:
         verbose_name_plural = 'Alternativas'
         
@@ -273,8 +284,10 @@ class MultipleChoiceAnswer(Answer):
         verbose_name_plural = 'Respostas de Múltipla Escolha'
 
     def correct(self):
-        correct_choice = self.question.choice_set.filter(is_correct=True)[0]
-        if(correct_choice == self.choice):
+        correct_choice = self.question.choice_set.filter(is_correct=True).first()
+        print("CORRECT: ",  correct_choice)
+        print("ACTUAL: ",  self.choice)
+        if correct_choice == self.choice:
             self.status = self.CORRECT
         else:
             self.status = self.INCORRECT

@@ -1,14 +1,19 @@
 {% extends 'mydidata/base.html' %}
-{%load classroom_extras}
+
 {% block content %}
     <div id="content-container" class="container p-none">
         {# List Questions #}
-        {%is_test_closed classroom test%}
-            <a href={{}}>Resultados disponíveis aqui!</a>        
+        {%load test_extras%}
+        {%is_test_closed classroom test as test_closed%}
+        {% if test_closed%}
+            <div class="alert alert-danger">
+                {%get_progress_url classroom test as progress_url%}
+                <strong><a href="{{ progress_url }}">Resultados disponíveis aqui!</a></strong>
+            </div>
         {%endif%}
         <div id="cd-container" class="ad-container">
             <div class="ad-headers">
-                <h4 class="ad-mh m-none">Questões</h4>
+                <h4 class="ad-mh m-none">{{test.title}}: {{user.first_name}} {{user.last_name}}</h4>
             </div>
             <div id="cd-body" class="row">
                 <table id="cd-table" class="table table-hover">

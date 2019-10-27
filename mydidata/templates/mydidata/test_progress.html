@@ -7,26 +7,11 @@
     <div id="content-container" class="container p-none">
 		{% if classroom %}
 			<h1>{{classroom.name}}</h1>
-			<p>Compartilhe esse link com seus alunos para inscrição: https://mydidata.herokuapp.com{{classroom.get_signup_link}} </p>
 		{%endif%}
-		
-        {%for test in tests %}
-            {%if classroom%}
-                {% get_close_url classroom topic as close_url %}
-                {% get_open_url classroom topic as open_url %}
-                {% is_topic_closed classroom topic as topic_closed %}
-            {%endif%}
-
             {% if user.is_superuser and classroom%}
-                {% if topic_closed%}
-                    <h2>{{topic.topic_title}} (Fechado)</h2>
-                    <h4><a href="{{open_url}}">Abrir</a></h4>
-                {%else%}
-                    <h2>{{topic.topic_title}}</h2>
-                    <h4><a href="{{close_url}}">Fechar</a></h4>
-                {%endif%}
-            {%else%}
-                <h2>{{topic.topic_title}}</h2>
+                
+                <h2>{{test.title}}</h2>
+
             {%endif%}
 
             
@@ -34,7 +19,7 @@
                 <tbody>
                     <tr>
                         <th>Aluno</th>
-                        {% for question in topic.question_set.all %}
+                        {% for question in test.question_set.all %}
                             <th>Question {{ forloop.counter }}</th>
                         {% endfor %}
                     </tr>
@@ -42,7 +27,7 @@
                         <tr>
                             <td>{{student.first_name}}</td>
                             
-                            {%for question in topic.get_ordered_questions %}
+                            {%for question in test.get_ordered_questions %}
                                 {% get_answers question student as answers%}
                                 {%if answers%}
                                     {%for answer in answers%}
@@ -69,6 +54,23 @@
                     {%endfor%}
                 </tbody>
             </table>
-        {%endfor%}
+            <h1>Resultado</h1>
+            <table id="cd-table" class="table table-hover">
+                <tbody>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Nota</th>
+                    </tr>
+                    {% for student, grade in student_grades.items %}                    
+                        <tr>
+                        <td>{{student.first_name}}&nbsp{{student.last_name}}</td>
+                        <td>{{grade}}</td>
+                        </tr>
+                    {%endfor%}
+                    
+                </tbody>
+            </table>
+
     </div>
+
 {% endblock %}

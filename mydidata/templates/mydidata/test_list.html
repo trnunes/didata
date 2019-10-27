@@ -3,6 +3,7 @@
 
 {% block content %}
 {%load student_extras%}
+{%load test_extras%}
     <div id="content-container" class="container p-none">
         <div id="al-container" class="side-p">
             <div id="al-control">
@@ -18,7 +19,20 @@
             <ul id="al-group" class="strip-list">
                 {% for test in tests %}
                     <li class="al-item">
-                        <a href="{{ test.get_absolute_url }}"><h4 class="al-name">{{ test.title }}</h4></a>
+                    {%for klass in test.classroom_set.all%}
+                        {% get_close_url klass test as close_url %}
+                        {% get_open_url klass test as open_url %}
+                        {% get_assess_url klass test as assess_url %}
+                        {% if user.is_superuser%}
+                            {%get_progress_url klass test as progress_url%}
+                            <a href="{{ progress_url }}"><h4 class="al-name">{{klass.name}}: {{ test.title }}</h4></a>
+                            &nbsp                            
+                            | <a href="{{ assess_url }}">Corrigir</a>
+                        {%else%}
+                            <a href="{{ test.get_absolute_url }}"><h4 class="al-name">{{ test.title }}</h4></a>
+                        {%endif%}
+                    {%endfor%}
+
                     </li>
                 {% endfor %}
             </ul>
