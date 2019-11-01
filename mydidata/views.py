@@ -386,21 +386,20 @@ def feedback(request, answer_id):
                     }
                     return render(request, 'mydidata/answer_cru.html', context)
 
-            if student.id == answer.student.id and student_index < students.count(): next_student_found = True
-            student_index += 1
-            test = question.test
-            classroom = Classroom.objects.filter(students__id=request.user.id).first()
-            if test and not test in classroom.closed_tests.all():
-                context = { 
-                    'question': question,
-                    'test': test,
-                    'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
-                }
+        if student.id == answer.student.id and student_index < students.count(): next_student_found = True
+        student_index += 1
+        test = question.test
+        classroom = Classroom.objects.filter(students__id=request.user.id).first()
+        if test and not test in classroom.closed_tests.all():
+            context = { 
+                'question': question,
+                'test': test,
+                'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
+            }
 
-                return HttpResponseRedirect(reverse('mydidata:tests'))
-            else:
-                return redirect('mydidata:class_progress', class_id=classroom.id)
-
+            return HttpResponseRedirect(reverse('mydidata:tests'))
+        else:
+            return redirect('mydidata:class_progress', class_id=classroom.id)
 
     context = {
         'question': question,
