@@ -331,7 +331,7 @@ def calculate_grades(request, class_id, topic_uuid=None):
 
             for q in topic.question_set.all():
                 answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
-                if answer and answer.is_ok(): sum_grades += q.weight
+                if answer and answer.is_ok(): sum_grades += answer.grade * q.weight
                 sum_weights += q.weight
             wavg = 0
             if sum_weights: wavg = sum_grades/sum_weights
@@ -388,8 +388,18 @@ def feedback(request, answer_id):
 
             if student.id == answer.student.id and student_index < students.count(): next_student_found = True
             student_index += 1
+            test = question.test
+            classroom = Classroom.objects.filter(students__id=request.user.id).first()
+            if test and not test in classroom.closed_tests.all():
+                context = { 
+                    'question': question,
+                    'test': test,
+                    'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
+                }
 
-        return redirect('mydidata:class_progress', class_id=classroom.id)
+                return HttpResponseRedirect(reverse('mydidata:tests'))
+            else:
+                return redirect('mydidata:class_progress', class_id=classroom.id)
 
 
     context = {
@@ -446,8 +456,18 @@ def discursive_answer(request, question_uuid):
 
 
                         member_answer = question.answer_set.filter(student=member).first()
-                        
-            return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(question.topic.uuid,)))
+            test = question.test
+            classroom = Classroom.objects.filter(students__id=request.user.id).first()
+            if test and not test in classroom.closed_tests.all():
+                context = { 
+                    'question': question,
+                    'test': test,
+                    'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
+                }
+
+                return HttpResponseRedirect(reverse('mydidata:test_detail', args=(test.uuid,)))
+            else:
+                return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(question.topic.uuid,)))
         else:
             context = {  
                 'question': question,
@@ -485,7 +505,7 @@ def test_progress(request, class_id, uuid):
                 answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
                 if not answer:
                     answer = MultipleChoiceAnswer.objects.filter(student=student, question=q).first()
-                if answer and answer.is_ok(): sum_weights += q.weight
+                if answer and answer.is_ok(): sum_weights += answer.grade * q.weight
                 total_weight += q.weight
             final_grade = 0
             if sum_weights: final_grade = sum_weights/total_weight

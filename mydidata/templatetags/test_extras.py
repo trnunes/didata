@@ -21,7 +21,3 @@ def get_progress_url(classroom, test):
 @register.simple_tag
 def get_assess_url(classroom, test):
 	return reverse('mydidata:test_assess', args= (classroom.id, test.uuid))
-
-@register.simple_tag
-def get_grades_url(classroom, test):	
-	return reverse('mydidata:calculate_grades', args=(classroom.id, test.uuid))

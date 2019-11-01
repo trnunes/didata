@@ -188,7 +188,7 @@ class Question(models.Model):
         (1, 'Difícil'),
         (2, 'Médio'),
         (3, 'Fácil'),
-    )
+    )   
     difficulty_level = models.PositiveSmallIntegerField(choices=DIFFICULTY_LIST)
     TYPE_LIST = (
         (1, "Exercício"),
@@ -249,7 +249,7 @@ class Answer(models.Model):
         (UPDATED, 'Reenviada'),
     )
     status = models.IntegerField(choices=STATUS_CHOICES, default=SENT)
-
+    grade = models.FloatField(default=0.0)
     question = models.ForeignKey(Question, on_delete=models.DO_NOTHING)
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING)
@@ -259,6 +259,8 @@ class Answer(models.Model):
 
     def correct(self):
         self.status = self.CORRECT
+        if not self.grade:
+            self.grade = 1
         self.save()
 
     def is_correct(self):        
@@ -289,8 +291,10 @@ class MultipleChoiceAnswer(Answer):
         print("ACTUAL: ",  self.choice)
         if correct_choice == self.choice:
             self.status = self.CORRECT
+            self.grade = 1
         else:
             self.status = self.INCORRECT
+            self.grade = 0
         self.save()
 
     
@@ -312,6 +316,7 @@ class DiscursiveAnswer(Answer):
     answer_text = RichTextUploadingField(null=True, blank=True)
     assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage())
     feedback = RichTextUploadingField(null=True, blank=True)
+
 
     class Meta:
         verbose_name_plural = 'Respostas Discursivas'

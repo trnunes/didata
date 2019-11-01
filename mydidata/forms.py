@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Topic, Question, DiscursiveAnswer, Discipline, Classroom
+from .models import Topic, Question, DiscursiveAnswer, Discipline, Classroom, Answer
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -111,8 +111,13 @@ class DiscursiveAnswerForm(forms.ModelForm):
         classrooms = Classroom.objects.filter(students__id = student.id).all()
         question = self.instance.question
         topic = question.topic
+        test = question.test
         c_list = [classroom for classroom in classrooms if topic in classroom.closed_topics.all()]
-        if c_list:
+        t_classes = []
+        if test:
+            t_classes = [classroom for classroom in classrooms if test in classroom.closed_tests.all()]
+
+        if c_list or t_classes:
             raise ValidationError(_("Questão fechada para envio de respostas!"))
         text = self.cleaned_data.get("answer_text")
         print("TEXTO: ", text)
@@ -134,11 +139,16 @@ class SuperuserDiscursiveAnswerForm(forms.ModelForm):
             'answer_text': 'Resposta Aqui',
         }
 
-        fields += ['feedback', 'status']
+        fields += ['feedback', 'status', 'grade']
         widgets['feedback'] = forms.CharField(widget=CKEditorUploadingWidget(), label="Correções",
                                               required=False)
         labels['feedback'] = 'Correções Aqui'
         
+    def clean_grade(self):
+        if self.cleaned_data.get("status") == Answer.CORRECT:
+            if not self.cleaned_data.get('grade'):
+                return 1
+        return self.cleaned_data.get("grade")
 
     def is_valid(self):
         return True;
