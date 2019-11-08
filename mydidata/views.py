@@ -540,7 +540,26 @@ def multiple_choice_answer(request, question_uuid):
             return render(request, 'mydidata/answer_cru.html', context)
         else:
             answer.save()
-            
+            if request.session.get('teams', False):
+                if request.session['teams'].get(str(request.user.id), False):
+
+                    for member_id in request.session['teams'][str(request.user.id)]:
+                        member = User.objects.get(pk=member_id)
+                        member_answer = question.answer_set.filter(student=member).first()
+                        
+                        if not member_answer:
+                            member_answer = MultipleChoiceAnswer()
+                        else:
+                            member_answer = member_answer.multiplechoiceanswer
+                            
+                        member_answer.student = member
+                        member_answer.question = question
+                        
+                        member_answer.choice = answer.choice
+                        member_answer.save()
+                        question.save()
+                        member_answer = question.answer_set.filter(student=member).first()
+
             if test:
                 redirect_url = reverse('mydidata:test_detail', args=(test.uuid,))
             else:
