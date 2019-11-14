@@ -3,6 +3,7 @@
 {% block content %}
     <div id="content-container" class="container p-none">
         {# List Questions #}
+        {% load question_extras %}
         {%load test_extras%}
         {%is_test_closed classroom test as test_closed%}
         {% if test_closed%}
@@ -20,7 +21,20 @@
                     <tbody>
                         <tr></tr>
                         {% for question in questions %}
-                            {% include 'mydidata/question_item_view.html' %}
+                            <tr>
+                                <td class="ci-td-p-l"><a href="{{ question.get_answer_url }}">Questão {{ forloop.counter }}</a></td>
+                                {% if user.is_authenticated %}
+                                    <td>{% get_question_status question user%}</td>
+                                {%endif%}
+                                <td class="con-cntrl">
+                                    {# Question Edit Link #}
+                                    
+                                        <a class="pen"
+                                           href="{{ question.get_answer_url }}"></a>
+                                    
+                                </td>
+    
+                            </tr>
                         {% endfor %}
 
                     </tbody>

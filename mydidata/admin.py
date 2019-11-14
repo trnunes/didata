@@ -5,7 +5,7 @@ from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 
 from .models import Question, Discipline
-from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, DiscursiveAnswer, Classroom, ResourceRoom
+from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, DiscursiveAnswer, Classroom, ResourceRoom, TestUserRelation
 from django.utils.safestring import mark_safe
 
 
@@ -50,6 +50,20 @@ class QuestionAdminForm(forms.ModelForm):
 class ClassroomAdmin(admin.ModelAdmin):
     model = Classroom
     filter_horizontal = ('students', 'disciplines', 'closed_topics', 'tests', 'closed_tests')
+    def save_model(self, request, obj, form, change):        
+        import random
+        for test in obj.tests.all():
+            for student in obj.students.all():
+                tu = TestUserRelation.objects.filter(student=student, test=test)
+                if not tu:
+                    tu = TestUserRelation.objects.create(student=student, test=test)
+                    questions = list(Question.objects.filter(test=test).order_by('index'))
+                    random.shuffle(questions)
+                    
+                    index_list = [q.index for q in questions]
+                    tu.set_index_list(index_list)
+                    tu.save()   
+        obj.save()
 
 class ResourceRoomAdmin(admin.ModelAdmin):
     model = ResourceRoom
@@ -104,6 +118,7 @@ admin.site.register(Classroom, ClassroomAdmin)
 admin.site.register(ResourceRoom, ResourceRoomAdmin)
 admin.site.register(Topic, TopicAdmin)
 admin.site.register(Test, TestAdmin)
+admin.site.register(TestUserRelation)
 
 
 

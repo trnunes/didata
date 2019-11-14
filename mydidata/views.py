@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from .models import Question, Choice, DiscursiveAnswer, MultipleChoiceAnswer, Topic, Test, Discipline, Classroom, ResourceRoom, Answer
+from .models import Question, Choice, DiscursiveAnswer, MultipleChoiceAnswer, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation
 from django.template import loader
 from django.http import Http404
 from django.urls import reverse
@@ -567,14 +567,13 @@ def multiple_choice_answer(request, question_uuid):
 
             return HttpResponseRedirect(redirect_url)
     else:
-        context = {  
+        context = {
             'question': question,
         }
         
         form = DiscursiveAnswerForm(instance=answer)
         context['form'] = form
-        return render(request, 'mydidata/answer_cru.html', context)
-        
+        return render(request, 'mydidata/answer_cru.html', context)        
 
 def topic_detail(request, uuid):
     topic = Topic.objects.get(uuid=uuid)
@@ -601,9 +600,11 @@ def test_detail(request, uuid):
     test = get_object_or_404(Test, uuid=uuid)
 
     classroom = Classroom.objects.filter(students__id=request.user.id).first()    
-    questions = Question.objects.filter(test=test).order_by('index')
+    questions = list(Question.objects.filter(test=test).order_by('index'))
+    tu = TestUserRelation.objects.filter(student=request.user, test=test).first()
+    reordered_questions = [questions[i-1] for i in tu.index_list_as_array()]
     context = {
-        'questions': questions,
+        'questions': reordered_questions,
         'classroom': classroom,
         'test': test,
 

@@ -14,6 +14,7 @@ import urllib
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.core.validators import FileExtensionValidator
+import random
 
 class AdminURLMixin(object):
     def get_admin_url(self):
@@ -226,6 +227,12 @@ class Question(models.Model):
     @models.permalink
     def get_test_url(self):
         return 'mydidata:test_for', [self.uuid]
+
+    def shuffled_choice_set(self):
+        choice_list = list(self.choice_set.all())
+        random.shuffle(choice_list)
+        return choice_list
+
       
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
@@ -296,7 +303,6 @@ class MultipleChoiceAnswer(Answer):
             self.status = self.INCORRECT
             self.grade = 0
         self.save()
-
     
     @models.permalink
     def get_detail_url(self):
@@ -334,4 +340,17 @@ class DiscursiveAnswer(Answer):
     @models.permalink
     def get_detail_url(self):
         return "mydidata:discursive_answer_detail", [self.id]
+
+class TestUserRelation(models.Model):
+    student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    test = models.ForeignKey(Test, on_delete=models.DO_NOTHING)
+    index_list = models.CharField(max_length=255, verbose_name=_("índices"),)
+    class Meta:
+        verbose_name_plural = 'Índices de Questões'
+    def __str__(self):
+        return str(self.student.first_name + " " + self.student.last_name + ": " + self.test.title)
+    def index_list_as_array(self):
+        return eval(self.index_list)
+    def set_index_list(self, index_list):
+        self.index_list = str(index_list)
 

@@ -1,7 +1,6 @@
 
 
 <p>{{ question.question_text | safe}}</p>
-
 {% if error_message %}
     <div class="alert alert-danger">
         <strong>{{ error_message }}</strong>
@@ -11,7 +10,7 @@
 <h4 class="gi-sh">Marque uma das opções abaixo e clique em enviar</h4>
 <form action="{% url 'mydidata:multiple_choice_answer' question.uuid %}" method="post">
 {% csrf_token %}
-    {% for choice in question.choice_set.all %}
+    {% for choice in question.shuffled_choice_set %}
         <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
         <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br />
     {% endfor %}
