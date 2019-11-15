@@ -55,7 +55,7 @@ class TestList(ListView):
 
     def get_queryset(self):
     	user = self.request.user
-    	classes = Classroom.objects.all().order_by('name').all()
+    	classes = Classroom.objects.filter(students__id=user.id).order_by('name').all()
     	tests = []
     	
     	if not user.is_superuser:
@@ -250,6 +250,18 @@ def test_progress(request, uuid, class_id):
         students = klass.students.all().order_by('first_name')
 
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
+
+@login_required
+def finish_test(request, uuid, class_id):
+    user = request.user
+    test = get_object_or_404(Test, uuid=uuid)
+    klass = get_object_or_404(Classroom, pk=class_id)
+    test_user = TestUserRelation.objects.filter(test=test, student=user).first()
+    if test_user: 
+        test_user.is_closed = True
+        test_user.save()
+    return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
+
 
 @login_required
 def resource_room_progress(request, uuid):
@@ -519,7 +531,9 @@ def multiple_choice_answer(request, question_uuid):
     if request.POST:
         test = question.test
         classroom = Classroom.objects.filter(students__id=request.user.id).first()
-        if test and test in classroom.closed_tests.all():
+        tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
+        closed_for_student = (tuserrelation and tuserrelation.is_closed)
+        if (test and test in classroom.closed_tests.all()) or closed_for_student:
             context = {
                 'question': question,
                 'test': test,
@@ -603,6 +617,7 @@ def test_detail(request, uuid):
     questions = list(Question.objects.filter(test=test).order_by('index'))
     tu = TestUserRelation.objects.filter(student=request.user, test=test).first()
     reordered_questions = [questions[i-1] for i in tu.index_list_as_array()]
+
     context = {
         'questions': reordered_questions,
         'classroom': classroom,

@@ -96,6 +96,10 @@ class Test(models.Model, AdminURLMixin):
 
     def is_closed(self, classroom):
         return self in classroom.closed_tests.all()
+
+    def is_closed_for(self, user):
+        test_user = TestUserRelation.objects.filter(test=self, student=user).first()
+        return (test_user and test_user.is_closed)
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:test_detail', [self.uuid]
@@ -345,6 +349,7 @@ class TestUserRelation(models.Model):
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     test = models.ForeignKey(Test, on_delete=models.DO_NOTHING)
     index_list = models.CharField(max_length=255, verbose_name=_("índices"),)
+    is_closed = models.BooleanField(default=False)
     class Meta:
         verbose_name_plural = 'Índices de Questões'
     def __str__(self):

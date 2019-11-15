@@ -36,6 +36,14 @@
     
                             </tr>
                         {% endfor %}
+                            {%get_finish_url_for_user classroom test as finish_url%}
+                            {%is_closed_for_student user test as is_closed_for_student%}
+                            {%if not is_closed_for_student%}
+                                <tr> <td><a href="{{finish_url}}"><span style="color: red;font-weight:bold">Clique aqui para finalizar!</span></a> <td></tr>
+                            {%else%}
+                                <tr> <td><span style="color: red">Teste Finalizado! Aguarde os Resultados.</span><td></tr>
+                            {%endif%}
+                            
 
                     </tbody>
                 </table>

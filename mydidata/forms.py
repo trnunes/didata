@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Topic, Question, DiscursiveAnswer, Discipline, Classroom, Answer
+from .models import Topic, Question, DiscursiveAnswer, Discipline, Classroom, Answer, TestUserRelation
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -116,8 +116,10 @@ class DiscursiveAnswerForm(forms.ModelForm):
         t_classes = []
         if test:
             t_classes = [classroom for classroom in classrooms if test in classroom.closed_tests.all()]
-
-        if c_list or t_classes:
+        tuserrelation = TestUserRelation.objects.filter(test=test,student=student).first()
+        closed_for_student = (tuserrelation and tuserrelation.is_closed)
+        print("TEST USER RELATION CLOSED: ", tuserrelation.is_closed)
+        if c_list or t_classes or closed_for_student:
             raise ValidationError(_("Questão fechada para envio de respostas!"))
         text = self.cleaned_data.get("answer_text")
         print("TEXTO: ", text)
