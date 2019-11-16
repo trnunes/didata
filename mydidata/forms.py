@@ -118,7 +118,7 @@ class DiscursiveAnswerForm(forms.ModelForm):
             t_classes = [classroom for classroom in classrooms if test in classroom.closed_tests.all()]
         tuserrelation = TestUserRelation.objects.filter(test=test,student=student).first()
         closed_for_student = (tuserrelation and tuserrelation.is_closed)
-        print("TEST USER RELATION CLOSED: ", tuserrelation.is_closed)
+        
         if c_list or t_classes or closed_for_student:
             raise ValidationError(_("Questão fechada para envio de respostas!"))
         text = self.cleaned_data.get("answer_text")

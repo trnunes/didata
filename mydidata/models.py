@@ -35,8 +35,8 @@ class Greeting(models.Model):
 
 class Discipline(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
-    name = models.CharField(max_length=255, verbose_name=_("Name"),)
-    students = models.ManyToManyField(User, verbose_name=_("Students"),)
+    name = models.CharField(max_length=255, verbose_name="Nome",)
+    students = models.ManyToManyField(User, verbose_name="Estudantes",)
     class Meta:
         verbose_name_plural = 'Disciplinas'
 
@@ -49,14 +49,14 @@ class Discipline(models.Model, AdminURLMixin):
 
 class Topic(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
-    topic_title = models.CharField(max_length=200)
-    topic_content = RichTextUploadingField(blank=True, null=True)
-    order = models.IntegerField()
-    owner = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    discipline = models.ForeignKey(Discipline, null=True, on_delete=models.DO_NOTHING)    
-    is_resource = models.BooleanField(default=False)
+    topic_title = models.CharField(max_length=200, verbose_name="Título")
+    topic_content = RichTextUploadingField(blank=True, null=True, verbose_name="Conteúdo")
+    order = models.IntegerField(verbose_name="Ordem")
+    owner = models.ForeignKey(User, on_delete=models.DO_NOTHING, verbose_name="Dono")
+    discipline = models.ForeignKey(Discipline, null=True, on_delete=models.DO_NOTHING, verbose_name="Disciplina Associada")
+    is_resource = models.BooleanField(default=False,verbose_name="É para reforço?")
     is_assessment = models.BooleanField(default=False)
-    weight = models.PositiveSmallIntegerField(default=1)
+    weight = models.PositiveSmallIntegerField(default=1, verbose_name="Peso")
 
     class Meta:
         verbose_name_plural = 'Tópicos'
@@ -85,8 +85,8 @@ class Topic(models.Model, AdminURLMixin):
 
 class Test(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
-    title = models.CharField(max_length=200, default="test")
-    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING)
+    title = models.CharField(max_length=200, default="test", verbose_name="Título")
+    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico")
 
     class Meta:
         verbose_name_plural = 'Avaliações'
@@ -125,12 +125,12 @@ class Test(models.Model, AdminURLMixin):
 
 class Classroom(models.Model):
     uuid = ShortUUIDField(unique=True)
-    name = models.CharField(max_length=255)
-    students = models.ManyToManyField(User, null=True)
-    disciplines = models.ManyToManyField(Discipline, null=True)
-    closed_topics = models.ManyToManyField(Topic, null=True, blank=True)
-    closed_tests = models.ManyToManyField(Test, null=True, blank=True, related_name="closed_tests")
-    tests = models.ManyToManyField(Test, null=True, blank=True)
+    name = models.CharField(max_length=255, verbose_name="Nome")
+    students = models.ManyToManyField(User, null=True, verbose_name="Estudantes")
+    disciplines = models.ManyToManyField(Discipline, null=True, verbose_name="Disciplinas")
+    closed_topics = models.ManyToManyField(Topic, null=True, blank=True, verbose_name="Tópicos Fechados")
+    closed_tests = models.ManyToManyField(Test, null=True, blank=True, related_name="closed_tests", verbose_name="Avaliações Fechadas")
+    tests = models.ManyToManyField(Test, null=True, blank=True, verbose_name="Avaliações")
 
     class Meta:
         verbose_name_plural = 'Turmas'
@@ -165,10 +165,10 @@ class Classroom(models.Model):
 
 class ResourceRoom(models.Model):
     uuid = ShortUUIDField(unique=True)
-    name = models.CharField(max_length=255)
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
-    students = models.ManyToManyField(User, null=True)
-    topics = models.ManyToManyField(Topic, null=True)
+    name = models.CharField(max_length=255, verbose_name='Nome')
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, verbose_name='Turma')
+    students = models.ManyToManyField(User, null=True, verbose_name='Alunos')
+    topics = models.ManyToManyField(Topic, null=True, verbose_name='Tópicos')
     class Meta:
         verbose_name_plural = 'Turmas de Reforço'
 
@@ -182,25 +182,25 @@ class ResourceRoom(models.Model):
 
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
-    index = models.PositiveSmallIntegerField()
-    question_text = RichTextUploadingField()
-    is_discursive = models.BooleanField(default=False)
-    file_types_accepted = models.CharField(max_length=255, verbose_name=_("Types"), null=True, blank="True")
-    text_required = models.BooleanField(default=False)
-    weight = models.PositiveSmallIntegerField(default=1)
+    index = models.PositiveSmallIntegerField(verbose_name='Ordem')
+    question_text = RichTextUploadingField(verbose_name='Texto')
+    is_discursive = models.BooleanField(default=False, verbose_name='É discursiva?')
+    file_types_accepted = models.CharField(max_length=255, verbose_name="Tipos de arquivos aceitos", null=True, blank="True")
+    text_required = models.BooleanField(default=False, verbose_name='Resposta de texto obrigatória?')
+    weight = models.PositiveSmallIntegerField(default=1, verbose_name='Peso')
 
     DIFFICULTY_LIST = (
         (1, 'Difícil'),
         (2, 'Médio'),
         (3, 'Fácil'),
     )   
-    difficulty_level = models.PositiveSmallIntegerField(choices=DIFFICULTY_LIST)
+    difficulty_level = models.PositiveSmallIntegerField(choices=DIFFICULTY_LIST, verbose_name="Dificuldade")
     TYPE_LIST = (
         (1, "Exercício"),
         (2, "Trabalho"),
         (3, "Prova")
     )
-    question_type = models.PositiveSmallIntegerField(choices=TYPE_LIST)
+    question_type = models.PositiveSmallIntegerField(choices=TYPE_LIST, verbose_name="Tipo")
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, null=True, blank=True)
     test = models.ForeignKey(Test, on_delete=models.DO_NOTHING, null=True, blank=True)
     class Meta:
@@ -239,9 +239,9 @@ class Question(models.Model):
 
       
 class Choice(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    choice_text = models.CharField(max_length=200)
-    is_correct = models.BooleanField(default=False)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Questão")
+    choice_text = models.CharField(max_length=200, verbose_name="Texto")
+    is_correct = models.BooleanField(default=False, verbose_name="É a alternativa correta?")
     class Meta:
         verbose_name_plural = 'Alternativas'
         
@@ -259,11 +259,11 @@ class Answer(models.Model):
         (INCORRECT, 'Incorreta'),
         (UPDATED, 'Reenviada'),
     )
-    status = models.IntegerField(choices=STATUS_CHOICES, default=SENT)
-    grade = models.FloatField(default=0.0)
-    question = models.ForeignKey(Question, on_delete=models.DO_NOTHING)
-    student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=SENT, verbose_name="Avaliação")
+    grade = models.FloatField(default=0.0, verbose_name="Nota")
+    question = models.ForeignKey(Question, on_delete=models.DO_NOTHING, verbose_name="Questão")
+    student = models.ForeignKey(User, on_delete=models.DO_NOTHING, verbose_name="Estudante")
+    test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Avaliação")
     
     class Meta:
         verbose_name_plural = 'Respostas'
@@ -292,7 +292,7 @@ class Answer(models.Model):
 
 
 class MultipleChoiceAnswer(Answer):
-    choice = models.ForeignKey(Choice, null=True, on_delete=models.DO_NOTHING)
+    choice = models.ForeignKey(Choice, null=True, on_delete=models.DO_NOTHING, verbose_name="Alternativa")
     class Meta:
         verbose_name_plural = 'Respostas de Múltipla Escolha'
 
@@ -323,9 +323,9 @@ class OverwriteStorage(FileSystemStorage):
         return name
         
 class DiscursiveAnswer(Answer):
-    answer_text = RichTextUploadingField(null=True, blank=True)
-    assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage())
-    feedback = RichTextUploadingField(null=True, blank=True)
+    answer_text = RichTextUploadingField(null=True, blank=True, verbose_name="Texto")
+    assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage(), verbose_name="Arquivo")
+    feedback = RichTextUploadingField(null=True, blank=True, verbose_name="Correções")
 
 
     class Meta:

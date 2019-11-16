@@ -7,7 +7,8 @@ from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from .models import Question, Discipline
 from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, DiscursiveAnswer, Classroom, ResourceRoom, TestUserRelation
 from django.utils.safestring import mark_safe
-
+from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.utils.translation import ugettext_lazy as _
 
 class MultipleChoiceAnswerInline(admin.TabularInline):
     model = MultipleChoiceAnswer
@@ -24,6 +25,7 @@ class ChoiceInline(admin.TabularInline):
 class QuestionInline(admin.StackedInline):
     model = Question
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
+    question_text.label = "Texto"
     readonly_fields = ('question_link',) 
     def question_link(self, obj):
         question_url = "/admin/mydidata/question/"+str(obj.id)+"/change/"
@@ -43,6 +45,7 @@ class TopicInline(admin.TabularInline):
             
 class QuestionAdminForm(forms.ModelForm):
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
+    question_text.label = "Texto"
     class Meta:
         model = Question
         fields = '__all__'
@@ -87,6 +90,7 @@ class QuestionAdmin(admin.ModelAdmin):
     
 class TopicAdminForm(forms.ModelForm):
     topic_content = forms.CharField(widget=CKEditorUploadingWidget())
+    topic_content.label = "Conteúdo"
     class Meta:
         model = Topic
         fields = '__all__'
@@ -97,14 +101,65 @@ class TopicAdmin(admin.ModelAdmin):
     inlines = [
         QuestionInline,
     ]
-class TestAdminForm(forms.ModelForm):    
-    class Meta:
-        model = Test
-        fields = '__all__'
+
+class TestAdminForm(forms.ModelForm):
+  classrooms_closed = forms.ModelMultipleChoiceField(
+    queryset=Classroom.objects.all(), 
+    required=False,
+    widget=FilteredSelectMultiple(
+      verbose_name='Turmas',
+      is_stacked=False
+    )
+  )
+
+  classrooms = forms.ModelMultipleChoiceField(
+    queryset=Classroom.objects.all(), 
+    required=False,
+    widget=FilteredSelectMultiple(
+      verbose_name='Turmas',
+      is_stacked=False
+    )
+  )
+
+
+  class Meta:
+    model = Test
+    fields = '__all__'
+
+  def __init__(self, *args, **kwargs):
+    super(TestAdminForm, self).__init__(*args, **kwargs)
+
+    if self.instance and self.instance.pk:
+      self.fields['classrooms_closed'].initial = self.instance.closed_tests.all()
+      self.fields['classrooms_closed'].label = "Fechado para Turmas"
+      self.fields['classrooms'].initial = self.instance.classroom_set.all()
+      self.fields['classrooms'].label = "Turmas"
+      self.fields['title'].label = "Título"
+      self.fields['topic'].label = "Tópico"
+      
+
+  def save(self, commit=True):
+    test = super(TestAdminForm, self).save(commit=False)
+
+    if commit:
+      test.save()
+
+    if test.pk:
+      test.classroom_set.set(self.cleaned_data['classrooms'])
+      test.closed_tests.set(self.cleaned_data['classrooms_closed'])
+      self.save_m2m()
+
+    return test
+
+# class TestAdminForm(forms.ModelForm):    
+#     class Meta:
+#         model = Test
+#         fields = '__all__'    
 
 class TestAdmin(admin.ModelAdmin):
     form = TestAdminForm
     show_change_link = True
+    
     inlines = [
         QuestionInline,
     ]
