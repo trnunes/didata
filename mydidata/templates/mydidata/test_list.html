@@ -19,7 +19,7 @@
             <ul id="al-group" class="strip-list">
                 {% for test in tests %}
                     <li class="al-item">
-                    {%for klass in test.classroom_set.all%}
+                    {%get_class test user as klass%}
                         {% get_close_url klass test as close_url %}
                         {% get_open_url klass test as open_url %}
                         {% get_assess_url klass test as assess_url %}
@@ -31,7 +31,6 @@
                         {%else%}
                             <a href="{{ test.get_absolute_url }}"><h4 class="al-name">{{ test.title }}</h4></a>
                         {%endif%}
-                    {%endfor%}
 
                     </li>
                 {% endfor %}

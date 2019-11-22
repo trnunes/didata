@@ -6,6 +6,15 @@
         {% load question_extras %}
         {%load test_extras%}
         {%is_test_closed classroom test as test_closed%}
+        <input id = "classroom" type="hidden" value="{{classroom.id}}">
+        <input id = "test_uuid" type="hidden" value="{{test.uuid}}">
+        {%if messages%}
+            <div class="alert alert-danger">
+                {% for message in messages %}
+                    <strong>{{message}}</strong>
+                {% endfor %}
+            </div>
+        {%endif%}
         {% if test_closed%}
             <div class="alert alert-danger">
                 {%get_progress_url classroom test as progress_url%}
@@ -36,10 +45,10 @@
     
                             </tr>
                         {% endfor %}
-                            {%get_finish_url_for_user classroom test as finish_url%}
+                            
                             {%is_closed_for_student user test as is_closed_for_student%}
                             {%if not is_closed_for_student%}
-                                <tr> <td><a href="{{finish_url}}"><span style="color: red;font-weight:bold">Clique aqui para finalizar!</span></a> <td></tr>
+                                <tr> <td><a id="finish_test_link" href=""><span style="color: red;font-weight:bold">Clique aqui para finalizar!</span></a> <td></tr>
                             {%else%}
                                 <tr> <td><span style="color: red">Teste Finalizado! Aguarde os Resultados.</span><td></tr>
                             {%endif%}

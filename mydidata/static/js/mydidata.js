@@ -178,5 +178,25 @@ $(document).ready(function() {
 		$('select').not('[name=template_select]').remove();
 		
 	});
+    $('#finish_test_link').click(function(){
+         var class_id = $('#classroom').val()
+         var test_uuid = $('#test_uuid').val()
+         var keypass = prompt("Digite a chave de envio fornecida pelo professor: ", "").trim();
+         
+         $.ajax({
+            url: '/mydidata/finish_test/' + class_id + '/' + test_uuid + '/' + keypass,
+            dataType: 'json',
+            success: function (data) {
+                
+                if (data.error){
+                    alert(data.error);
+                }else{
+                    alert("Teste finalizado com sucesso! Boa sorte ;-)");
+                    $('#finish_test_link').remove();
+
+                }
+            }
+          });
+    });
     
 });

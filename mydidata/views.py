@@ -12,9 +12,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.conf import settings
+from django.contrib import messages
 import boto3
 import re
- 
+import json
 class HomePage(TemplateView):
     """
     Because our needs are so simple, all we have to do is
@@ -252,15 +253,20 @@ def test_progress(request, uuid, class_id):
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
 
 @login_required
-def finish_test(request, uuid, class_id):
+def finish_test(request, uuid, class_id, key):
     user = request.user
     test = get_object_or_404(Test, uuid=uuid)
+    if key != test.key:
+        response_context = {'error':"Palavra-chave errada!"}
+        return HttpResponse(json.dumps(response_context), content_type='application/json')
+
     klass = get_object_or_404(Classroom, pk=class_id)
     test_user = TestUserRelation.objects.filter(test=test, student=user).first()
     if test_user: 
         test_user.is_closed = True
         test_user.save()
-    return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
+    return HttpResponse(json.dumps({}), content_type='application/json')
+    #return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
 
 
 @login_required

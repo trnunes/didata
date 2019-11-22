@@ -87,7 +87,7 @@ class Test(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     title = models.CharField(max_length=200, default="test", verbose_name="Título")
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico")
-
+    key = models.CharField(max_length=200, default="testkey", verbose_name="Frase de Envio")
     class Meta:
         verbose_name_plural = 'Avaliações'
 
@@ -121,7 +121,7 @@ class Test(models.Model, AdminURLMixin):
         return 'mydidata:test_progress', [self.uuid, klass.id]
     
     def get_ordered_questions(self):
-        return self.question_set.all().order_by('index')
+        return self.question_set.all().order_by('index')    
 
 class Classroom(models.Model):
     uuid = ShortUUIDField(unique=True)
@@ -350,6 +350,7 @@ class TestUserRelation(models.Model):
     test = models.ForeignKey(Test, on_delete=models.DO_NOTHING)
     index_list = models.CharField(max_length=255, verbose_name=_("índices"),)
     is_closed = models.BooleanField(default=False)
+    key = models.CharField(max_length=255, verbose_name=_("Chave de Envio"), default="stub_key")
     class Meta:
         verbose_name_plural = 'Índices de Questões'
     def __str__(self):
