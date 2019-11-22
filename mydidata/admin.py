@@ -25,6 +25,7 @@ class ChoiceInline(admin.TabularInline):
 class QuestionInline(admin.StackedInline):
     model = Question
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
+    
     question_text.label = "Texto"
     readonly_fields = ('question_link',) 
     def question_link(self, obj):

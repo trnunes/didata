@@ -11,8 +11,10 @@
 <form action="{% url 'mydidata:multiple_choice_answer' question.uuid %}" method="post">
 {% csrf_token %}
     {% for choice in question.shuffled_choice_set %}
-        <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
-        <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br />
+        <div style="display: block;width: 100%;">   
+            <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+            <label for="choice{{ forloop.counter }}" style="display: inline;">{{ choice.choice_text }}</label><br />
+        </div>
     {% endfor %}
 
 {%if test%}
