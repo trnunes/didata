@@ -33,7 +33,7 @@ def get_finish_url_for_user(classroom, test):
 
 @register.simple_tag
 def get_class(test, user):
-	if !user.is_superuser:
+	if not user.is_superuser:
 		classes = [c for c in test.classroom_set.all() if c in user.classroom_set.all()]
 	else:
 		classes = test.classroom_set.all()
