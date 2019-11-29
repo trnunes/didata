@@ -513,7 +513,7 @@ def test_progress(request, class_id, uuid):
                 answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
                 if not answer:
                     answer = MultipleChoiceAnswer.objects.filter(student=student, question=q).first()
-                if answer and answer.is_ok(): sum_weights += answer.grade * q.weight
+                if answer: sum_weights += answer.grade * q.weight
                 total_weight += q.weight
             final_grade = 0
             if sum_weights: final_grade = sum_weights/total_weight
