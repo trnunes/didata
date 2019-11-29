@@ -4,7 +4,7 @@
     <div id="content-container" class="container p-none">
         {# List Questions #}
         {% load question_extras %}
-        {%load test_extras%}
+        {% load test_extras %}
         {%is_test_closed classroom test as test_closed%}
         <input id = "classroom" type="hidden" value="{{classroom.id}}">
         <input id = "test_uuid" type="hidden" value="{{test.uuid}}">
