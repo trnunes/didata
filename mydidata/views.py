@@ -523,6 +523,33 @@ def test_progress(request, class_id, uuid):
 
     return render(request, 'mydidata/test_progress.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
 
+@login_required()
+def test_progress_sum(request, class_id, uuid):
+    test = get_object_or_404(Test, uuid=uuid)
+    students = [request.user]
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    if request.user.is_superuser:
+        students = classroom.students.all().order_by('first_name')
+    student_grade = {}
+    if test.is_closed(classroom):
+        
+        for student in students:
+            
+            sum_weights = 0
+            final_grade = 0
+            for q in test.question_set.all():
+                answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
+                if not answer:
+                    answer = MultipleChoiceAnswer.objects.filter(student=student, question=q).first()
+                if answer: sum_weights += answer.grade
+                
+            final_grade = 0
+            if sum_weights: final_grade = sum_weights
+
+            student_grade[student] = "{:2.1f}".format(final_grade)
+        
+
+    return render(request, 'mydidata/test_progress.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
 
 @login_required()
 def multiple_choice_answer(request, question_uuid):

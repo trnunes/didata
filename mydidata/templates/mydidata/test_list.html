@@ -24,12 +24,14 @@
                             {% get_close_url klass test as close_url %}
                             {% get_open_url klass test as open_url %}
                             {% get_assess_url klass test as assess_url %}
+                            {% get_assess_sum_url klass test as assess_sum_url %}
                             <li class="al-item">
                             {% if user.is_superuser%}
                                 {%get_progress_url klass test as progress_url%}
                                 <a href="{{ progress_url }}"><h4 class="al-name">{{klass.name}}: {{ test.title }}</h4></a>
                                 &nbsp                            
                                 | <a href="{{ assess_url }}">Corrigir</a>
+                                | <a href="{{ assess_sum_url }}">Notas (Soma)</a>
                             {%else%}
                                 <a href="{{ test.get_absolute_url }}"><h4 class="al-name">{{ test.title }}</h4></a>
                             {%endif%}

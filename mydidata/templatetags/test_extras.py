@@ -23,6 +23,10 @@ def get_assess_url(classroom, test):
 	return reverse('mydidata:test_assess', args= (classroom.id, test.uuid))
 
 @register.simple_tag
+def get_assess_sum_url(classroom, test):
+	return reverse('mydidata:test_progress_sum', args= (classroom.id, test.uuid))
+
+@register.simple_tag
 def is_closed_for_student(user, test):
     
     return test.is_closed_for(user)
