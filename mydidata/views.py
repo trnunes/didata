@@ -241,18 +241,6 @@ def topic_progress(request, topic_uuid, class_id):
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
 
 @login_required
-def test_progress(request, uuid, class_id):
-    user = request.user
-    students = [user]
-    klass = get_object_or_404(Classroom, pk=class_id)
-    topic = get_object_or_404(Topic, uuid=topic_uuid)
-    discipline = topic.discipline
-    if user.is_superuser:
-        students = klass.students.all().order_by('first_name')
-
-    return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
-
-@login_required
 def finish_test(request, uuid, class_id, key):
     user = request.user
     test = get_object_or_404(Test, uuid=uuid)
@@ -494,9 +482,19 @@ def discursive_answer(request, question_uuid):
 
 
         return render(request, 'mydidata/answer_cru.html', context)
-    
+
 @login_required()
 def test_progress(request, class_id, uuid):
+    test = get_object_or_404(Test, uuid=uuid)
+    students = [request.user]
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    if request.user.is_superuser:
+        students = classroom.students.all().order_by('first_name')
+
+    return render(request, 'mydidata/test_progress.html', {'classroom': classroom, 'students': students, 'test':test,})
+
+@login_required()
+def test_results_wavg(request, class_id, uuid):
     test = get_object_or_404(Test, uuid=uuid)
     students = [request.user]
     classroom = get_object_or_404(Classroom, pk=class_id)
@@ -521,10 +519,10 @@ def test_progress(request, class_id, uuid):
             student_grade[student] = "{:2.1f}".format(final_grade*10)
         
 
-    return render(request, 'mydidata/test_progress.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
+    return render(request, 'mydidata/test_results.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
 
 @login_required()
-def test_progress_sum(request, class_id, uuid):
+def test_results_sum(request, class_id, uuid):
     test = get_object_or_404(Test, uuid=uuid)
     students = [request.user]
     classroom = get_object_or_404(Classroom, pk=class_id)
@@ -549,7 +547,7 @@ def test_progress_sum(request, class_id, uuid):
             student_grade[student] = "{:2.1f}".format(final_grade)
         
 
-    return render(request, 'mydidata/test_progress.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
+    return render(request, 'mydidata/test_results.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
 
 @login_required()
 def multiple_choice_answer(request, question_uuid):
