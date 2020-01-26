@@ -1,0 +1,20 @@
+{% extends 'mydidata/base.html' %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <h1>Detector de Cópias</h1>
+        <p>{{ question.question_text | safe}}</p>
+		{% if classroom %}
+			<h1>{{classroom.name}}</h1>
+		{%endif%}
+        
+        
+        <ul>
+        {%for student in group.students%}
+            <li><a href="">{{student.first_name}} {{student.last_name}}</a></li>
+        {%endfor%}
+        </ul>
+        
+    </div>
+
+{% endblock %}

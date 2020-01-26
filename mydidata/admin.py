@@ -25,7 +25,7 @@ class ChoiceInline(admin.TabularInline):
 class QuestionInline(admin.StackedInline):
     model = Question
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
-    
+    filter_horizontal = ('tests',)
     question_text.label = "Texto"
     readonly_fields = ('question_link',) 
     def question_link(self, obj):
@@ -146,24 +146,48 @@ class TestAdminForm(forms.ModelForm):
       test.save()
 
     if test.pk:
-      test.classroom_set.set(self.cleaned_data['classrooms'])
-      test.closed_tests.set(self.cleaned_data['classrooms_closed'])
-      self.save_m2m()
-
+        test.classroom_set.set(self.cleaned_data['classrooms'])
+        test.closed_tests.set(self.cleaned_data['classrooms_closed'])
+        self.save_m2m()
+        questions = list(test.questions.order_by('index').all())
+        print("test Questions: ", questions)
+        import random
+        for croom in self.cleaned_data['classrooms']:
+            for student in croom.students.all():
+                tu = TestUserRelation.objects.filter(student=student, test=test).first()
+                if not tu:
+                    tu = TestUserRelation.objects.create(student=student, test=test)
+                random.shuffle(questions)
+                
+                index_list = [q.index for q in questions]
+                tu.set_index_list(index_list)
+                tu.save()
     return test
 
 # class TestAdminForm(forms.ModelForm):    
 #     class Meta:
 #         model = Test
 #         fields = '__all__'    
+class TestQuestionInline(admin.TabularInline):
+    model = Test.questions.through
+    question_text = forms.CharField(widget=CKEditorUploadingWidget())
+    filter_horizontal = ('tests',)
+    question_text.label = "Texto"
+    readonly_fields = ('question_link',) 
+    def question_link(self, obj):
+        question_url = "/admin/mydidata/question/"+str(obj.question.id)+"/change/"
+        return mark_safe('<a href="%s">%s</a>' % (question_url, "visualizar"))
+    question_link.allow_tags = True
+    extra = 1
 
 class TestAdmin(admin.ModelAdmin):
     form = TestAdminForm
     show_change_link = True
     
     inlines = [
-        QuestionInline,
+        TestQuestionInline,
     ]
+    exclude = ('questions',)
     
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Choice)

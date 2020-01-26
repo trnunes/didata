@@ -1,5 +1,5 @@
 {% if error_message %}<h4><strong>{{ error_message }}</strong></h4>{% endif %}
-
+{%load question_extras%}
 <p>{{ question.question_text | safe}}</p>
 
 
@@ -8,24 +8,27 @@
     <h3 class="gi-sh">Correções Solicitadas</h3>
     <p><font color='red'>{{ answer.feedback | safe}}</font></p>
 {% endif %}
+{%with answer_form_url=action_url%}
+{%if test%}	
+	{%append_test_param action_url test as answer_form_url%}
+{%endif%}
 
 
 
-<form enctype="multipart/form-data" action="{{ action_url }}" method="post">
+<form enctype="multipart/form-data" action="{{ answer_form_url }}" method="post">
 
 {% csrf_token %}
     
 {{ form.media }}
 {{ form.as_p }}
 
-{%if test%}
-    <input id="test" name="test"
-           type="hidden"
-           value="{{ test.id}}"/>
-{%endif%}
 
 <input type="submit" value="Salvar" />
+
 </form>
+{%endwith%}
 {% if user.is_superuser %}
+	{%get_copy_detect_url question.uuid as detect_url%}
+	<a href='{{ detect_url }}'>Detectar Cópias</a>
     <a href='{{ classroom.get_absolute_url }}'>Voltar para Progresso da Turma</a>
 {%endif%}

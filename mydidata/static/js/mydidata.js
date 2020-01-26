@@ -192,7 +192,7 @@ $(document).ready(function() {
                     alert(data.error);
                 }else{
                     alert("Teste finalizado com sucesso! Boa sorte ;-)");
-                    $('#finish_test_link').remove();
+                    $('#finish_test_link').replaceWith("<span> Teste enviado. Aguarde os resultados! <span> ");
 
                 }
             }

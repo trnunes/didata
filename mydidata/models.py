@@ -100,6 +100,7 @@ class Test(models.Model, AdminURLMixin):
     def is_closed_for(self, user):
         test_user = TestUserRelation.objects.filter(test=self, student=user).first()
         return (test_user and test_user.is_closed)
+
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:test_detail', [self.uuid]
@@ -121,7 +122,7 @@ class Test(models.Model, AdminURLMixin):
         return 'mydidata:test_progress', [self.uuid, klass.id]
     
     def get_ordered_questions(self):
-        return self.question_set.all().order_by('index')    
+        return self.questions.order_by('index').all()
 
 class Classroom(models.Model):
     uuid = ShortUUIDField(unique=True)
@@ -193,7 +194,7 @@ class Question(models.Model):
         (1, 'Difícil'),
         (2, 'Médio'),
         (3, 'Fácil'),
-    )   
+    )
     difficulty_level = models.PositiveSmallIntegerField(choices=DIFFICULTY_LIST, verbose_name="Dificuldade")
     TYPE_LIST = (
         (1, "Exercício"),
@@ -202,7 +203,10 @@ class Question(models.Model):
     )
     question_type = models.PositiveSmallIntegerField(choices=TYPE_LIST, verbose_name="Tipo")
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, null=True, blank=True)
+    #TODO change to many-to-many
+    tests = models.ManyToManyField(Test, null=True, blank=True, related_name="questions", verbose_name="Avaliações",)
     test = models.ForeignKey(Test, on_delete=models.DO_NOTHING, null=True, blank=True)
+    
     class Meta:
         verbose_name_plural = 'Questões'
 
@@ -222,11 +226,16 @@ class Question(models.Model):
         return 'mydidata:question_delete', [self.id]
         
     @models.permalink
-    def get_answer_url(self):
+    def get_answer_url(self, test=None):
+        params = [self.uuid]
+        if test:
+            params.append(test.id)
+        
         if self.is_discursive:
-            return 'mydidata:discursive_answer', [self.uuid]
+            return 'mydidata:discursive_answer', params
         else:
-            return 'mydidata:multiple_choice_answer', [self.uuid]
+            return 'mydidata:multiple_choice_answer', params
+
     
     @models.permalink
     def get_test_url(self):

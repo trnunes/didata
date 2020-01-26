@@ -211,10 +211,10 @@ def test_assess(request, uuid, class_id):
     test = get_object_or_404(Test, uuid=uuid)
     student_list = classroom.students.all().order_by('first_name')
     for student in student_list:
-        for q in test.question_set.all():
+        for q in test.questions.all():
             answers = []
-            answers.extend(DiscursiveAnswer.objects.filter(student=student, question=q).all())
-            answers.extend(MultipleChoiceAnswer.objects.filter(student=student, question=q).all())
+            answers.extend(DiscursiveAnswer.objects.filter(student=student, question=q, test=test).all())
+            answers.extend(MultipleChoiceAnswer.objects.filter(student=student, question=q, test=test).all())
             for a in answers:
                 a.correct()
     return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
@@ -405,173 +405,38 @@ def feedback(request, answer_id):
     }
     return render(request, 'mydidata/answer_cru.html', context)
 
-
-
 @login_required()
-def discursive_answer(request, question_uuid):
+def multiple_choice_answer(request, question_uuid, test_id = None):
+    #TODO remove duplicated code with #discursive_answer
     question = get_object_or_404(Question, uuid=question_uuid)
-    answer = question.answer_set.filter(student=request.user).first()
-    if not answer:
-        answer = DiscursiveAnswer(student = request.user, question=question)        
+    test = None
+    if test_id:    
+        test = get_object_or_404(Test, pk=test_id)
+        answer = question.answer_set.filter(student=request.user, test=test_id).first()
     else:
-        answer = answer.discursiveanswer
-        answer.status = DiscursiveAnswer.SENT
+        answer = question.answer_set.filter(student=request.user).first()
+
+    if not answer:
+        answer = MultipleChoiceAnswer(student = request.user, question=question)
+        if test:
+            answer.test = test
+    else:
+        answer = answer.multiplechoiceanswer
+
     if request.POST:
         
-        if request.FILES.get('assignment_file', False):
-            file_name = request.FILES['assignment_file'].name
-            request.FILES['assignment_file'].name = answer.get_answer_file_id() + "." +  file_name.split(".")[-1]
-        
-        answer_form = DiscursiveAnswerForm(request.POST, request.FILES, instance=answer)
-
-        if answer_form.is_valid():
-            
-            answer_form.save()            
-
-            if request.session.get('teams', False):
-                if request.session['teams'].get(str(request.user.id), False):
-
-                    for member_id in request.session['teams'][str(request.user.id)]:
-                        member = User.objects.get(pk=member_id)
-                        member_answer = question.answer_set.filter(student=member).first()
-                        
-                        if not member_answer:
-                            member_answer = DiscursiveAnswer()
-                        else:
-                            member_answer = member_answer.discursiveanswer
-                            
-                        member_answer.student = member
-                        member_answer.question = question
-                        
-                        
-                        member_answer.answer_text = answer.answer_text
-                        member_answer.assignment_file = answer.assignment_file
-                        
-                        member_answer.save()
-                        question.save()
-
-
-                        member_answer = question.answer_set.filter(student=member).first()
-            test = question.test
+        if test:
             classroom = Classroom.objects.filter(students__id=request.user.id).first()
-            if test and not test in classroom.closed_tests.all():
-                context = { 
+            tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
+            closed_for_student = (tuserrelation and tuserrelation.is_closed)
+            if test in classroom.closed_tests.all() or closed_for_student:
+                context = {
                     'question': question,
                     'test': test,
                     'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
                 }
+                return render(request, 'mydidata/answer_cru.html', context)
 
-                return HttpResponseRedirect(reverse('mydidata:test_detail', args=(test.uuid,)))
-            else:
-                return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(question.topic.uuid,)))
-        else:
-            context = {  
-                'question': question,
-                'answer': answer,
-                'form': answer_form,
-            }
-
-            return render(request, 'mydidata/answer_cru.html', context) 
-    else:
-        form = DiscursiveAnswerForm(instance=answer)
-        context = {
-            'question': question,
-            'answer': answer,
-            'form': form,
-        }
-
-
-        return render(request, 'mydidata/answer_cru.html', context)
-
-@login_required()
-def test_progress(request, class_id, uuid):
-    test = get_object_or_404(Test, uuid=uuid)
-    students = [request.user]
-    classroom = get_object_or_404(Classroom, pk=class_id)
-    if request.user.is_superuser:
-        students = classroom.students.all().order_by('first_name')
-
-    return render(request, 'mydidata/test_progress.html', {'classroom': classroom, 'students': students, 'test':test,})
-
-@login_required()
-def test_results_wavg(request, class_id, uuid):
-    test = get_object_or_404(Test, uuid=uuid)
-    students = [request.user]
-    classroom = get_object_or_404(Classroom, pk=class_id)
-    if request.user.is_superuser:
-        students = classroom.students.all().order_by('first_name')
-    student_grade = {}
-    if test.is_closed(classroom):
-        
-        for student in students:
-            total_weight = 0
-            sum_weights = 0
-            final_grade = 0
-            for q in test.question_set.all():
-                answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
-                if not answer:
-                    answer = MultipleChoiceAnswer.objects.filter(student=student, question=q).first()
-                if answer: sum_weights += answer.grade * q.weight
-                total_weight += q.weight
-            final_grade = 0
-            if sum_weights: final_grade = sum_weights/total_weight
-
-            student_grade[student] = "{:2.1f}".format(final_grade*10)
-        
-
-    return render(request, 'mydidata/test_results.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
-
-@login_required()
-def test_results_sum(request, class_id, uuid):
-    test = get_object_or_404(Test, uuid=uuid)
-    students = [request.user]
-    classroom = get_object_or_404(Classroom, pk=class_id)
-    if request.user.is_superuser:
-        students = classroom.students.all().order_by('first_name')
-    student_grade = {}
-    if test.is_closed(classroom):
-        
-        for student in students:
-            
-            sum_weights = 0
-            final_grade = 0
-            for q in test.question_set.all():
-                answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
-                if not answer:
-                    answer = MultipleChoiceAnswer.objects.filter(student=student, question=q).first()
-                if answer: sum_weights += answer.grade
-                
-            final_grade = 0
-            if sum_weights: final_grade = sum_weights
-
-            student_grade[student] = "{:2.1f}".format(final_grade)
-        
-
-    return render(request, 'mydidata/test_results.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
-
-@login_required()
-def multiple_choice_answer(request, question_uuid):
-
-    question = get_object_or_404(Question, uuid=question_uuid)
-    answer = question.answer_set.filter(student=request.user).first()
-    if not answer:
-        answer = MultipleChoiceAnswer(student = request.user, question=question)
-    else:
-        answer = answer.multiplechoiceanswer
-        
-    if request.POST:
-        test = question.test
-        classroom = Classroom.objects.filter(students__id=request.user.id).first()
-        tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
-        closed_for_student = (tuserrelation and tuserrelation.is_closed)
-        if (test and test in classroom.closed_tests.all()) or closed_for_student:
-            context = {
-                'question': question,
-                'test': test,
-                'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
-            }
-
-            return render(request, 'mydidata/answer_cru.html', context)
         try:
             selected_choice = question.choice_set.get(pk=request.POST['choice'])
             answer.choice = selected_choice
@@ -597,10 +462,14 @@ def multiple_choice_answer(request, question_uuid):
                         else:
                             member_answer = member_answer.multiplechoiceanswer
                             
+                        if test:
+                            member_answer.test = test
+
                         member_answer.student = member
                         member_answer.question = question
                         
                         member_answer.choice = answer.choice
+
                         member_answer.save()
                         question.save()
                         member_answer = question.answer_set.filter(student=member).first()
@@ -615,10 +484,159 @@ def multiple_choice_answer(request, question_uuid):
         context = {
             'question': question,
         }
+        if test: context['test']=test
+        return render(request, 'mydidata/answer_cru.html', context)
+
+@login_required()
+def discursive_answer(request, question_uuid, test_id = None):
+    question = get_object_or_404(Question, uuid=question_uuid)
+    test = None
+    if test_id:    
+        test = get_object_or_404(Test, pk=test_id)
+        answer = question.answer_set.filter(student=request.user, test=test_id).first()
+    else:
+        answer = question.answer_set.filter(student=request.user).first()
+    if not answer:
+        answer = DiscursiveAnswer(student = request.user, question=question)        
+        if test:
+            answer.test = test
+    else:
+        answer = answer.discursiveanswer
+        answer.status = DiscursiveAnswer.SENT
+    if request.POST:
+        if test:
+            classroom = Classroom.objects.filter(students__id=request.user.id).first()
+            tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
+            closed_for_student = (tuserrelation and tuserrelation.is_closed)
+            if test in classroom.closed_tests.all() or closed_for_student:
+                context = {
+                    'question': question,
+                    'test': test,
+                    'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
+                }
+                return render(request, 'mydidata/answer_cru.html', context)
+
         
+        if request.FILES.get('assignment_file', False):
+            file_name = request.FILES['assignment_file'].name
+            request.FILES['assignment_file'].name = answer.get_answer_file_id() + "." +  file_name.split(".")[-1]
+        
+        answer_form = DiscursiveAnswerForm(request.POST, request.FILES, instance=answer)
+        if answer_form.is_valid():
+            
+            answer_form.save()            
+
+            if request.session.get('teams', False):
+                if request.session['teams'].get(str(request.user.id), False):
+
+                    for member_id in request.session['teams'][str(request.user.id)]:
+                        member = User.objects.get(pk=member_id)
+                        member_answer = question.answer_set.filter(student=member).first()
+                        
+                        if not member_answer:
+                            member_answer = DiscursiveAnswer()
+                        else:
+                            member_answer = member_answer.discursiveanswer
+                        if test:
+                            member_answer.test = test
+
+                        member_answer.student = member
+                        member_answer.question = question
+                        
+                        
+                        member_answer.answer_text = answer.answer_text
+                        member_answer.assignment_file = answer.assignment_file
+                        
+                        member_answer.save()
+                        question.save()
+
+                        member_answer = question.answer_set.filter(student=member).first()
+            if test_id:
+                redirect_url = reverse('mydidata:test_detail', args=(test.uuid,))
+            else:
+                redirect_url = reverse('mydidata:topic_detail', args=(question.topic.uuid,))
+
+            return HttpResponseRedirect(redirect_url)
+            
+    else:
         form = DiscursiveAnswerForm(instance=answer)
-        context['form'] = form
-        return render(request, 'mydidata/answer_cru.html', context)        
+        context = {
+            'question': question,
+            'answer': answer,
+            'form': form,
+        }
+        if test: context['test'] = test;
+
+
+        return render(request, 'mydidata/answer_cru.html', context)
+
+
+@login_required()
+def test_progress(request, class_id, uuid):
+    test = get_object_or_404(Test, uuid=uuid)
+    students = [request.user]
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    if request.user.is_superuser:
+        students = classroom.students.all().order_by('first_name')
+
+    return render(request, 'mydidata/test_progress.html', {'classroom': classroom, 'students': students, 'test':test,})
+
+@login_required()
+def test_results_wavg(request, class_id, uuid):
+    test = get_object_or_404(Test, uuid=uuid)
+    students = [request.user]
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    if request.user.is_superuser:
+        students = classroom.students.all().order_by('first_name')
+    student_grade = {}
+    if test.is_closed(classroom):
+        
+        for student in students:
+            total_weight = 0
+            sum_weights = 0
+            final_grade = 0
+            for q in test.questions.all():
+                answer = DiscursiveAnswer.objects.filter(student=student, question=q, test=test).first()
+                if not answer:
+                    answer = MultipleChoiceAnswer.objects.filter(student=student, question=q, test=test).first()
+                if answer: sum_weights += answer.grade * q.weight
+                total_weight += q.weight
+            final_grade = 0
+            if sum_weights: final_grade = sum_weights/total_weight
+
+            student_grade[student] = "{:2.1f}".format(final_grade*10)
+        
+
+    return render(request, 'mydidata/test_results.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
+
+@login_required()
+def test_results_sum(request, class_id, uuid):
+    test = get_object_or_404(Test, uuid=uuid)
+    students = [request.user]
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    if request.user.is_superuser:
+        students = classroom.students.all().order_by('first_name')
+    student_grade = {}
+    #TODO duplicated code with test_results_wavg()
+    if test.is_closed(classroom):
+        
+        for student in students:
+            
+            sum_weights = 0
+            final_grade = 0
+            for q in test.questions.all():
+                answer = DiscursiveAnswer.objects.filter(student=student, question=q, test=test).first()
+                if not answer:
+                    answer = MultipleChoiceAnswer.objects.filter(student=student, question=q, test=test).first()
+                if answer: sum_weights += answer.grade
+                
+            final_grade = 0
+            if sum_weights: final_grade = sum_weights
+
+            student_grade[student] = "{:2.1f}".format(final_grade)
+        
+
+    return render(request, 'mydidata/test_results.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
 
 def topic_detail(request, uuid):
     topic = Topic.objects.get(uuid=uuid)
@@ -645,8 +663,11 @@ def test_detail(request, uuid):
     test = get_object_or_404(Test, uuid=uuid)
 
     classroom = Classroom.objects.filter(students__id=request.user.id).first()    
-    questions = list(Question.objects.filter(test=test).order_by('index'))
+    questions = list(test.questions.order_by('index').all())
+    print("Questions: ", len(questions))
+
     tu = TestUserRelation.objects.filter(student=request.user, test=test).first()
+    print("SIZE", tu.index_list_as_array())
     reordered_questions = [questions[i-1] for i in tu.index_list_as_array()]
 
     context = {
@@ -815,4 +836,15 @@ def define_team(request):
                 'mydidata/define_team.html', 
                 {'studentList': studentsToSelect, 'selectedMembers': selectedMembers,}
         )
+@login_required()
+def detect_copies(request, question_uuid):
 
+    classroom = Classroom.objects.filter(students__id=request.user.id).first()
+    question = get_object_or_404(Question, uuid=question_uuid)
+
+    answers = DiscursiveAnswer.objects.filter(question = question, student__id__in=classroom.students.all())
+
+    [(a2, a1) for a1 in answers for a2 in answers if a1.text.replace(" ", "") == a2.text.replace(" ", "")]
+
+
+    return render(request, 'mydidata/copy_detector.html', {'question': question, 'answers': [a.student for a in answers]})

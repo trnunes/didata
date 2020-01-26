@@ -8,7 +8,7 @@
 
 {% endif %}
 <h4 class="gi-sh">Marque uma das opções abaixo e clique em enviar</h4>
-<form action="{% url 'mydidata:multiple_choice_answer' question.uuid %}" method="post">
+<form action="{% url 'mydidata:multiple_choice_answer' question.uuid test.id%}" method="post">
 {% csrf_token %}
     {% for choice in question.shuffled_choice_set %}
         <div style="display: block;width: 100%;margin-bottom: 10px;">   

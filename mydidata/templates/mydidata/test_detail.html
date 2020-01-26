@@ -30,16 +30,17 @@
                     <tbody>
                         <tr></tr>
                         {% for question in questions %}
+                            {%get_answer_url question test as answer_url%}
                             <tr>
-                                <td class="ci-td-p-l"><a href="{{ question.get_answer_url }}">Questão {{ forloop.counter }}</a></td>
+                                <td class="ci-td-p-l"><a href="{{ answer_url }}">Questão {{ forloop.counter }}</a></td>
                                 {% if user.is_authenticated %}
-                                    <td>{% get_question_status question user%}</td>
+                                    <td>{% get_question_status question user test%}</td>
                                 {%endif%}
                                 <td class="con-cntrl">
                                     {# Question Edit Link #}
                                     
                                         <a class="pen"
-                                           href="{{ question.get_answer_url }}"></a>
+                                           href="{{ answer_url }}"></a>
                                     
                                 </td>
     
@@ -48,7 +49,10 @@
                             
                             {%is_closed_for_student user test as is_closed_for_student%}
                             {%if not is_closed_for_student%}
-                                <tr> <td><a id="finish_test_link" href=""><span style="color: red;font-weight:bold">Clique aqui para finalizar!</span></a> <td></tr>
+                                <tr> <td>
+                                    <button id="finish_test_link" type="submit"><span style="color: red;font-weight:bold">Clique aqui para finalizar!</span></button>
+                                    <!-- <a id="finish_test_link" href=""><span style="color: red;font-weight:bold">Clique aqui para finalizar!</span></a>  -->
+                                    <td></tr>
                             {%else%}
                                 <tr> <td><span style="color: red">Teste Finalizado! Aguarde os Resultados.</span><td></tr>
                             {%endif%}

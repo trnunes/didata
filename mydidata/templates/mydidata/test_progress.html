@@ -17,7 +17,7 @@
                 <tbody>
                     <tr>
                         <th>Aluno</th>
-                        {% for question in test.question_set.all %}
+                        {% for question in test.questions.all %}
                             <th>Question {{ forloop.counter }}</th>
                         {% endfor %}
                     </tr>
@@ -26,7 +26,7 @@
                             <td>{{student.first_name}}</td>
                             
                             {%for question in test.get_ordered_questions %}
-                                {% get_answers question student as answers%}
+                                {% get_answers question student test as answers%}
                                 {%if answers%}
                                     {%for answer in answers%}
                                         {%get_specific_answer answer as specific_answer%}

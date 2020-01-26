@@ -111,7 +111,7 @@ class DiscursiveAnswerForm(forms.ModelForm):
         classrooms = Classroom.objects.filter(students__id = student.id).all()
         question = self.instance.question
         topic = question.topic
-        test = question.test
+        test = self.instance.test
         c_list = [classroom for classroom in classrooms if topic in classroom.closed_topics.all()]
         t_classes = []
         if test:
