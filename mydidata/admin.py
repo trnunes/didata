@@ -47,9 +47,11 @@ class TopicInline(admin.TabularInline):
 class QuestionAdminForm(forms.ModelForm):
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
     question_text.label = "Texto"
+
     class Meta:
         model = Question
         fields = '__all__'
+
         
 class ClassroomAdmin(admin.ModelAdmin):
     model = Classroom
@@ -83,6 +85,8 @@ class DisciplineAdmin(admin.ModelAdmin):
     
 class QuestionAdmin(admin.ModelAdmin):
     form = QuestionAdminForm
+    filter_horizontal = ('tests',)
+    
     inlines = [
         ChoiceInline,
         MultipleChoiceAnswerInline,
@@ -171,7 +175,7 @@ class TestAdminForm(forms.ModelForm):
 class TestQuestionInline(admin.TabularInline):
     model = Test.questions.through
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
-    filter_horizontal = ('tests',)
+    
     question_text.label = "Texto"
     readonly_fields = ('question_link',) 
     def question_link(self, obj):
