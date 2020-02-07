@@ -9,6 +9,7 @@ from django import template
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from django.utils.translation import gettext as _
+
 from mydidata.storage_backends import PublicMediaStorage
 import urllib
 from django.contrib.contenttypes.models import ContentType
@@ -211,7 +212,8 @@ class Question(models.Model):
         verbose_name_plural = 'Questões'
 
     def __str__(self):
-        return u'%s ...' % self.question_text[0:100]
+
+        return u'%s ...' % self.question_text[0:200]
 
     @models.permalink
     def get_absolute_url(self):

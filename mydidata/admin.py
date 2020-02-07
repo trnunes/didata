@@ -3,7 +3,7 @@ from django.contrib import admin
 from django import forms
 from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
-
+from django.utils.html import format_html
 from .models import Question, Discipline
 from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, DiscursiveAnswer, Classroom, ResourceRoom, TestUserRelation
 from django.utils.safestring import mark_safe
@@ -58,18 +58,20 @@ class ClassroomAdmin(admin.ModelAdmin):
     filter_horizontal = ('students', 'disciplines', 'closed_topics', 'tests', 'closed_tests')
     def save_model(self, request, obj, form, change):        
         import random
-        for test in obj.tests.all():
-            for student in obj.students.all():
-                tu = TestUserRelation.objects.filter(student=student, test=test)
-                if not tu:
-                    tu = TestUserRelation.objects.create(student=student, test=test)
-                    questions = list(Question.objects.filter(test=test).order_by('index'))
-                    random.shuffle(questions)
-                    
-                    index_list = [q.index for q in questions]
-                    tu.set_index_list(index_list)
-                    tu.save()   
         obj.save()
+        if obj.tests:
+            for test in obj.tests.all():
+                for student in obj.students.all():
+                    tu = TestUserRelation.objects.filter(student=student, test=test)
+                    if not tu:
+                        tu = TestUserRelation.objects.create(student=student, test=test)
+                        questions = list(Question.objects.filter(test=test).order_by('index'))
+                        random.shuffle(questions)
+                        
+                        index_list = [q.index for q in questions]
+                        tu.set_index_list(index_list)
+                        tu.save()   
+        
 
 class ResourceRoomAdmin(admin.ModelAdmin):
     model = ResourceRoom
@@ -81,12 +83,17 @@ class DisciplineAdmin(admin.ModelAdmin):
     inlines = [
         TopicInline,
     ]
+
+def get_formated_text(self):
+    return format_html(u'%s ...' % self.question_text[0:200])
     
     
 class QuestionAdmin(admin.ModelAdmin):
     form = QuestionAdminForm
     filter_horizontal = ('tests',)
-    
+    search_fields = ['question_text']
+
+    list_filter = ('tests',)
     inlines = [
         ChoiceInline,
         MultipleChoiceAnswerInline,
