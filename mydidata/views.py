@@ -557,6 +557,16 @@ def discursive_answer(request, question_uuid, test_id = None):
                 redirect_url = reverse('mydidata:topic_detail', args=(question.topic.uuid,))
 
             return HttpResponseRedirect(redirect_url)
+        else:            
+            context = {
+                'question': question,
+                'answer': answer,
+                'form': answer_form,
+            }
+            if test: context['test'] = test;
+
+
+        return render(request, 'mydidata/answer_cru.html', context)
             
     else:
         form = DiscursiveAnswerForm(instance=answer)
