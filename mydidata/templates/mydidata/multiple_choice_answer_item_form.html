@@ -12,8 +12,15 @@
 {% csrf_token %}
     {% for choice in question.shuffled_choice_set %}
         <div style="display: block;width: 100%;margin-bottom: 10px;">   
-            <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+            
             <label for="choice{{ forloop.counter }}" style="display: inline;">{{ choice.choice_text }}</label><br />
+            {%if choice == answer.choice%}
+                <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" checked="checked"/>
+
+            {%else%}
+                <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+            {%endif%}
+            
         </div>
     {% endfor %}
 

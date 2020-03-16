@@ -26,17 +26,18 @@
                             {% get_assess_url klass test as assess_url %}
                             {% get_assess_sum_url klass test as assess_sum_url %}
                             {% get_assess_wavg_url klass test as assess_wavg_url %}
+                            {%get_progress_url klass test as progress_url%}
                             <li class="al-item">
+                                
                             {% if user.is_superuser%}
-                                {%get_progress_url klass test as progress_url%}
-                                <a href="{{ progress_url }}"><h4 class="al-name">{{klass.name}}: {{ test.title }}</h4></a>
-                                &nbsp                            
+                                <a href="{{ progress_url }}"><h4 class="al-name">{{ test.title }} para {{klass.name}}</h4></a>
                                 | <a href="{{ assess_url }}">Corrigir</a>
                                 | <a href="{{ assess_sum_url }}">Notas (Soma)</a>
-                                | <a href="{{ assess_wavg_url }}">Notas (Soma Ponderada)</a>
+                                | <a href="{{ assess_wavg_url }}">Notas (Média Ponderada)</a>
                             {%else%}
-                                <a href="{{ test.get_absolute_url }}"><h4 class="al-name">{{ test.title }}</h4></a>
+                                <a href="{{ test.get_absolute_url }}"><h4 class="al-name">{{ test.title }} para {{klass.name}}</h4></a>
                             {%endif%}
+
                             </li>
                         {%endfor%}
 

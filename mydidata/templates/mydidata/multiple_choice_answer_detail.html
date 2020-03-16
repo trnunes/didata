@@ -21,8 +21,12 @@
                             
                             {% for choice in answer.question.choice_set.all %}
                                 
-                                <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" checked = "{%is_selected choice answer%}"/>
-                                
+                                {%if choice == answer.choice%}
+                                    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" checked = "checked"/>
+                                {%else%}
+                                    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}"/>
+                                {%endif%}
+
                                 <label class = "{%get_choice_label_class answer choice%}" for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br />
                             {% endfor %}
 

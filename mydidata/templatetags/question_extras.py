@@ -25,7 +25,7 @@ def get_choice_label_class(answer, choice):
     if answer.choice == choice and not answer.choice.is_correct:
         return "label label-danger"
     if choice.is_correct:
-        return "label label-info"
+        return "label label-success"
     
         
 @register.simple_tag

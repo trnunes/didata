@@ -432,6 +432,7 @@ def multiple_choice_answer(request, question_uuid, test_id = None):
             if test in classroom.closed_tests.all() or closed_for_student:
                 context = {
                     'question': question,
+                    'answer': answer,
                     'test': test,
                     'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
                 }
@@ -483,6 +484,7 @@ def multiple_choice_answer(request, question_uuid, test_id = None):
     else:
         context = {
             'question': question,
+            'answer': answer,
         }
         if test: context['test']=test
         return render(request, 'mydidata/answer_cru.html', context)
