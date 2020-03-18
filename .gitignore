@@ -8,3 +8,4 @@ bucket
 .env
 .env
 .idea
+sendgrid.env

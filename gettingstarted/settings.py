@@ -26,7 +26,7 @@ SECRET_KEY = 'CHANGE_ME!!!! (P.S. the SECRET_KEY environment variable will be us
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
+SENDGRID_SANDBOX_MODE_IN_DEBUG = False
 ALLOWED_HOSTS = []
 
 
@@ -44,6 +44,10 @@ INSTALLED_APPS = [
     'ckeditor_uploader',
     'storages',
 ]
+EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'  # During development only
+SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
+SENDGRID_ECHO_TO_STDOUT=True
+print("SENDGRIP", SENDGRID_API_KEY)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

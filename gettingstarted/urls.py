@@ -14,6 +14,7 @@ from django.views.static import serve
 
 urlpatterns = [
     url(r'^$', mydidata.views.index, name='index'),
+	url(r'^', include('django.contrib.auth.urls')),
     url(r'^accounts/', auth_views.login, {'template_name': 'mydidata/login.html'}),
     # url(r'^db', mydidata.views.db, name='db'),
     url(r'^mydidata/', include('mydidata.urls')),
