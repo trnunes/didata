@@ -17,7 +17,7 @@ django-shortuuidfield = "*"
 "boto3" = "*"
 unidecode = "*"
 pillow = "*"
-
+django-sendgrid-v5 = "*"
 
 [requires]
 
