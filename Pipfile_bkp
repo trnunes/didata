@@ -1,0 +1,24 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+
+[packages]
+
+django = "*"
+gunicorn = "*"
+django-heroku = "*"
+requests = "*"
+django-ckeditor = "*"
+django-storages = "*"
+shortuuid = "*"
+django-shortuuidfield = "*"
+boto3 = "*"
+unidecode = "*"
+pillow = "*"
+django-sendgrid-v5 = "*"
+
+[requires]
+
+python_version = "3.7"
