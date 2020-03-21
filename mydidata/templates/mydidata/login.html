@@ -25,15 +25,15 @@
                 {% if form.errors %}
                     <p class=" label label-danger">
                         O login e a senha não combinam.                        
-                    </p>
-                    <p>
-                    <a href="/password_reset">Clique aqui caso você tenha esquecido seu login ou sua senha.</a>
-                    </p>
+                    </p>                    
                 {% endif %}
 
                 <input type="submit" value="Login" 
                        class="btn btn-primary pull-right" />
                 <input type="hidden" name="next" value="{{ next }}" />
+                <p>
+                <a href="/password_reset">Esqueceu o nome de usuário ou senha? Clique aqui!</a>
+                </p>
             </form>
 
 			

@@ -350,7 +350,7 @@ def calculate_grades(request, class_id, topic_uuid=None):
 
 
 
-@login_required()
+
 def discursive_answer_detail(request, answer_id):
     answer = DiscursiveAnswer.objects.get(pk=answer_id)
 
@@ -489,15 +489,29 @@ def multiple_choice_answer(request, question_uuid, test_id = None):
         if test: context['test']=test
         return render(request, 'mydidata/answer_cru.html', context)
 
-@login_required()
+
 def discursive_answer(request, question_uuid, test_id = None):
     question = get_object_or_404(Question, uuid=question_uuid)
     test = None
-    if test_id:    
-        test = get_object_or_404(Test, pk=test_id)
+    answer = None
+    if test_id: test = get_object_or_404(Test, pk=test_id)
+    if not request.user.is_authenticated:
+        if request.POST:
+            return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+        else:
+            context = {
+                'question': question,
+                'test': test,
+                'error_message': 'Você precisa fazer o login para responder!'
+            }
+
+        return render(request, 'mydidata/answer_cru.html', context)
+    
+    if test_id:        
         answer = question.answer_set.filter(student=request.user, test=test_id).first()
     else:
         answer = question.answer_set.filter(student=request.user).first()
+   
     if not answer:
         answer = DiscursiveAnswer(student = request.user, question=question)        
         if test:
@@ -505,7 +519,10 @@ def discursive_answer(request, question_uuid, test_id = None):
     else:
         answer = answer.discursiveanswer
         answer.status = DiscursiveAnswer.SENT
+    
     if request.POST:
+        if not request.user.is_authenticated: return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+
         if test:
             classroom = Classroom.objects.filter(students__id=request.user.id).first()
             tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
