@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'mydidata',
     'ckeditor',
-    'ckeditor_uploader',
+    'ckeditor_uploader',    
     'storages',
 ]
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'  # During development only

@@ -23,7 +23,7 @@
         {% endblock head_meta %}
         {% block head_css %}
             {% block head_css_site %}
-		    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" media="screen"/>
+		    
 			
                 <link href="/static/css/bootstrap.min.css"
                       rel="stylesheet" media="screen">
@@ -101,7 +101,7 @@
     {% block footer_javascript %}
         {% block footer_javascript_site %}
 		    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-		    <script type="text/javascript" src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+		    <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
 		
             <!-- <script src="/static/js/jquery.min.js"></script>
             <script src="/static/js/bootstrap.min.js"></script> -->
@@ -110,7 +110,7 @@
             
             {# javascript to format all code snippets#}
             <script>
-                snippets = $('pre code');
+                snippets = $('pre code');   
                 snippets.each(function(i){hljs.highlightBlock(snippets[i]);});
             </script>
             
