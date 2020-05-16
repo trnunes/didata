@@ -8,12 +8,13 @@ admin.autodiscover()
 import mydidata.views
 from django.conf import settings
 from django.views.static import serve
+from django.http import HttpResponseRedirect
 # Examples:
 # url(r'^$', 'gettingstarted.views.home', name='home'),
 # url(r'^blog/', include('blog.urls')),
 
 urlpatterns = [
-    url(r'^$', mydidata.views.index, name='index'),
+    url(r'^$', lambda r: HttpResponseRedirect('mydidata/')),
 	url(r'^', include('django.contrib.auth.urls')),
     url(r'^accounts/', auth_views.login, {'template_name': 'mydidata/login.html'}),
     # url(r'^db', mydidata.views.db, name='db'),
