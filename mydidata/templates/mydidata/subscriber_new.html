@@ -25,7 +25,7 @@
                             <td>{{ form.last_name.errors }}</td>
                         </tr>
                         <tr>
-                            <th>Nome de Usuário</th>
+                            <th>Nome de Usuário (sem espaço)</th>
                             <th>{{ form.email.label }}</th>
                         </tr>
                         <tr>
@@ -37,7 +37,7 @@
                             <td>{{ form.email.errors }}</td>
                         </tr>
                         <tr>
-                            <th>Senha</th>
+                            <th>Senha (8 dígitos com pelo menos uma letra e um número)</th>
                             <th>Confirmar Senha</th>
                         </tr>
                         <tr>
@@ -61,7 +61,7 @@
                     </tbody>
                 </table>
                 {# Billing Address Section #}
-                <input class="btn btn-primary" type="submit" value="submit">
+                <input class="btn btn-primary" type="submit" value="Cadastrar">
             </form>
             {# Credit Card Section #}
         </div>

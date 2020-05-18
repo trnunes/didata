@@ -9,14 +9,11 @@
                 {# Account Search Form #}
             </div>
             {# List of Accounts #}
-            <ul id="al-group" class="strip-list">
+            <div class="list-group">
                 {% for discipline in disciplines %}
-                    <li class="al-item">
-                        <a href="{{ discipline.get_absolute_url }}"><h4 class="al-name">{{ discipline.name }}</h4></a>
-                        
-                    </li>
+                    <a href="{{ discipline.get_absolute_url }}" class="list-group-item list-group-item-action">{{ discipline.name }}</a>
                 {% endfor %}
-            </ul>
+            </div>
             {# Pagination Section #}
         </div>
     </div>

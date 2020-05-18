@@ -20,13 +20,13 @@
                 {# Account Search Form #}
             </div>
             {# List of Accounts #}
-            <ul id="al-group" class="strip-list">
+            
+            <div class="list-group">
                 {% for topic in topics %}
-                    <li class="al-item">
-                        <a href="{{ topic.get_absolute_url }}"><h4 class="al-name">{{ topic.topic_title }}</h4></a>
-                        
-                    </li>
+                    <a href="{{ topic.get_absolute_url }}" class="list-group-item list-group-item-action">{{ topic.topic_title }}</a>
                 {% endfor %}
+
+    
                 {%is_on_resource_room user as is_on_resource%}
                 {% if topics and not topics.first.is_resource%}
                     {%if is_on_resource %}
@@ -37,7 +37,7 @@
                     <a href="{{ topics.first.discipline.get_absolute_url }}">Voltar para programa da disciplina</a>
 
                 {%endif%}
-            </ul>
+            </div>
             {# Pagination Section #}
         </div>
     </div>
