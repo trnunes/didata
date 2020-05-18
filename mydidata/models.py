@@ -37,7 +37,8 @@ class Greeting(models.Model):
 class Discipline(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     name = models.CharField(max_length=255, verbose_name="Nome",)
-    students = models.ManyToManyField(User, verbose_name="Estudantes",)
+    students = models.ManyToManyField(User, verbose_name="Estudantes", null=True, blank=True,)
+    enabled = models.BooleanField(default=True, verbose_name="Habilitado?")
     class Meta:
         verbose_name_plural = 'Disciplinas'
 

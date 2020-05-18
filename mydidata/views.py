@@ -90,7 +90,7 @@ class DisciplineList(ListView):
     context_object_name = 'disciplines'
 
     def get_queryset(self):
-        discipline_list = Discipline.objects.order_by('name')
+        discipline_list = Discipline.objects.filter(enabled=True).order_by('name')
         return discipline_list
         
 
