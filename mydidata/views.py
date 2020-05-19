@@ -16,6 +16,7 @@ from django.contrib import messages
 import boto3
 import re
 import json
+from django.db.models import Q
 class HomePage(TemplateView):
     """
     Because our needs are so simple, all we have to do is
@@ -96,6 +97,13 @@ class DisciplineList(ListView):
 
     def dispatch(self, *args, **kwargs):
         return super(DisciplineList, self).dispatch(*args, **kwargs)
+
+def search(request):
+    keyword = request.GET['keyword']
+    if(not keyword):
+        return render('mydidata/home.html')
+    context = {'topics': Topic.objects.filter(Q(topic_title__icontains=keyword) | Q(topic_content__icontains=keyword)).order_by('topic_title') }
+    return render(request, 'mydidata/search.html', context)
 
 def subscriber_new(request, classroom_id, template='mydidata/subscriber_new.html'):
     classroom = get_object_or_404(Classroom, pk=classroom_id)

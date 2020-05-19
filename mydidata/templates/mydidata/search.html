@@ -1,0 +1,15 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Tópicos{% endblock title %}
+
+{% block content %}
+    <div class="container">
+    <div class="list-group" style="margin-bottom: 1rem;">
+        {% for topic in topics %}
+            <a href="{{ topic.get_absolute_url }}" class="list-group-item list-group-item-action">{{ topic.topic_title }}</a>
+        {% endfor %}
+
+        
+    </div>
+    <p><a class="btn btn-md btn-primary" href="/mydidata/signup/8" role="button">Cadastre-se e tenha acesso gratuito a todo o nosso conteúdo!</a></p>
+    </div>
+{% endblock content %}
