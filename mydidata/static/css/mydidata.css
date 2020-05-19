@@ -20,6 +20,7 @@ body {
   .carousel-caption {
     bottom: -1rem;
     z-index: 10;
+    margin-bottom: 80%;
   }
   
   /* Declare heights because of positioning of img element */
