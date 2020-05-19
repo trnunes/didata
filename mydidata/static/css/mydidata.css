@@ -31,8 +31,6 @@ body {
   .carousel-item > img {
     /* position: absolute; */
     object-fit: cover !important;
-    top: 0;
-    left: 0;
     min-width: 100%;
     height: auto;
     max-height: 32rem;
