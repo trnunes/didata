@@ -100,16 +100,17 @@ class DisciplineList(ListView):
 def subscriber_new(request, classroom_id, template='mydidata/subscriber_new.html'):
     classroom = get_object_or_404(Classroom, pk=classroom_id)
     if request.method == 'POST':
+        
         form = SubscriberForm(request.POST)
+        
         if form.is_valid():
             # Unpack form values
-            first_name = form.cleaned_data['first_name']
-            last_name = form.cleaned_data['last_name']
+            first_name = form.cleaned_data['first_name']            
             username = form.cleaned_data['username']
             password = form.cleaned_data['password1']
             email = form.cleaned_data['email']
             # Create the User record
-            user = User(first_name=first_name, last_name = last_name, username=username, email=email)
+            user = User(first_name=first_name, username=username, email=email)
             user.set_password(password)
             
             user.save()

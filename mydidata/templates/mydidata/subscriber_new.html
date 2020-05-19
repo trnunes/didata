@@ -2,67 +2,38 @@
 {% block title %}Signup{% endblock title %}
 
 {% block content %}
+
     <div id="content-container" class="container p-none">
         <div class="side-p">
-            
-            <form id="user-reg-form" action="/mydidata/signup/{{classroom.id}}" method="post">
-            
+            <form action="/mydidata/signup/{{classroom.id}}" method="post">
                 {% csrf_token %}
-                {# Username & Password Section #}
-                <h5 class="sn-sh">Crie uma conta de estudante</h5>
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <th>Primeiro Nome</th>
-                            <th>Último Nome</th>
-                        </tr>
-                        <tr>
-                            <td>{{ form.first_name }}</td>
-                            <td>{{ form.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.first_name.errors }}</td>
-                            <td>{{ form.last_name.errors }}</td>
-                        </tr>
-                        <tr>
-                            <th>Nome de Usuário (sem espaço)</th>
-                            <th>{{ form.email.label }}</th>
-                        </tr>
-                        <tr>
-                            <td>{{ form.username }}</td>
-                            <td>{{ form.email }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.username.errors }}</td>
-                            <td>{{ form.email.errors }}</td>
-                        </tr>
-                        <tr>
-                            <th>Senha (8 dígitos com pelo menos uma letra e um número)</th>
-                            <th>Confirmar Senha</th>
-                        </tr>
-                        <tr>
-                            <td>{{ form.password1 }}</td>
-                            <td>{{ form.password2 }}</td>
-                        </tr>
-                        <tr>
-                            <td>{{ form.password1.errors }}</td>
-                            <td>{{ form.password2.errors }}</td>
-                        </tr>
-                        <!--<tr>-->
-                        <!--    <th>Disciplinas</th>-->
-                        <!--<tr>-->
-                        <!--    <td>{{ form.disciplines }}</td>-->
-                        <!--</tr>-->
-                        <tr>
-                            <td>{{ form.password1.errors }}</td>
-                            <td>{{ form.password2.errors }}</td>
-                        </tr>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Nome</label>
+                    {{ form.first_name }}
+                    {{ form.first_name.errors }}
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Nome de Usuário</label>
+                    {{ form.username }}
+                    {{ form.username.errors }}
+                </div>
+  
+                <div class="form-group">
+                  <label for="exampleInputEmail1">Email</label>
+                  {{ form.email }}
+                  {{ form.email.errors }}
+                  <small id="emailHelp" class="form-text text-muted">Nós não compartilhamos endereços de email com mais ninguém.</small>
+                </div>
+                <div class="form-group">
+                  <label for="exampleInputPassword1">Senha</label>
+                  {{ form.password1 }}
+                  {{ form.password1.errors }}
+                  {{ form.password2.errors }}
+                </div>
 
-                    </tbody>
-                </table>
-                {# Billing Address Section #}
-                <input class="btn btn-primary" type="submit" value="Cadastrar">
+                <button type="submit" class="btn btn-primary">Cadastrar</button>
             </form>
+
             {# Credit Card Section #}
         </div>
     </div>

@@ -10,9 +10,6 @@ class SubscriberForm(UserCreationForm):
     first_name = forms.CharField(
         required=True, widget=forms.TextInput(attrs={'class':'form-control'})
     )
-    last_name = forms.CharField(
-        required=True, widget=forms.TextInput(attrs={'class':'form-control'})
-    )
     email = forms.EmailField(
         required=True, widget=forms.TextInput(attrs={'class':'form-control'})
     )
@@ -22,9 +19,9 @@ class SubscriberForm(UserCreationForm):
     password1 = forms.CharField(
         widget=forms.TextInput(attrs={'class':'form-control', 'type':'password'})
     )
-    password2 = forms.CharField(
-        widget=forms.TextInput(attrs={'class':'form-control', 'type':'password'})
-    )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        del self.fields['password2']
     # disciplines = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple)
     # def __init__(self,*args,**kwargs):
     #     print kwargs
