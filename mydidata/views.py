@@ -697,10 +697,14 @@ def topic_detail(request, uuid):
 
 
     questions = Question.objects.filter(topic=topic).order_by('index')
-
+    test = None
+    if(topic.test_set):
+        test = topic.test_set.all().first()
+    
     context = {
         'topic': topic,
         'questions': questions,
+        'test': test
     }
     return render(request, 'mydidata/topic_detail.html', context)
 
@@ -709,9 +713,19 @@ def test_detail(request, uuid):
 
     classroom = Classroom.objects.filter(students__id=request.user.id).first()    
     questions = list(test.questions.order_by('index').all())
+
     print("Questions: ", len(questions))
 
     tu = TestUserRelation.objects.filter(student=request.user, test=test).first()
+    
+    if (not tu):
+        import random
+        tu = TestUserRelation.objects.create(student=request.user, test=test)
+        index_list = [q.index for q in questions]
+        random.shuffle(index_list)
+        tu.set_index_list(index_list)
+        tu.save()
+
     print("SIZE", tu.index_list_as_array())
     reordered_questions = [questions[i-1] for i in tu.index_list_as_array()]
 

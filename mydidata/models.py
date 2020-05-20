@@ -59,6 +59,7 @@ class Topic(models.Model, AdminURLMixin):
     is_resource = models.BooleanField(default=False,verbose_name="É para reforço?")
     is_assessment = models.BooleanField(default=False)
     weight = models.PositiveSmallIntegerField(default=1, verbose_name="Peso")
+    show_questions = models.BooleanField(default=True)
 
     class Meta:
         verbose_name_plural = 'Tópicos'

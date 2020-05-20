@@ -16,24 +16,30 @@
   
         </div>    
         {# List Questions #}
-        <div id="cd-container" >
-            <div class="ad-headers">
-                <h4 class="ad-mh m-none">Questões</h4>
+        {%if topic.show_questions%}
+
+            <div id="cd-container" >
+                <div class="ad-headers">
+                    <h4 class="ad-mh m-none">Questões</h4>
+                </div>
+                <div id="cd-body" class="row">
+                    <table id="cd-table" class="table">
+                        <tbody>
+                            <tr></tr>
+                            {% for question in questions %}
+                                {% include 'mydidata/question_item_view.html' %}
+                            {% endfor %}
+                            {%if topic.test_enabled%}
+                                <tr><a href="{{topic.test_enabled.get_absolute_url}}">Fazer Avaliação</a></tr>
+                            {%endif%}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div id="cd-body" class="row">
-                <table id="cd-table" class="table">
-                    <tbody>
-                        <tr></tr>
-                        {% for question in questions %}
-                            {% include 'mydidata/question_item_view.html' %}
-                        {% endfor %}
-                        {%if topic.test_enabled%}
-                            <tr><a href="{{topic.test_enabled.get_absolute_url}}">Fazer Avaliação</a></tr>
-                        {%endif%}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        {%endif%}
+        {%if test%}
+            <a class="btn btn-lg btn-primary" href="{{ test.get_absolute_url }}"> Fazer Avaliação </a>
+        {%endif%}
 
         {# List Communications #}
     </div>
