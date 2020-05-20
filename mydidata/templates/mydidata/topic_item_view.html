@@ -1,19 +1,12 @@
 <div class="gi-header">
     <h3 class="ad-mh">{{ topic.topic_title }}
-        <span>
-            <!--<a class="btn btn-link p-r-none"-->
-            <!--   href="{{ topic.get_update_url }}">Editar</a>-->
-           <a class="btn btn-link p-r-none"
-               href="">Editar</a>
-               
-        </span>
         
     </h3>
 
 </div>
 <div class="row gi-body">
     <div class="col-md-9">
-        <h5 class="gi-sh">Conteúdo</h5>
+
         <p>{{ topic.topic_content | safe}}</p>
     </div>
     <!--<h5 class="ad-mh">{{ topic.topic_title }}-->

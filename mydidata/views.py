@@ -105,6 +105,13 @@ def search(request):
     context = {'topics': Topic.objects.filter(Q(topic_title__icontains=keyword) | Q(topic_content__icontains=keyword)).order_by('topic_title') }
     return render(request, 'mydidata/search.html', context)
 
+def topic_next(request, current_id):
+    topic = get_object_or_404(Topic, pk=current_id)
+    next_topic = topic.next()
+    if not next_topic:
+        return HttpResponseRedirect('/mydidata/topics?discipline=' + topic.discipline.uuid)
+    return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(next_topic.uuid,)))
+    
 def subscriber_new(request, classroom_id, template='mydidata/subscriber_new.html'):
     classroom = get_object_or_404(Classroom, pk=classroom_id)
     if request.method == 'POST':

@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^$', HomePage.as_view(), name="home"),
     url(r'^signup/(?P<classroom_id>[0-9]+)$', views.subscriber_new, name='sub_new'),
     url(r'^search$', views.search, name='search'),
+    url(r'^topic_next/(?P<current_id>[0-9]+)$', views.topic_next, name='topic_next'),
     url(r'^(?P<question_id>[0-9]+)/$', views.detail, name='detail'),
     url(r'^login/$', auth_views.login, {'template_name': 'mydidata/login.html'}, name='login'),
     url(r'^logout/$', auth_views.logout, {'next_page': '/mydidata/login/'}, name='logout'),

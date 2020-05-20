@@ -65,6 +65,28 @@ class Topic(models.Model, AdminURLMixin):
 
     def __str__(self):
         return u"%s" % self.topic_title
+    
+    
+    def next_url(self):
+        topics = []
+        topics.extend(self.discipline.topic_set.all())
+        topics.sort(key=lambda topic: topic.order)
+        self_index = topics.index(self)
+
+        if self_index == len(topics) - 1:
+            return '/mydidata/topics?discipline=' + self.discipline.uuid
+        return reverse('mydidata:topic_detail', args=(topics[self_index + 1].uuid,))
+
+    def previous_url(self):
+
+        topics = []
+        topics.extend(self.discipline.topic_set.all())
+        topics.sort(key=lambda topic: topic.order)
+        self_index = topics.index(self)
+        if self_index == 0:
+            return '/mydidata/topics?discipline=' + self.discipline.uuid
+
+        return reverse('mydidata:topic_detail', args=(topics[self_index - 1].uuid,))
 
     @models.permalink
     def get_absolute_url(self):

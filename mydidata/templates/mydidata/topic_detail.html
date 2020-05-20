@@ -6,7 +6,15 @@
             <div id="gi-container" class="ad-container2">
                 {% include 'mydidata/topic_item_view.html' %}
             </div>
+
         </div>
+        <div aria-label="Page navigation example" >
+            <ul class="pagination" style="justify-content: space-between;">
+              <li class="page-item"><a class="page-link" href="{{topic.previous_url}}">Etapa Anterior</a></li>
+              <li class="page-item"><a class="page-link" href="{{topic.next_url}}">Próxima Etapa</a></li>
+            </ul>
+  
+        </div>    
         {# List Questions #}
         <div id="cd-container" class="ad-container">
             <div class="ad-headers">
