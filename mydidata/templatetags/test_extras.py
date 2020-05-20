@@ -8,6 +8,8 @@ def get_close_url(classroom, test):
 	
 @register.simple_tag
 def is_test_closed(classroom, test):
+	if not classroom:
+		return False
 	return test in classroom.closed_tests.all()
 	
 @register.simple_tag
