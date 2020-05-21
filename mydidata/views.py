@@ -492,7 +492,11 @@ def multiple_choice_answer(request, question_uuid, test_id = None):
                         member_answer = question.answer_set.filter(student=member).first()
 
             if test:
-                redirect_url = reverse('mydidata:test_detail', args=(test.uuid,))
+                redirect_url = question.get_next_answer_url(request.user, test)
+                if not redirect_url:
+                    tuserrelation.is_closed = True
+                    tuserrelation.save()
+                    redirect_url = reverse('mydidata:test_progress', args=(test.uuid,))
             else:
                 redirect_url = reverse('mydidata:topic_detail', args=(question.topic.uuid,))
 
@@ -617,14 +621,49 @@ def discursive_answer(request, question_uuid, test_id = None):
 
 
 @login_required()
-def test_progress(request, class_id, uuid):
+def test_progress(request, uuid, class_id=None):
     test = get_object_or_404(Test, uuid=uuid)
     students = [request.user]
-    classroom = get_object_or_404(Classroom, pk=class_id)
-    if request.user.is_superuser:
+    classroom = None
+    if class_id:
+        classroom = Classroom.objects.filter(pk=class_id).first()
+
+    if request.user.is_superuser and class_id:
         students = classroom.students.all().order_by('first_name')
 
-    return render(request, 'mydidata/test_progress.html', {'classroom': classroom, 'students': students, 'test':test,})
+    student_grade = {}
+        
+    for student in students:
+        test_user = TestUserRelation.objects.filter(test=test, student=request.user).first()
+        total_weight = 0
+        sum_weights = 0
+        final_grade = 0
+        for q in test_user.current_questions():
+            answer = DiscursiveAnswer.objects.filter(student=student, question=q, test=test).first()
+            if not answer:
+                answer = MultipleChoiceAnswer.objects.filter(student=student, question=q, test=test).first()
+            
+            if answer:
+                answer.correct()
+                
+                sum_weights += answer.grade * q.weight
+            total_weight += q.weight
+        final_grade = 0
+        if sum_weights: final_grade = (sum_weights/total_weight) * 10
+        student_grade[student] = {}
+        student_grade[student]['grade'] = "{:2.1f}".format(final_grade)
+        
+        student_grade[student]['test_user'] = test_user
+        assessment = {}
+        
+        if final_grade < 6:
+            assessment['fail'] = "Infelizmente você não atingiu a nota mínima necessária."
+            assessment['next_try_link'] = test_user.next_try()
+        else:
+            assessment['success'] = "Parabéns, você concluiu com sucesso esta avaliação!"
+
+
+    return render(request, 'mydidata/test_progress.html', {'classroom':classroom, 'students': students, 'test':test, 'student_grades': student_grade, 'assessment':assessment,})
 
 @login_required()
 def test_results_wavg(request, class_id, uuid):
@@ -697,17 +736,23 @@ def topic_detail(request, uuid):
 
 
     questions = Question.objects.filter(topic=topic).order_by('index')
-    test = None
-    if(topic.test_set):
+    test_user_relation = None
+    if(topic.test_set and request.user.is_authenticated):
         test = topic.test_set.all().first()
-    
+        test_questions = test.questions.all()
+        test_user_relation = TestUserRelation.objects.filter(test=test, student=request.user).first()
+        if (not test_user_relation):
+            test_user_relation = TestUserRelation.objects.create(student=request.user, test=test)
+            test_user_relation.generate_question_index()
+            test_user_relation.save()
     context = {
         'topic': topic,
         'questions': questions,
-        'test': test
+        'test_user_relation': test_user_relation
     }
     return render(request, 'mydidata/topic_detail.html', context)
 
+@login_required
 def test_detail(request, uuid):
     test = get_object_or_404(Test, uuid=uuid)
 
@@ -721,9 +766,7 @@ def test_detail(request, uuid):
     if (not tu):
         import random
         tu = TestUserRelation.objects.create(student=request.user, test=test)
-        index_list = [q.index for q in questions]
-        random.shuffle(index_list)
-        tu.set_index_list(index_list)
+        tu.generate_question_index()
         tu.save()
 
     print("SIZE", tu.index_list_as_array())
@@ -735,6 +778,10 @@ def test_detail(request, uuid):
         'test': test,
 
     }
+    
+    if reordered_questions and not tu.is_closed:
+        first_question = reordered_questions[0]
+        return HttpResponseRedirect(first_question.get_answer_url(test))
     return render(request, 'mydidata/test_detail.html', context)
 
 @login_required()

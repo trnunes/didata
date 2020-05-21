@@ -65,11 +65,7 @@ class ClassroomAdmin(admin.ModelAdmin):
                     tu = TestUserRelation.objects.filter(student=student, test=test)
                     if not tu:
                         tu = TestUserRelation.objects.create(student=student, test=test)
-                        questions = list(Question.objects.filter(test=test).order_by('index'))
-                        random.shuffle(questions)
-                        
-                        index_list = [q.index for q in questions]
-                        tu.set_index_list(index_list)
+                        tu.generate_question_index()
                         tu.save()   
         
 
@@ -160,18 +156,12 @@ class TestAdminForm(forms.ModelForm):
         test.classroom_set.set(self.cleaned_data['classrooms'])
         test.closed_tests.set(self.cleaned_data['classrooms_closed'])
         self.save_m2m()
-        questions = list(test.questions.order_by('index').all())
-        print("test Questions: ", questions)
-        import random
         for croom in self.cleaned_data['classrooms']:
             for student in croom.students.all():
                 tu = TestUserRelation.objects.filter(student=student, test=test).first()
                 if not tu:
                     tu = TestUserRelation.objects.create(student=student, test=test)
-                random.shuffle(questions)
-                
-                index_list = [q.index for q in questions]
-                tu.set_index_list(index_list)
+                tu.generate_question_index()
                 tu.save()
     return test
 

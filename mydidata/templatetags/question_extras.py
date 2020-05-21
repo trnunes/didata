@@ -44,5 +44,9 @@ def get_answer_url(question, test):
     return question.get_answer_url(test)
 
 @register.simple_tag
+def get_next_answer_url(question, test):
+    return question.next_answer_url(test)
+
+@register.simple_tag
 def append_test_param(action_url, test):
     return action_url + "?test=" + str(test.id)

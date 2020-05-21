@@ -18,7 +18,7 @@ def get_open_url(classroom, test):
 
 @register.simple_tag
 def get_progress_url(classroom, test):
-	return reverse('mydidata:test_progress', args = (classroom.id, test.uuid))
+	return reverse('mydidata:test_progress', args = (test.uuid, classroom.id))
 
 @register.simple_tag
 def get_assess_url(classroom, test):
@@ -41,6 +41,10 @@ def is_closed_for_student(user, test):
 @register.simple_tag
 def get_finish_url_for_user(classroom, test):
 	return reverse('mydidata:finish_test', args=(classroom.id, test.uuid))
+
+@register.simple_tag
+def get_test_user(student_grades_dict, student):
+	return student_grades_dict[student]['test_user']
 
 @register.simple_tag
 def get_class(test, user):

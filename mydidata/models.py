@@ -112,6 +112,7 @@ class Test(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     title = models.CharField(max_length=200, default="test", verbose_name="Título")
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico")
+    limit_per_try = models.IntegerField(default=5)
     key = models.CharField(max_length=200, default="testkey", verbose_name="Frase de Envio")
     class Meta:
         verbose_name_plural = 'Avaliações'
@@ -125,6 +126,9 @@ class Test(models.Model, AdminURLMixin):
     def is_closed_for(self, user):
         test_user = TestUserRelation.objects.filter(test=self, student=user).first()
         return (test_user and test_user.is_closed)
+
+    def questions_range(self):
+        return range(self.limit_per_try)
 
     @models.permalink
     def get_absolute_url(self):
@@ -238,6 +242,29 @@ class Question(models.Model):
     def __str__(self):
 
         return u'%s ...' % self.question_text[0:200]
+
+    def get_next_answer_url(self, student, test):
+        if not student or not test:
+            raise Exception("Student and Test refs cannot be null!")
+        
+        test_user_relation = TestUserRelation.objects.filter(student=student, test=test)
+        if not test_user_relation:
+            raise Exception("This user is not subscribed to this test")
+
+        
+
+        test_user_obj = test_user_relation[0]
+        questions = test_user_obj.current_questions()
+
+        self_index = questions.index([q for q in questions if q.uuid == self.uuid][0])
+        
+        if self_index == len(questions) - 1:
+            return ""
+        
+        next_question = questions[self_index + 1]
+
+        return next_question.get_answer_url(test)
+
 
     @models.permalink
     def get_absolute_url(self):
@@ -392,6 +419,45 @@ class TestUserRelation(models.Model):
         return str(self.student.first_name + " " + self.student.last_name + ": " + self.test.title)
     def index_list_as_array(self):
         return eval(self.index_list)
+
+    def generate_question_index(self):
+        import random
+        questions = list(self.test.questions.order_by('uuid').all())[0:self.test.limit_per_try]
+        index_list = [questions.index(q)+1 for q in questions]
+        random.shuffle(index_list)
+        self.set_index_list(index_list)
+        return index_list
+    
+    def current_questions(self):
+        index_array = self.index_list_as_array()
+        return [list(self.test.questions.order_by('uuid'))[i-1] for i in index_array ]
+
+
+    def next_try(self):
+        
+        questions = list(self.test.questions.order_by('uuid').all())
+        question_index_array = [questions.index(q)+1 for q in questions]
+
+        test_size = self.test.limit_per_try
+
+        index_array = self.index_list_as_array()
+        max_index = max(index_array)
+    
+        if max_index == len(questions):
+            return ""
+
+        try_questions = question_index_array[max_index:(max_index+test_size)]
+        
+        import random
+        random.shuffle(try_questions)
+        self.set_index_list(try_questions)
+        self.is_closed = False
+        self.save()
+
+        return questions[try_questions[0]-1].get_answer_url(self.test)
+
+
+
     def set_index_list(self, index_list):
         self.index_list = str(index_list)
 

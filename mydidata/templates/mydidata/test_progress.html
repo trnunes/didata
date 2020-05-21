@@ -4,6 +4,7 @@
     {% load question_extras %}
     {% load answer_extras %}
     {% load classroom_extras %}
+    {% load test_extras %}
     <div id="content-container" class="container p-none">
 		{% if classroom %}
 			<h1>{{classroom.name}}</h1>
@@ -17,28 +18,32 @@
                 <tbody>
                     <tr>
                         <th>Aluno</th>
-                        {% for question in test.questions.all %}
+                        {% for question in test.questions_range %}
                             <th>Question {{ forloop.counter }}</th>
                         {% endfor %}
                     </tr>
                     {% for student in students%}
+                        {%get_test_user student_grades student as test_user%}
                         <tr>
                             <td>{{student.first_name}}</td>
                             
-                            {%for question in test.get_ordered_questions %}
+                            {%for question in test_user.current_questions %}
+                                <!-- {{question.question_text}} -->
                                 {% get_answers question student test as answers%}
+                                
                                 {%if answers%}
                                     {%for answer in answers%}
                                         {%get_specific_answer answer as specific_answer%}
+                                        
                                         <td>
                                             {%if specific_answer.is_sent%}
-                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-send"></span></a>
+                                                 <a href="{{specific_answer.get_detail_url}}"><i class="fa fa-paper-plane"></i></a>
                                             {%else%}
                                                 {%if specific_answer.is_ok%}
-                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-ok"></span></a>
+                                                 <a href="{{specific_answer.get_detail_url}}"><i class="fa fa-check-circle"></i></span></a>
                                                 
                                                  {%else%}
-                                                     <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-remove"></span></a>
+                                                     <a href="{{specific_answer.get_detail_url}}"><i class="fas fa-times-circle"></i></a>
                                                  {%endif%}
                                             {%endif%}
                                         </td>
@@ -52,7 +57,46 @@
                     {%endfor%}
                 </tbody>
             </table>
+        
             
+            {%if user.is_superuser%}
+                <h1>Aproveitamento</h1>
+                <table id="cd-table" class="table table-hover">
+                    <tbody>
+                        <tr>
+                            <th>Aluno</th>
+                            <th>Nota</th>
+                        </tr>
+                        {% for student, student_status in student_grades.items %}                    
+                            <tr>
+                            <td>{{student.first_name}}&nbsp{{student.last_name}}</td>
+                            <td>{{student_status.grade}}</td>
+                            </tr>
+                        {%endfor%}
+                        
+                    </tbody>
+                </table>
+            {%else%}
+                
+                {% for student, student_status in student_grades.items %}
+                    <h1>Aproveitamento: {{student_status.grade}}</h1>
+                    {%if assessment.success %}
+                        <div class="alert alert-success">
+                            {{assessment.success}}
+                        </div>
+                    {%else%}
+                        <div class="alert alert-danger" role="alert">
+                            {{assessment.fail}} 
+                            {%if assessment.next_try_link%}
+                                Você pode tentar mais uma vez clicando <a href="{{assessment.next_try_link}}" class="alert-link">aqui!</a\>!
+                            {%endif%}
+                        </div>
+
+                    {%endif%}
+                {%endfor%}
+
+            {%endif%}
+
     </div>
 
 {% endblock %}

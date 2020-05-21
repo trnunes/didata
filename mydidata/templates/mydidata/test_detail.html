@@ -5,7 +5,7 @@
         {# List Questions #}
         {% load question_extras %}
         {% load test_extras %}
-        {%is_test_closed classroom test as test_closed%}
+        {%is_closed_for_student user test as test_closed%}
         <input id = "classroom" type="hidden" value="{{classroom.id}}">
         <input id = "test_uuid" type="hidden" value="{{test.uuid}}">
         {%if messages%}

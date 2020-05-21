@@ -3,6 +3,21 @@
 {% block content %}
     <div id="content-container" class="container p-none">
         <div >
+            
+            {%if test_user_relation and test_user_relation.is_closed%}
+                <div class="alert alert-primary" role="alert">
+                    A avaliação desta etapa já foi concluída!
+                    <a class="alert-link" href="{%url 'mydidata:test_progress' test_user_relation.test.uuid %}"> Clique aqui para verificar suas respostas. </a>
+                </div>
+            {%endif%}
+            <div aria-label="Page navigation example" >
+                <ul class="pagination" style="justify-content: space-between;">
+                  <li class="page-item"><a class="page-link" href="{{topic.previous_url}}">Etapa Anterior</a></li>
+                  <li class="page-item"><a class="page-link" href="{{topic.next_url}}">Próxima Etapa</a></li>
+                </ul>
+      
+            </div>    
+    
             <div id="gi-container" class="ad-container2">
                 {% include 'mydidata/topic_item_view.html' %}
             </div>
@@ -37,9 +52,10 @@
                 </div>
             </div>
         {%endif%}
-        {%if test%}
-            <a class="btn btn-lg btn-primary" href="{{ test.get_absolute_url }}"> Fazer Avaliação </a>
+        {%if test_user_relation and not test_user_relation.is_closed%}
+            <a class="btn btn-lg btn-primary" href="{{ test_user_relation.test.get_absolute_url }}"> Fazer Avaliação </a>
         {%endif%}
+
 
         {# List Communications #}
     </div>

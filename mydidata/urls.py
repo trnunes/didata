@@ -30,13 +30,14 @@ urlpatterns = [
     
     url(r'^tests$', TestList.as_view(), name="tests"),
     url(r'^test_detail/(?P<uuid>[\w-]+)/$', views.test_detail, name='test_detail'),
-    url(r'^test/progress/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_progress, name='test_progress'),
+    url(r'^test/progress/(?P<uuid>[\w-]+)/$',views.test_progress, name='test_progress'),
     url(r'^test/close/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_close, name='test_close'),
     url(r'^test/open/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_open, name='test_open'),
     url(r'^test/assess/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_assess, name='test_assess'),
-    url(r'^test/progress/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_progress, name='test_progress'),
     url(r'^test/results_sum/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_results_sum, name='test_results_sum'),
     url(r'^test/results_wavg/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_results_wavg, name='test_results_wavg'),
+    url(r'^test_progress/(?P<uuid>[\w-]+)/$', views.test_progress, name='test_progress'),
+    url(r'^test_progress/(?P<uuid>[\w-]+)/(?P<class_id>[0-9]+)/$',views.test_progress, name='test_progress'),
     url(r'^detect_copies/(?P<question_uuid>[\w-]+)/$',views.detect_copies, name='detect_copies'),
     url(r'^test_for/(?P<uuid>[\w-]+)/$',views.test_for, name='test_for'),
     url(r'^finish_test/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/(?P<key>[\w-]+)/$',views.finish_test, name='finish_test'),
@@ -50,11 +51,13 @@ urlpatterns = [
     url(r'^multiple_choice_answer_detail/(?P<answer_id>[0-9]+)$',views.multiple_choice_answer_detail, name='multiple_choice_answer_detail'),    
     url(r'^discursive_answer/(?P<question_uuid>[\w-]+)/$',views.discursive_answer, name='discursive_answer'),
     url(r'^discursive_answer_test/(?P<question_uuid>[\w-]+)/(?P<test_id>[0-9]+)/$',views.discursive_answer, name='discursive_answer'),
+
+
     url(r'^discursive_answer_detail/(?P<answer_id>[0-9]+)$',views.discursive_answer_detail, name='discursive_answer_detail'),
     url(r'^feedback/(?P<answer_id>[0-9]+)$',views.feedback, name='feedback'),
     url(r'^test/new/(?P<topic_id>[\w-]+)/$',views.test_new, name='test_new'),
     url(r'^progress/(?P<discipline_name>[\w|\W]+)/$',views.progress, name='progress'),
-    url(r'^test_progress/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_progress, name='test_progress'),
+    
 
     url(r'^percentage_progress/(?P<class_id>[\w-]+)/$',views.percentage_progress, name='percentage_progress'),
     url(r'^my_progress/$',views.my_progress, name='my_progress'),
