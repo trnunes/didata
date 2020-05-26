@@ -2,6 +2,7 @@
 
 {% block content %}
     <div id="content-container" class="container p-none">
+        <hr class="my-3" />
         <div >
             
             {%if test_user_relation and test_user_relation.is_closed%}
@@ -23,6 +24,19 @@
             </div>
 
         </div>
+        {% if user.is_authenticated %}
+            <hr class="my-3" />
+            <div>
+                <h4 class="ad-mh m-none"> Para certificação, selecione e envie o arquivo elaborado neste tutorial </h4>
+                <form ecytpe="multipart/form-data" action="{%url 'mydidata:discursive_answer' question.uuid %}" method="post">
+                    {% csrf_token %}
+                    {{ form.media }}
+                    {{ form.as_p }}
+                    <input type="submit" value="Enviar Arquivo"/>
+                </form>
+            </div>
+        {%endif%}
+        <hr class="my-3" />
         <div aria-label="Page navigation example" >
             <ul class="pagination" style="justify-content: space-between;">
               <li class="page-item"><a class="page-link" href="{{topic.previous_url}}">Etapa Anterior</a></li>
@@ -30,6 +44,7 @@
             </ul>
   
         </div>    
+        
         {# List Questions #}
         {%if topic.show_questions%}
 
@@ -41,6 +56,7 @@
                     <table id="cd-table" class="table">
                         <tbody>
                             <tr></tr>
+                            
                             {% for question in questions %}
                                 {% include 'mydidata/question_item_view.html' %}
                             {% endfor %}

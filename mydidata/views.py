@@ -7,7 +7,7 @@ from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
-from .forms import SubscriberForm, TopicForm, QuestionForm, DiscursiveAnswerForm, SuperuserDiscursiveAnswerForm
+from .forms import SubscriberForm, TopicForm, QuestionForm, DiscursiveAnswerForm, SuperuserDiscursiveAnswerForm, DiscursiveAnswerFormUploadOnly
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -735,21 +735,37 @@ def topic_detail(request, uuid):
             topic.topic_content = topic.topic_content.replace(url, new_url)
 
 
-    questions = Question.objects.filter(topic=topic).order_by('index')
+    questions = list(Question.objects.filter(topic=topic).order_by('index'))
     test_user_relation = None
-    if(topic.test_set and request.user.is_authenticated):
-        test = topic.test_set.all().first()
+    test = topic.test_set.all().first()
+    if( test and request.user.is_authenticated):
         test_questions = test.questions.all()
         test_user_relation = TestUserRelation.objects.filter(test=test, student=request.user).first()
         if (not test_user_relation):
             test_user_relation = TestUserRelation.objects.create(student=request.user, test=test)
             test_user_relation.generate_question_index()
             test_user_relation.save()
+    questions_minus_first = questions[1:-1]
     context = {
         'topic': topic,
-        'questions': questions,
+        'questions': questions_minus_first,
         'test_user_relation': test_user_relation
     }
+
+    
+    if questions and request.user.is_authenticated:        
+        questions[0].has_text = False
+        tutorial_answer = questions[0].get_answer_for([request.user])[0]
+        context['question'] = questions[0]
+        if questions[0].has_text:
+            form = DiscursiveAnswerForm(instance=tutorial_answer)        
+        else:
+            form = DiscursiveAnswerFormUploadOnly(instance = tutorial_answer)
+
+        context['answer'] = tutorial_answer
+        context['form'] = form
+        
+
     return render(request, 'mydidata/topic_detail.html', context)
 
 @login_required

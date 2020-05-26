@@ -71,6 +71,34 @@ class QuestionForm(forms.ModelForm):
                 attrs={'placeholder':'Tipo', 'class':'form-control'}
             ),
         }
+
+class DiscursiveAnswerFormUploadOnly(forms.ModelForm):
+
+    class Meta:
+        model = DiscursiveAnswer
+        fields = ['assignment_file',]
+
+        labels = {
+            'assignment_file': 'Arquivo da Resposta',
+        }
+    def clean_assignment_file(self):
+
+        file = self.cleaned_data.get("assignment_file")
+        question = self.instance.question
+        if not file and not question.file_types_accepted:
+            return file
+
+        if not file and question.file_types_accepted:
+            raise ValidationError(_("Você deve enviar um arquivo como anexo a esta questão! Clique no botão \"Escolher Arquivo\" e depois envie a resposta."))
+
+        print("FILE in FORM UPLOAD: ", file)
+        file_type = file.name.split(".")[-1]
+        if question.file_types_accepted and not file_type in question.file_types_accepted and not "todos" in question.file_types_accepted:
+            raise ValidationError(_("Arquivo de resposta inválido para esta questão. Apenas os tipos %(tipos)s são aceitos!"), 
+                params = {'tipos': str(question.file_types_accepted)},
+            )        
+        return file
+
 class DiscursiveAnswerForm(forms.ModelForm):
 
 

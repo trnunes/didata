@@ -16,6 +16,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.core.validators import FileExtensionValidator
 import random
+from django.utils.html import strip_tags
+import html
 
 class AdminURLMixin(object):
     def get_admin_url(self):
@@ -212,12 +214,12 @@ class ResourceRoom(models.Model):
 
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
-    index = models.PositiveSmallIntegerField(verbose_name='Ordem')
-    question_text = RichTextUploadingField(verbose_name='Texto')
-    is_discursive = models.BooleanField(default=False, verbose_name='É discursiva?')
+    index = models.PositiveSmallIntegerField(default=1, verbose_name='Ordem')
+    question_text = RichTextUploadingField(verbose_name='Texto')    
     file_types_accepted = models.CharField(max_length=255, verbose_name="Tipos de arquivos aceitos", null=True, blank="True")
     text_required = models.BooleanField(default=False, verbose_name='Resposta de texto obrigatória?')
     weight = models.PositiveSmallIntegerField(default=1, verbose_name='Peso')
+    has_text = models.BooleanField(default=True)
 
     DIFFICULTY_LIST = (
         (1, 'Difícil'),
@@ -232,16 +234,29 @@ class Question(models.Model):
     )
     question_type = models.PositiveSmallIntegerField(choices=TYPE_LIST, verbose_name="Tipo")
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, null=True, blank=True)
+
     #TODO change to many-to-many
     tests = models.ManyToManyField(Test, null=True, blank=True, related_name="questions", verbose_name="Avaliações",)
-    test = models.ForeignKey(Test, on_delete=models.DO_NOTHING, null=True, blank=True)
     
     class Meta:
         verbose_name_plural = 'Questões'
 
     def __str__(self):
 
-        return u'%s ...' % self.question_text[0:200]
+        return u'%s ...' % html.unescape(strip_tags(self.question_text))[0:200]
+    
+    def is_discursive(self):
+        return len(self.choice_set.all()) == 0
+
+    def get_answer_for(self, student_list):
+        answers = list(DiscursiveAnswer.objects.filter(question = self, student__id__in=[s.id for s in student_list]))
+        
+        if not answers:
+            for student in student_list:
+                answer = DiscursiveAnswer.objects.create(student = student, question=self)
+                answers.append(answer)
+        
+        return answers
 
     def get_next_answer_url(self, student, test):
         if not student or not test:
@@ -284,7 +299,7 @@ class Question(models.Model):
         if test:
             params.append(test.id)
         
-        if self.is_discursive:
+        if self.is_discursive():
             return 'mydidata:discursive_answer', params
         else:
             return 'mydidata:multiple_choice_answer', params
@@ -302,7 +317,8 @@ class Question(models.Model):
       
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Questão")
-    choice_text = models.CharField(max_length=200, verbose_name="Texto")
+    # choice_text = RichTextUploadingField(verbose_name='Texto da Alternativa')
+    choice_text = models.TextField()
     is_correct = models.BooleanField(default=False, verbose_name="É a alternativa correta?")
     class Meta:
         verbose_name_plural = 'Alternativas'

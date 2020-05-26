@@ -9,6 +9,8 @@ from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, Discursiv
 from django.utils.safestring import mark_safe
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext_lazy as _
+from django.db import models
+from django.forms import inlineformset_factory
 
 class MultipleChoiceAnswerInline(admin.TabularInline):
     model = MultipleChoiceAnswer
@@ -43,7 +45,7 @@ class TopicInline(admin.TabularInline):
     edit_link.allow_tags = True
     extra = 1
     ordering = ('order',)
-            
+
 class QuestionAdminForm(forms.ModelForm):
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
     question_text.label = "Texto"
@@ -52,7 +54,6 @@ class QuestionAdminForm(forms.ModelForm):
         model = Question
         fields = '__all__'
 
-        
 class ClassroomAdmin(admin.ModelAdmin):
     model = Classroom
     filter_horizontal = ('students', 'disciplines', 'closed_topics', 'tests', 'closed_tests')
@@ -91,10 +92,12 @@ class QuestionAdmin(admin.ModelAdmin):
 
     list_filter = ('tests',)
     inlines = [
+        
         ChoiceInline,
-        MultipleChoiceAnswerInline,
         DiscursiveAnswerInline,
+        MultipleChoiceAnswerInline,
     ]
+
     
 class TopicAdminForm(forms.ModelForm):
     topic_content = forms.CharField(widget=CKEditorUploadingWidget())
