@@ -1,6 +1,6 @@
 {% load question_extras %}
 <tr>
-    <td class="ci-td-p-l"><a href="{{ question.get_answer_url }}">Questão {{ question.index}}</a></td>
+    <td class="ci-td-p-l"><a href="{{ question.get_answer_url }}">Questão {{ forloop.counter}}</a></td>
     {% if user.is_authenticated %}
 		<td>{% get_question_status question user%}</td>
 	{%endif%}
