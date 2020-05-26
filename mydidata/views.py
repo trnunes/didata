@@ -753,7 +753,7 @@ def topic_detail(request, uuid):
     }
 
     
-    if questions and request.user.is_authenticated:        
+    if topic.has_assessment_question and questions and request.user.is_authenticated:        
         questions[0].has_text = False
         tutorial_answer = questions[0].get_answer_for([request.user])[0]
         context['question'] = questions[0]

@@ -62,6 +62,7 @@ class Topic(models.Model, AdminURLMixin):
     is_assessment = models.BooleanField(default=False)
     weight = models.PositiveSmallIntegerField(default=1, verbose_name="Peso")
     show_questions = models.BooleanField(default=True)
+    has_assessment_question = models.BooleanField(default=True, verbose_name="Possui questão avaliativa?")
 
     class Meta:
         verbose_name_plural = 'Tópicos'
