@@ -1,13 +1,13 @@
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from .models import Question, Choice, DiscursiveAnswer, MultipleChoiceAnswer, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation
+from .models import Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation
 from django.template import loader
 from django.http import Http404
 from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
-from .forms import SubscriberForm, TopicForm, QuestionForm, DiscursiveAnswerForm, SuperuserDiscursiveAnswerForm, DiscursiveAnswerFormUploadOnly
+from .forms import SubscriberForm, TopicForm, QuestionForm, SuperuserDiscursiveAnswerForm, DiscursiveAnswerFormUploadOnly, get_answer_form
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -147,14 +147,6 @@ def subscriber_new(request, classroom_id, template='mydidata/subscriber_new.html
 
     return render(request, template, {'form':form, 'classroom':classroom})
 
-def index(request):
-    question_list = Question.objects.order_by('-question_text')
-    template = loader.get_template("mydidata/index.html")
-    context = {
-        'question_list':question_list,
-    }
-    return render(request, 'mydidata/index.html', context)
-
 def topic_close(request, topic_uuid, class_id):
     print("CLASS: ", class_id)
     print("TOPIC: ", topic_uuid)
@@ -194,13 +186,8 @@ def topic_assess(request, topic_uuid, class_id):
                 a.save()
 
                 print(a.is_ok(), " - ", a.status == Answer.CORRECT)
-            
-
 
     return redirect('mydidata:class_progress', class_id=class_id, )
-
-def test_for(request, uuid, class_id):
-    return render()
 
 def test_close(request, uuid, class_id):
     print("CLASS: ", class_id)
@@ -228,16 +215,11 @@ def test_assess(request, uuid, class_id):
     student_list = classroom.students.all().order_by('first_name')
     for student in student_list:
         for q in test.questions.all():
-            answers = []
-            answers.extend(DiscursiveAnswer.objects.filter(student=student, question=q, test=test).all())
-            answers.extend(MultipleChoiceAnswer.objects.filter(student=student, question=q, test=test).all())
+            answers = Answer.objects.filter(student=student, question=q, test=test).all()
+            
             for a in answers:
                 a.correct()
     return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
-
-def detail(request, question_id):
-    question = get_object_or_404(Question, pk=question_id)
-    return render(request, 'mydidata/detail.html', {'question': question})
 
 @login_required
 def progress(request, discipline_name):
@@ -294,7 +276,6 @@ def my_progress(request):
     topics.sort(key=lambda topic: topic.order)
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': [student] , 'topics':topics,})
     
-
 @login_required
 def class_progress(request, class_id):
     classroom = get_object_or_404(Classroom, pk=class_id)
@@ -322,7 +303,7 @@ def percentage_progress(request, class_id):
     for student in student_list:
         student_by_topic_percentage[student] = []
         for topic in topics:
-            answers = [DiscursiveAnswer.objects.filter(student=student, question=q).first() for q in topic.question_set.all()]
+            answers = [Answer.objects.filter(student=student, question=q).first() for q in topic.question_set.all()]
             answers = [a for a in answers if a]
             percentage = len(answers)/len(topic.question_set.all()) if len(topic.question_set.all()) else 0            
             student_by_topic_percentage[student].append([topic,  "{:2.1f}%".format(percentage*100)])
@@ -352,7 +333,7 @@ def calculate_grades(request, class_id, topic_uuid=None):
             sum_topic_weight += topic.weight
 
             for q in topic.question_set.all():
-                answer = DiscursiveAnswer.objects.filter(student=student, question=q).first()
+                answer = Answer.objects.filter(student=student, question=q).first()
                 if answer and answer.is_ok(): sum_grades += answer.grade * q.weight
                 sum_weights += q.weight
             wavg = 0
@@ -365,21 +346,87 @@ def calculate_grades(request, class_id, topic_uuid=None):
     return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_grade})
 
 
+def answer(request, question_uuid, test_id=None):
+
+    question = get_object_or_404(Question, uuid=question_uuid)
+
+    
+
+    if request.POST:        
+        print("POST Question UUID: ", question_uuid)        
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+                #TODO insert test logic here
+        answer = Answer.find(student=request.user, question=question, test_id=test_id)
+        form = get_answer_form(request.POST, request.FILES, instance=answer, question=question)
+        answer = form.instance
+        answer.question = question
+        answer.student = request.user
+        answer.status = Answer.SENT
+        
+        if test_id:
+            test = get_object_or_404(Test, pk=test_id)
+            answer.test = test
+            redirect_url = question.get_next_answer_url(request.user, test)
+            if not redirect_url:
+                tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
+                tuserrelation.is_closed = True
+                tuserrelation.save()
+                redirect_url = reverse('mydidata:test_progress', args=(test.uuid,))
+        else:
+            redirect_url = reverse('mydidata:topic_detail', args=(question.topic.uuid,))
+        
+        if request.FILES.get('assignment_file', False):
+            file_name = request.FILES['assignment_file'].name
+            request.FILES['assignment_file'].name = answer.get_answer_file_id() + "." +  file_name.split(".")[-1]
+        
+        if form.is_valid():
+            form.save()
+
+            #TODO insert logic for team work
+
+        else:
+            print("FORM ERROR: ")
+            context = {
+                'question': question,            
+                'form': form,
+            }
+            return render(request, 'mydidata/answer_cru.html', context)
+        print("REDIRECT URL: ", redirect_url)
+        return HttpResponseRedirect(redirect_url)
+
+
+    form = get_answer_form(question=question)
+    if request.user.is_authenticated:
+        answer = Answer.find(student=request.user, question=question, test_id=test_id)
+        if answer:
+            print("Answer found: ", answer.answer_text, answer.assignment_file)
+        else:
+            print("Answer not found")
+        form = get_answer_form(instance=answer, question=question)
+
+    context = {
+        'question': question,        
+        'form': form,
+    }
+    print("GET: ", question.uuid)
+    return render(request, 'mydidata/answer_cru.html', context)
+
 
 
 def discursive_answer_detail(request, answer_id):
-    answer = DiscursiveAnswer.objects.get(pk=answer_id)
+    answer = Answer.objects.get(pk=answer_id)
 
     return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, })
 
 @login_required()
 def multiple_choice_answer_detail(request, answer_id):
-    answer = MultipleChoiceAnswer.objects.get(pk=answer_id)
+    answer = Answer.objects.get(pk=answer_id)
     return render(request, 'mydidata/multiple_choice_answer_detail.html', {'answer':answer,})
 
 @login_required()
 def feedback(request, answer_id):
-    answer = get_object_or_404(DiscursiveAnswer, pk=answer_id)
+    answer = get_object_or_404(Answer, pk=answer_id)
     question = answer.question
     form = SuperuserDiscursiveAnswerForm(instance=answer)
     classroom = Classroom.objects.filter(students__id=answer.student.id).first()
@@ -396,7 +443,7 @@ def feedback(request, answer_id):
 
         for student in students:
             if next_student_found:
-                next_answer = DiscursiveAnswer.objects.filter(student=student, question=question).first()
+                next_answer = Answer.objects.filter(student=student, question=question).first()
                 if next_answer:
                     form = SuperuserDiscursiveAnswerForm(instance=next_answer)
                     context = {
@@ -433,7 +480,7 @@ def multiple_choice_answer(request, question_uuid, test_id = None):
         answer = question.answer_set.filter(student=request.user).first()
 
     if not answer:
-        answer = MultipleChoiceAnswer(student = request.user, question=question)
+        answer = Answer(student = request.user, question=question)
         if test:
             answer.test = test
     else:
@@ -475,7 +522,7 @@ def multiple_choice_answer(request, question_uuid, test_id = None):
                         member_answer = question.answer_set.filter(student=member).first()
                         
                         if not member_answer:
-                            member_answer = MultipleChoiceAnswer()
+                            member_answer = Answer()
                         else:
                             member_answer = member_answer.multiplechoiceanswer
                             
@@ -511,6 +558,7 @@ def multiple_choice_answer(request, question_uuid, test_id = None):
 
 
 def discursive_answer(request, question_uuid, test_id = None):
+    return answer(request, question_uuid, test_id)
     question = get_object_or_404(Question, uuid=question_uuid)
     test = None
     answer = None
@@ -533,12 +581,11 @@ def discursive_answer(request, question_uuid, test_id = None):
         answer = question.answer_set.filter(student=request.user).first()
    
     if not answer:
-        answer = DiscursiveAnswer(student = request.user, question=question)        
+        answer = Answer(student = request.user, question=question)        
         if test:
             answer.test = test
     else:
-        answer = answer.discursiveanswer
-        answer.status = DiscursiveAnswer.SENT
+        answer.status = Answer.SENT
     
     if request.POST:
         if not request.user.is_authenticated: return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
@@ -573,7 +620,7 @@ def discursive_answer(request, question_uuid, test_id = None):
                         member_answer = question.answer_set.filter(student=member).first()
                         
                         if not member_answer:
-                            member_answer = DiscursiveAnswer()
+                            member_answer = Answer()
                         else:
                             member_answer = member_answer.discursiveanswer
                         if test:
@@ -638,14 +685,11 @@ def test_progress(request, uuid, class_id=None):
         total_weight = 0
         sum_weights = 0
         final_grade = 0
+        
         for q in test_user.current_questions():
-            answer = DiscursiveAnswer.objects.filter(student=student, question=q, test=test).first()
-            if not answer:
-                answer = MultipleChoiceAnswer.objects.filter(student=student, question=q, test=test).first()
-            
+            answer = Answer.objects.filter(student=student, question=q, test=test).first()
             if answer:
-                answer.correct()
-                
+                answer.correct()        
                 sum_weights += answer.grade * q.weight
             total_weight += q.weight
         final_grade = 0
@@ -658,13 +702,20 @@ def test_progress(request, uuid, class_id=None):
         
         if final_grade < 6:
             assessment['fail'] = "Infelizmente você não atingiu a nota mínima necessária."
-            assessment['next_try_link'] = test_user.next_try()
+            if test_user.has_next_try():
+                assessment['next_try_link'] = reverse('mydidata:next_try', args=(test_user.id,))
+                
         else:
             assessment['success'] = "Parabéns, você concluiu com sucesso esta avaliação!"
 
 
     return render(request, 'mydidata/test_progress.html', {'classroom':classroom, 'students': students, 'test':test, 'student_grades': student_grade, 'assessment':assessment,})
 
+@login_required()
+def next_try(request, test_user_id):
+    test_user_rel = get_object_or_404(TestUserRelation, pk=test_user_id)
+    return HttpResponseRedirect(test_user_rel.next_try())
+    
 @login_required()
 def test_results_wavg(request, class_id, uuid):
     test = get_object_or_404(Test, uuid=uuid)
@@ -680,9 +731,7 @@ def test_results_wavg(request, class_id, uuid):
             sum_weights = 0
             final_grade = 0
             for q in test.questions.all():
-                answer = DiscursiveAnswer.objects.filter(student=student, question=q, test=test).first()
-                if not answer:
-                    answer = MultipleChoiceAnswer.objects.filter(student=student, question=q, test=test).first()
+                answer = Answer.objects.filter(student=student, question=q, test=test).first()
                 if answer: sum_weights += answer.grade * q.weight
                 total_weight += q.weight
             final_grade = 0
@@ -709,9 +758,7 @@ def test_results_sum(request, class_id, uuid):
             sum_weights = 0
             final_grade = 0
             for q in test.questions.all():
-                answer = DiscursiveAnswer.objects.filter(student=student, question=q, test=test).first()
-                if not answer:
-                    answer = MultipleChoiceAnswer.objects.filter(student=student, question=q, test=test).first()
+                answer = Answer.objects.filter(student=student, question=q, test=test).first()
                 if answer: sum_weights += answer.grade
                 
             final_grade = 0
@@ -753,21 +800,24 @@ def topic_detail(request, uuid):
     }
 
     
-    if topic.has_assessment_question and questions and request.user.is_authenticated:        
-        questions[0].has_text = False
-        tutorial_answer = questions[0].get_answer_for([request.user])[0]
+    if topic.has_assessment_question and questions and request.user.is_authenticated:
         context['question'] = questions[0]
-        if questions[0].has_text:
-            form = DiscursiveAnswerForm(instance=tutorial_answer)        
-        else:
-            form = DiscursiveAnswerFormUploadOnly(instance = tutorial_answer)
-
-        context['answer'] = tutorial_answer
-        context['form'] = form
-        
 
     return render(request, 'mydidata/topic_detail.html', context)
 
+@login_required
+def start_test(request, uuid):
+    test = get_object_or_404(Test, uuid=uuid)
+    test_user = TestUserRelation.objects.filter(student=request.user, test=test).first()
+    if not test_user:
+        test_user = TestUserRelation.objects.create(student=request.user, test=test)
+        test_user.generate_question_index()
+        test_user.save()
+
+    first_question = test_user.current_questions()[0]
+    return HttpResponseRedirect(first_question.get_answer_url(test))
+
+    
 @login_required
 def test_detail(request, uuid):
     test = get_object_or_404(Test, uuid=uuid)
@@ -817,40 +867,7 @@ def test_new(request, topic_id):
     }
     template = 'mydidata/test_detail.html'
     return render(request, template, variables)
-
-@login_required()
-def topic_cru(request, uuid=None):
-
-    if uuid:
-        topic = get_object_or_404(Topic, uuid=uuid)
-        if topic.owner != request.user:
-            return HttpResponseForbidden()
-    else:
-        topic = Topic(owner=request.user)
-
-    if request.POST:
-        form = TopicForm(request.POST, instance=topic)
-        if form.is_valid():
-            form.save()
-            redirect_url = reverse(
-                'mydidata:topic_detail',
-                args=(topic.uuid,)
-            )
-            return HttpResponseRedirect(redirect_url)
-    else:
-        form = TopicForm(instance=topic)
-
-    variables = {
-        'form': form,
-        'topic':topic
-    }
-    if request.is_ajax():
-        template = 'mydidata/topic_item_form.html'
-    else:
-        template = 'mydidata/topic_cru.html'
-
-    return render(request, template, variables)
-    
+  
 @login_required()
 def question_detail(request, uuid):
 
@@ -867,47 +884,6 @@ def question_detail(request, uuid):
                 {'question': question}
     )
     
-@login_required()
-def question_cru(request, uuid=None, topic=None):
-    if uuid:
-        question = get_object_or_404(Question, uuid=uuid)
-    else:
-        question = Question()
-    if request.POST:
-        form = QuestionForm(request.POST, instance=question)
-        
-        if form.is_valid():
-            # make sure the user owns the account
-            topic = form.cleaned_data['topic']
-            # save the data
-            question = form.save(commit=False)
-            question.owner = request.user
-            question.save()
-            # return the user to the account detail view
-            reverse_url = reverse(
-                'mydidata:topic_detail',
-                args=(topic.uuid,)
-            )
-            return HttpResponseRedirect(reverse_url)
-        else:
-            # if the form isn't valid, still fetch the account so it can be passed to the template
-            topic = form.cleaned_data['topic']
-    else:
-        form = QuestionForm(instance=question)
-    if request.GET.get('topic', ''):
-        topic = Topic.objects.get(id=request.GET.get('topic', ''))
-
-
-    variables = {
-        'form': form,
-        'question': question,
-        'topic': topic
-    }
-
-    template = 'mydidata/question_cru.html'
-
-    return render(request, template, variables)
-
 def discipline_detail(request, uuid=None):
     return HttpResponseRedirect('/mydidata/topics?discipline=' + uuid)
 
@@ -964,7 +940,7 @@ def detect_copies(request, question_uuid):
     classroom = Classroom.objects.filter(students__id=request.user.id).first()
     question = get_object_or_404(Question, uuid=question_uuid)
 
-    answers = DiscursiveAnswer.objects.filter(question = question, student__id__in=classroom.students.all())
+    answers = Answer.objects.filter(question = question, student__id__in=classroom.students.all())
 
     [(a2, a1) for a1 in answers for a2 in answers if a1.text.replace(" ", "") == a2.text.replace(" ", "")]
 

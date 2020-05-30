@@ -5,19 +5,15 @@ from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.utils.html import format_html
 from .models import Question, Discipline
-from .models import Choice, Topic, Test, Answer, MultipleChoiceAnswer, DiscursiveAnswer, Classroom, ResourceRoom, TestUserRelation
+from .models import Choice, Topic, Test, Answer, Classroom, ResourceRoom, TestUserRelation
 from django.utils.safestring import mark_safe
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.forms import inlineformset_factory
 
-class MultipleChoiceAnswerInline(admin.TabularInline):
-    model = MultipleChoiceAnswer
-    extra = 1
-
-class DiscursiveAnswerInline(admin.TabularInline):
-    model = DiscursiveAnswer
+class AnswerInline(admin.TabularInline):
+    model = Answer
     extra = 1
 
 class ChoiceInline(admin.TabularInline):
@@ -92,13 +88,10 @@ class QuestionAdmin(admin.ModelAdmin):
 
     list_filter = ('tests',)
     inlines = [
-        
         ChoiceInline,
-        DiscursiveAnswerInline,
-        MultipleChoiceAnswerInline,
+        AnswerInline,
     ]
 
-    
 class TopicAdminForm(forms.ModelForm):
     topic_content = forms.CharField(widget=CKEditorUploadingWidget())
     topic_content.label = "Conteúdo"
@@ -168,10 +161,6 @@ class TestAdminForm(forms.ModelForm):
                 tu.save()
     return test
 
-# class TestAdminForm(forms.ModelForm):    
-#     class Meta:
-#         model = Test
-#         fields = '__all__'    
 class TestQuestionInline(admin.TabularInline):
     model = Test.questions.through
     question_text = forms.CharField(widget=CKEditorUploadingWidget())
@@ -195,8 +184,7 @@ class TestAdmin(admin.ModelAdmin):
     
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Choice)
-admin.site.register(MultipleChoiceAnswer)
-admin.site.register(DiscursiveAnswer)
+admin.site.register(Answer)
 admin.site.register(Discipline, DisciplineAdmin)
 admin.site.register(Classroom, ClassroomAdmin)
 admin.site.register(ResourceRoom, ResourceRoomAdmin)

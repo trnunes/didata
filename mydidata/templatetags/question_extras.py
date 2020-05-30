@@ -1,14 +1,19 @@
 from django import template
 from django.urls import reverse
-
+from ..models import Answer
 register = template.Library()
+
+
+@register.simple_tag
+def get_questions(student_grades_dict, student):
+    return student_grades_dict[student]['questions']
 
 @register.simple_tag
 def get_answers(question, student, test=None):
-    answers = question.answer_set.filter(student=student)
+    answers = Answer.objects.filter(student=student, question=question)
+
     if test:
         answers = answers.filter(test=test)
-    
     return answers
     
 @register.simple_tag

@@ -28,12 +28,7 @@
             <hr class="my-3" />
             <div>
                 <h4 class="ad-mh m-none"> Para certificação, selecione e envie o arquivo elaborado neste tutorial </h4>
-                <form ecytpe="multipart/form-data" action="{%url 'mydidata:discursive_answer' question.uuid %}" method="post">
-                    {% csrf_token %}
-                    {{ form.media }}
-                    {{ form.as_p }}
-                    <input type="submit" value="Enviar Arquivo"/>
-                </form>
+                <a class="btn btn-lg btn-primary" href="{%url 'mydidata:discursive_answer' question.uuid%}"> Clique para enviar o arquivo desenvolvido neste tópico</a>
             </div>
         {%endif%}
         <hr class="my-3" />
@@ -69,7 +64,7 @@
             </div>
         {%endif%}
         {%if test_user_relation and not test_user_relation.is_closed%}
-            <a class="btn btn-lg btn-primary" href="{{ test_user_relation.test.get_absolute_url }}"> Fazer Avaliação </a>
+            <a class="btn btn-lg btn-primary" href="{%url 'mydidata:start_test' test_user_relation.test.uuid%}"> Fazer Avaliação </a>
         {%endif%}
 
 

@@ -63,7 +63,7 @@ class Topic(models.Model, AdminURLMixin):
     weight = models.PositiveSmallIntegerField(default=1, verbose_name="Peso")
     show_questions = models.BooleanField(default=True)
     has_assessment_question = models.BooleanField(default=True, verbose_name="Possui questão avaliativa?")
-
+    
     class Meta:
         verbose_name_plural = 'Tópicos'
 
@@ -220,7 +220,7 @@ class Question(models.Model):
     file_types_accepted = models.CharField(max_length=255, verbose_name="Tipos de arquivos aceitos", null=True, blank="True")
     text_required = models.BooleanField(default=False, verbose_name='Resposta de texto obrigatória?')
     weight = models.PositiveSmallIntegerField(default=1, verbose_name='Peso')
-    has_text = models.BooleanField(default=True)
+    file_upload_only = models.BooleanField(default=False, verbose_name="Aceitar somente upload de arquivos?")
 
     DIFFICULTY_LIST = (
         (1, 'Difícil'),
@@ -250,11 +250,12 @@ class Question(models.Model):
         return len(self.choice_set.all()) == 0
 
     def get_answer_for(self, student_list):
-        answers = list(DiscursiveAnswer.objects.filter(question = self, student__id__in=[s.id for s in student_list]))
+        answers = list(Answer.objects.filter(question = self, student__id__in=[s.id for s in student_list]))
         
         if not answers:
             for student in student_list:
-                answer = DiscursiveAnswer.objects.create(student = student, question=self)
+                answer = Answer.objects.create(student = student, question=self)
+                answer.save()
                 answers.append(answer)
         
         return answers
@@ -271,14 +272,16 @@ class Question(models.Model):
 
         test_user_obj = test_user_relation[0]
         questions = test_user_obj.current_questions()
-
+        print("Current Question: ", self.uuid)
+    
+        print("Next Answer questions: ", [q.uuid for q in questions])
         self_index = questions.index([q for q in questions if q.uuid == self.uuid][0])
         
         if self_index == len(questions) - 1:
             return ""
         
         next_question = questions[self_index + 1]
-
+        print("Next Question: ", next_question.uuid)
         return next_question.get_answer_url(test)
 
 
@@ -338,16 +341,49 @@ class Answer(models.Model):
         (INCORRECT, 'Incorreta'),
         (UPDATED, 'Reenviada'),
     )
+
+    answer_text = RichTextUploadingField(null=True, blank=True, verbose_name="Texto")
+    assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage(), verbose_name="Arquivo")
+    feedback = RichTextUploadingField(null=True, blank=True, verbose_name="Correções")
     status = models.IntegerField(choices=STATUS_CHOICES, default=SENT, verbose_name="Avaliação")
     grade = models.FloatField(default=0.0, verbose_name="Nota")
     question = models.ForeignKey(Question, on_delete=models.DO_NOTHING, verbose_name="Questão")
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING, verbose_name="Estudante")
     test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Avaliação")
-    
+    choice = models.ForeignKey(Choice, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Alternativa")
+
     class Meta:
         verbose_name_plural = 'Respostas'
+    
+    @classmethod
+    def find(cls, student, question, test_id=None):
+        args = {'student': student, 'question': question}
+        if test_id:
+            args['test'] = Test.objects.get(pk=test_id)
+        return cls.objects.filter(**args).first()
+
+    def __str__(self):
+        full_name = self.student.first_name + " " + self.student.last_name
+        return "Answer of %s for %s" % (full_name, str(self.question))
+
+    
+
+    def multiple_choice_correct(self):
+        correct_choice = self.question.choice_set.filter(is_correct=True).first()
+        print("CORRECT: ",  correct_choice)
+        print("ACTUAL: ",  self.choice)
+        if correct_choice == self.choice:
+            self.status = self.CORRECT
+            self.grade = 1
+        else:
+            self.status = self.INCORRECT
+            self.grade = 0
+        self.save()
 
     def correct(self):
+        if not self.question.is_discursive():
+            return self.multiple_choice_correct()
+
         self.status = self.CORRECT
         if not self.grade:
             self.grade = 1
@@ -365,31 +401,23 @@ class Answer(models.Model):
     def is_sent(self):
         return self.status == self.SENT
 
+    def file_link(self):
+         if self.assignment_file:
+             return "<a href='%s' target=\"_blank\">Baixar o Arquivo da Resposta</a>" % (self.assignment_file.url,)
+         else:
+             return "Não possui arquivo"
+    
+    file_link.allow_tags = True
+
     def get_answer_file_id(self):
         return self.student.first_name + "__" + self.student.last_name + "__" + str(self.student.id) + "__" + self.question.uuid
-
-
-
-class MultipleChoiceAnswer(Answer):
-    choice = models.ForeignKey(Choice, null=True, on_delete=models.DO_NOTHING, verbose_name="Alternativa")
-    class Meta:
-        verbose_name_plural = 'Respostas de Múltipla Escolha'
-
-    def correct(self):
-        correct_choice = self.question.choice_set.filter(is_correct=True).first()
-        print("CORRECT: ",  correct_choice)
-        print("ACTUAL: ",  self.choice)
-        if correct_choice == self.choice:
-            self.status = self.CORRECT
-            self.grade = 1
-        else:
-            self.status = self.INCORRECT
-            self.grade = 0
-        self.save()
     
     @models.permalink
     def get_detail_url(self):
-        return "mydidata:multiple_choice_answer_detail", [self.id]
+        if not self.question.is_discursive():
+            return "mydidata:multiple_choice_answer_detail", [self.id]
+        else:
+            return "mydidata:discursive_answer_detail", [self.id]
 
 class OverwriteStorage(FileSystemStorage):
     '''
@@ -401,29 +429,6 @@ class OverwriteStorage(FileSystemStorage):
             os.remove(os.path.join(settings.MEDIA_ROOT, name))
         return name
         
-class DiscursiveAnswer(Answer):
-    answer_text = RichTextUploadingField(null=True, blank=True, verbose_name="Texto")
-    assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage(), verbose_name="Arquivo")
-    feedback = RichTextUploadingField(null=True, blank=True, verbose_name="Correções")
-
-
-    class Meta:
-        verbose_name_plural = 'Respostas Discursivas'
-
-    def __str__(self):
-        return str(self.question.index)
-
-    def file_link(self):
-         if self.assignment_file:
-             return "<a href='%s' target=\"_blank\">Baixar o Arquivo da Resposta</a>" % (self.assignment_file.url,)
-         else:
-             return "No attachment"
-    file_link.allow_tags = True
-             
-    @models.permalink
-    def get_detail_url(self):
-        return "mydidata:discursive_answer_detail", [self.id]
-
 class TestUserRelation(models.Model):
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     test = models.ForeignKey(Test, on_delete=models.DO_NOTHING)
@@ -449,6 +454,13 @@ class TestUserRelation(models.Model):
         index_array = self.index_list_as_array()
         return [list(self.test.questions.order_by('uuid'))[i-1] for i in index_array ]
 
+    def has_next_try(self):
+        questions = list(self.test.questions.order_by('uuid').all())
+        index_array = self.index_list_as_array()
+        max_index = max(index_array)    
+        if max_index == len(questions):
+            return False
+        return True
 
     def next_try(self):
         

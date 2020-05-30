@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Topic, Question, DiscursiveAnswer, Discipline, Classroom, Answer, TestUserRelation
+from .models import Topic, Question, Choice, Discipline, Classroom, Answer, TestUserRelation
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.forms import modelform_factory
 
 class SubscriberForm(UserCreationForm):
     first_name = forms.CharField(
@@ -75,7 +76,7 @@ class QuestionForm(forms.ModelForm):
 class DiscursiveAnswerFormUploadOnly(forms.ModelForm):
 
     class Meta:
-        model = DiscursiveAnswer
+        model = Answer
         fields = ['assignment_file',]
 
         labels = {
@@ -99,31 +100,58 @@ class DiscursiveAnswerFormUploadOnly(forms.ModelForm):
             )        
         return file
 
-class DiscursiveAnswerForm(forms.ModelForm):
-
+class AnswerForm(forms.ModelForm):
+    # choice = forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=Choice.objects, label="Selecione a sua resposta", empty_label=None)
 
     class Meta:
-        model = DiscursiveAnswer
-        fields = ['assignment_file','answer_text',]
+        model = Answer
+        fields = ('assignment_file','answer_text', 'choice',)
 
         widgets = {
             'answer_text' : forms.CharField(widget=CKEditorUploadingWidget(), label="Resposta", required=False),
+            # 'choice': forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=Choice.objects.none(), label="Selecione a sua resposta", empty_label=None)
         }
         labels = {
             'answer_text': 'Digite sua Resposta Aqui',
-            'assignment_file': 'Arquivo da Resposta',
+            'assignment_file': 'Arquivo da Resposta',            
         }
+    def __init__(self, *args, **kwargs):
+        question = kwargs.pop('question', None)
+        super(forms.ModelForm, self).__init__(*args, **kwargs)
+        # self.fields['choice'] = forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=question.choice_set, label="Selecione a sua resposta", empty_label=None)
+        if question and question.is_discursive():
+            self.fields.pop('choice', None)
+        
+        if question and question.file_upload_only:
+            self.fields.pop('answer_text', None)
+
+        if question and not question.is_discursive():
+            self.fields.pop('answer_text', None)
+            self.fields['choice'] = forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=question.choice_set, label="Selecione a sua resposta", empty_label=None)
+            self.fields.pop('assignment_file', None)
+            
+
+    # def clean_choice(self):
+    #     question = self.instance.question
+    #     choice = question.choice_set.get(pk=self.cleaned_data['choice'])
+    #     print("Selected choice: ", choice.choice_text)
+    #     if not choice:
+    #         raise ValidationError(_("A resposta selecionada não existe mais!"))
+        
+    #     return choice
+
     def clean_assignment_file(self):
 
         file = self.cleaned_data.get("assignment_file")
         question = self.instance.question
         if not file and not question.file_types_accepted:
+            print("Não chegou arquivo")
             return file
 
         if not file and question.file_types_accepted:
             raise ValidationError(_("Você deve enviar um arquivo como anexo a esta questão! Clique no botão \"Escolher Arquivo\" e depois envie a resposta."))
 
-        print("FILE: ", file)
+        print("FILE in answer form: ", file)
         file_type = file.name.split(".")[-1]
         if question.file_types_accepted and not file_type in question.file_types_accepted and not "todos" in question.file_types_accepted:
             raise ValidationError(_("Arquivo de resposta inválido para esta questão. Apenas os tipos %(tipos)s são aceitos!"), 
@@ -144,7 +172,7 @@ class DiscursiveAnswerForm(forms.ModelForm):
         tuserrelation = TestUserRelation.objects.filter(test=test,student=student).first()
         closed_for_student = (tuserrelation and tuserrelation.is_closed)
         
-        if c_list or t_classes or closed_for_student:
+        if closed_for_student:
             raise ValidationError(_("Questão fechada para envio de respostas!"))
         text = self.cleaned_data.get("answer_text")
         print("TEXTO: ", text)
@@ -153,9 +181,9 @@ class DiscursiveAnswerForm(forms.ModelForm):
         return text
 
 class SuperuserDiscursiveAnswerForm(forms.ModelForm):
-    status = forms.MultipleChoiceField(choices=DiscursiveAnswer.STATUS_CHOICES, widget=forms.CheckboxSelectMultiple()),
+    status = forms.MultipleChoiceField(choices=Answer.STATUS_CHOICES, widget=forms.CheckboxSelectMultiple()),
     class Meta:
-        model = DiscursiveAnswer
+        model = Answer
         fields = ['answer_text', 'assignment_file']
 
         widgets = {
@@ -180,3 +208,6 @@ class SuperuserDiscursiveAnswerForm(forms.ModelForm):
     def is_valid(self):
         return True;
 
+def get_answer_form(*args, **kwargs):
+    
+    return AnswerForm(*args, **kwargs)

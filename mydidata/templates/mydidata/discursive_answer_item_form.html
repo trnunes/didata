@@ -4,7 +4,8 @@
 
 
 
-{% if answer.feedback %}
+
+{% if answer and answer.feedback %}
     <h3 class="gi-sh">Correções Solicitadas</h3>
     <p><font color='red'>{{ answer.feedback | safe}}</font></p>
 {% endif %}

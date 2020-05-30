@@ -46,16 +46,16 @@
                                 {% get_answers question student as answers%}
                                 {%if answers%}
                                     {%for answer in answers%}
-                                        {%get_specific_answer answer as specific_answer%}
+                                        
                                         <td>
-                                            {%if specific_answer.is_sent%}
-                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-send"></span></a>
+                                            {%if answer.is_sent%}
+                                                 <a href="{{answer.get_detail_url}}"><span class="glyphicon glyphicon-send"></span></a>
                                             {%else%}
-                                                {%if specific_answer.is_ok%}
-                                                 <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-ok"></span></a>
+                                                {%if answer.is_ok%}
+                                                 <a href="{{answer.get_detail_url}}"><span class="glyphicon glyphicon-ok"></span></a>
                                                 
                                                  {%else%}
-                                                     <a href="{{specific_answer.get_detail_url}}"><span class="glyphicon glyphicon-remove"></span></a>
+                                                     <a href="{{answer.get_detail_url}}"><span class="glyphicon glyphicon-remove"></span></a>
                                                  {%endif%}
                                             {%endif%}
                                         </td>
