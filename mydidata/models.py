@@ -246,6 +246,9 @@ class Question(models.Model):
 
         return u'%s ...' % html.unescape(strip_tags(self.question_text))[0:200]
     
+    def text_escaped(self):
+        return u'%s' % html.unescape(strip_tags(self.question_text))
+
     def is_discursive(self):
         return len(self.choice_set.all()) == 0
 

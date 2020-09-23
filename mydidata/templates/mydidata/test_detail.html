@@ -29,21 +29,31 @@
                 <table id="cd-table" class="table table-hover">
                     <tbody>
                         <tr></tr>
-                        {% for question in questions %}
-                            {%get_answer_url question test as answer_url%}
+                        {% for question in test.get_ordered_questions %}
+                            {%get_answers question request.user test as answers%}
                             <tr>
-                                <td class="ci-td-p-l"><a href="{{ answer_url }}">Questão {{ forloop.counter }}</a></td>
-                                {% if user.is_authenticated %}
-                                    <td>{% get_question_status question user test%}</td>
-                                {%endif%}
-                                <td class="con-cntrl">
-                                    {# Question Edit Link #}
-                                    
-                                        <a class="pen"
-                                           href="{{ answer_url }}"></a>
-                                    
-                                </td>
-    
+                                
+                                {%if answers%}
+                                    {%for answer in answers%}
+                                        <td class="ci-td-p-l"><a href="{{ answer.get_detail_url }}">{{ question }}</a></td>
+                                        <td>
+                                            
+                                            {%if answer.is_sent%}
+                                                <a href="{{answer.get_detail_url}}"><i class="fa fa-paper-plane"></i></a>
+                                            {%else%}
+                                                {%if answer.is_ok%}
+                                                <a href="{{answer.get_detail_url}}"><i class="fa fa-check-circle"></i></span></a>
+                                                
+                                                {%else%}
+                                                    <a href="{{answer.get_detail_url}}"><i class="fas fa-times-circle"></i></a>
+                                                {%endif%}
+                                            {%endif%}
+                                        </td>
+                                        
+                                    {%endfor%}
+                                {%else%}
+                                    <td><span class="badge">?</span></a><br></td>
+                                {%endif%}    
                             </tr>
                         {% endfor %}
                             

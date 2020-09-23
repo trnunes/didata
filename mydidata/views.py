@@ -7,7 +7,7 @@ from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
-from .forms import SubscriberForm, TopicForm, QuestionForm, SuperuserDiscursiveAnswerForm, DiscursiveAnswerFormUploadOnly, get_answer_form
+from .forms import SubscriberForm, TopicForm, QuestionForm, SuperuserAnswerForm, AnswerFormUploadOnly, get_answer_form
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -266,15 +266,17 @@ def resource_room_progress(request, uuid):
 def my_progress(request):
     student = request.user
     topics = []
+    d = Discipline.objects.filter(students__id = request.user.id)
+    print("Disciplines: ", d)
     for discipline in Discipline.objects.filter(students__id = request.user.id):
-        topics.extend(discipline.topic_set.all())
+        topics.extend(Topic.objects.filter(discipline=discipline, is_assessment=False).order_by('order'))
     
     klass = Classroom.objects.filter(students__id = request.user.id).first()
     r_klass = ResourceRoom.objects.filter(students__id = request.user.id).first()
     if r_klass:
     	topics.extend(r_klass.topics.all())
     topics.sort(key=lambda topic: topic.order)
-    return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': [student] , 'topics':topics,})
+    return render(request, 'mydidata/my_progress.html', {'classroom': klass, 'students': [student] , 'topics':topics,})
     
 @login_required
 def class_progress(request, class_id):
@@ -428,11 +430,11 @@ def multiple_choice_answer_detail(request, answer_id):
 def feedback(request, answer_id):
     answer = get_object_or_404(Answer, pk=answer_id)
     question = answer.question
-    form = SuperuserDiscursiveAnswerForm(instance=answer)
+    form = SuperuserAnswerForm(instance=answer)
     classroom = Classroom.objects.filter(students__id=answer.student.id).first()
 
     if request.POST:
-        form = SuperuserDiscursiveAnswerForm(request.POST, instance=answer)
+        form = SuperuserAnswerForm(request.POST, instance=answer)
 
         form.save()
         
@@ -445,7 +447,7 @@ def feedback(request, answer_id):
             if next_student_found:
                 next_answer = Answer.objects.filter(student=student, question=question).first()
                 if next_answer:
-                    form = SuperuserDiscursiveAnswerForm(instance=next_answer)
+                    form = SuperuserAnswerForm(instance=next_answer)
                     context = {
                         'question': question,
                         'form': form,
@@ -607,7 +609,7 @@ def discursive_answer(request, question_uuid, test_id = None):
             file_name = request.FILES['assignment_file'].name
             request.FILES['assignment_file'].name = answer.get_answer_file_id() + "." +  file_name.split(".")[-1]
         
-        answer_form = DiscursiveAnswerForm(request.POST, request.FILES, instance=answer)
+        answer_form = AnswerForm(request.POST, request.FILES, instance=answer)
         if answer_form.is_valid():
             
             answer_form.save()            
@@ -655,7 +657,7 @@ def discursive_answer(request, question_uuid, test_id = None):
         return render(request, 'mydidata/answer_cru.html', context)
             
     else:
-        form = DiscursiveAnswerForm(instance=answer)
+        form = AnswerForm(instance=answer)
         context = {
             'question': question,
             'answer': answer,
@@ -679,35 +681,33 @@ def test_progress(request, uuid, class_id=None):
         students = classroom.students.all().order_by('first_name')
 
     student_grade = {}
-        
+    assessment = {}    
     for student in students:
-        test_user = TestUserRelation.objects.filter(test=test, student=request.user).first()
+        test_user = TestUserRelation.objects.filter(test=test, student=student).first()
         total_weight = 0
         sum_weights = 0
         final_grade = 0
-        
-        for q in test_user.current_questions():
-            answer = Answer.objects.filter(student=student, question=q, test=test).first()
-            if answer:
-                answer.correct()        
-                sum_weights += answer.grade * q.weight
-            total_weight += q.weight
-        final_grade = 0
-        if sum_weights: final_grade = (sum_weights/total_weight) * 10
         student_grade[student] = {}
-        student_grade[student]['grade'] = "{:2.1f}".format(final_grade)
-        
-        student_grade[student]['test_user'] = test_user
-        assessment = {}
-        
-        if final_grade < 6:
-            assessment['fail'] = "Infelizmente você não atingiu a nota mínima necessária."
-            if test_user.has_next_try():
-                assessment['next_try_link'] = reverse('mydidata:next_try', args=(test_user.id,))
-                
+        if test_user:
+            for q in test_user.current_questions():
+                answer = Answer.objects.filter(student=student, question=q, test=test).first()
+                if answer:
+                    answer.correct()        
+                    sum_weights += answer.grade * q.weight
+                total_weight += q.weight
+            final_grade = 0
+            if sum_weights: final_grade = (sum_weights/total_weight) * 10
+            
+            student_grade[student]['grade'] = "{:2.1f}".format(final_grade)
+            student_grade[student]['test_user'] = test_user
+            if final_grade < 6:
+                assessment['fail'] = "Infelizmente você não atingiu a nota mínima necessária."
+                if test_user.has_next_try():
+                    assessment['next_try_link'] = reverse('mydidata:next_try', args=(test_user.id,))
+            else:
+                assessment['success'] = "Parabéns, você concluiu com sucesso esta avaliação!"
         else:
-            assessment['success'] = "Parabéns, você concluiu com sucesso esta avaliação!"
-
+            student_grade[student]['grade'] = '?'
 
     return render(request, 'mydidata/test_progress.html', {'classroom':classroom, 'students': students, 'test':test, 'student_grades': student_grade, 'assessment':assessment,})
 

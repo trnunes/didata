@@ -1,0 +1,53 @@
+{% extends 'mydidata/base.html' %}
+
+{% block content %}
+    {% load question_extras %}
+    {% load answer_extras %}
+    {% load classroom_extras %}
+    <div id="content-container" class="container p-none">
+            {%for topic in topics%}
+
+                <h2>{{topic.topic_title}}</h2>
+                
+                <table id="cd-table" class="table table-hover">
+                    <tbody>
+                        <tr>
+                            <th>Aluno</th>
+                            {% for question in topic.question_set.all %}
+                                <th>Question {{ forloop.counter }}</th>
+                            {% endfor %}
+                        </tr>
+                        {% for student in students%}
+                            <tr>
+                                <td>{{student.first_name}}</td>
+                                
+                                {%for question in topic.get_ordered_questions %}
+                                    {% get_answers question student as answers%}
+                                    {%if answers%}
+                                        {%for answer in answers%}
+                                            <td>
+                                                
+                                                {%if answer.is_sent%}
+                                                    <a href="{{answer.get_detail_url}}"><i class="fa fa-paper-plane"></i></a>
+                                                {%else%}
+                                                    {%if answer.is_ok%}
+                                                    <a href="{{answer.get_detail_url}}"><i class="fa fa-check-circle"></i></span></a>
+                                                    
+                                                    {%else%}
+                                                        <a href="{{answer.get_detail_url}}"><i class="fas fa-times-circle"></i></a>
+                                                    {%endif%}
+                                                {%endif%}
+                                            </td>
+                                            
+                                        {%endfor%}
+                                    {%else%}
+                                        <td><span class="badge">?</span></a><br></td>
+                                    {%endif%}
+                                {%endfor%}
+                            </tr>
+                        {%endfor%}
+                    </tbody>
+                </table>
+            {%endfor%}
+    </div>
+{% endblock %}

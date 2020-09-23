@@ -44,7 +44,7 @@ def get_finish_url_for_user(classroom, test):
 
 @register.simple_tag
 def get_test_user(student_grades_dict, student):
-	return student_grades_dict[student]['test_user']
+	return student_grades_dict[student].get('test_user', None)
 
 @register.simple_tag
 def get_class(test, user):

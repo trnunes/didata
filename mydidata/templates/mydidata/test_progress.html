@@ -9,18 +9,17 @@
 		{% if classroom %}
 			<h1>{{classroom.name}}</h1>
 		{%endif%}
-            {% if user.is_superuser and classroom%}
-                
-                <h2>{{test.title}}</h2>
-
-            {%endif%}
+        
             <h2>{{test.title}}</h2>
+            
             <table id="cd-table" class="table table-hover">
+
                 <tbody>
                     <tr>
                         <th>Aluno</th>
-                        {% for question in test.questions_range %}
-                            <th>Question {{ forloop.counter }}</th>
+                        
+                        {%for question in test.get_ordered_questions %}
+                            <th>{{question.text_escaped}}</th>
                         {% endfor %}
                     </tr>
                     {% for student in students%}
@@ -28,7 +27,7 @@
                         <tr>
                             <td>{{student}}</td>
                             
-                            {%for question in test_user.current_questions %}
+                            {%for question in test.get_ordered_questions %}
                                 
                                 {% get_answers question student test as answers%}
                                 
@@ -62,6 +61,7 @@
             {%if user.is_superuser%}
                 <h1>Aproveitamento</h1>
                 <table id="cd-table" class="table table-hover">
+                    Grades: {{student_grades}}
                     <tbody>
                         <tr>
                             <th>Aluno</th>

@@ -73,7 +73,7 @@ class QuestionForm(forms.ModelForm):
             ),
         }
 
-class DiscursiveAnswerFormUploadOnly(forms.ModelForm):
+class AnswerFormUploadOnly(forms.ModelForm):
 
     class Meta:
         model = Answer
@@ -180,7 +180,7 @@ class AnswerForm(forms.ModelForm):
             raise ValidationError(_("Sua resposta não pode ser em branco! Por favor, escreva a sua reposta na caixa de texto abaixo."))
         return text
 
-class SuperuserDiscursiveAnswerForm(forms.ModelForm):
+class SuperuserAnswerForm(forms.ModelForm):
     status = forms.MultipleChoiceField(choices=Answer.STATUS_CHOICES, widget=forms.CheckboxSelectMultiple()),
     class Meta:
         model = Answer
