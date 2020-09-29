@@ -792,16 +792,19 @@ def topic_detail(request, uuid):
             test_user_relation = TestUserRelation.objects.create(student=request.user, test=test)
             test_user_relation.generate_question_index()
             test_user_relation.save()
-    questions_minus_first = questions[1:-1]
+ 
+    if topic.has_assessment_question and questions and request.user.is_authenticated:
+        context['question'] = questions[0]
+        questions = questions[1:]
+    
     context = {
         'topic': topic,
-        'questions': questions_minus_first,
+        'questions': questions,
         'test_user_relation': test_user_relation
     }
 
     
-    if topic.has_assessment_question and questions and request.user.is_authenticated:
-        context['question'] = questions[0]
+    
 
     return render(request, 'mydidata/topic_detail.html', context)
 
