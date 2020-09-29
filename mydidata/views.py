@@ -368,10 +368,20 @@ def answer(request, question_uuid, test_id=None):
         
         if test_id:
             test = get_object_or_404(Test, pk=test_id)
+            tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
+            if tuserrelation.is_closed:
+                context = {
+                    'question': question,            
+                    'form': form,
+                    'errorMessage': "Esta avaliação esta finalizada. Já não é possível enviar respostas."
+                }
+                return render(request, 'mydidata/answer_cru.html', context)
+
+
             answer.test = test
             redirect_url = question.get_next_answer_url(request.user, test)
             if not redirect_url:
-                tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
+                
                 tuserrelation.is_closed = True
                 tuserrelation.save()
                 redirect_url = reverse('mydidata:test_progress', args=(test.uuid,))
