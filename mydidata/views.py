@@ -373,7 +373,7 @@ def answer(request, question_uuid, test_id=None):
                 context = {
                     'question': question,            
                     'form': form,
-                    'errorMessage': "Esta avaliação esta finalizada. Já não é possível enviar respostas."
+                    'error_message': "Esta avaliação esta finalizada. Já não é possível enviar respostas."
                 }
                 return render(request, 'mydidata/answer_cru.html', context)
 
