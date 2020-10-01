@@ -80,7 +80,7 @@
                 
                 {% for student, student_status in student_grades.items %}
                     <h1>Aproveitamento: {{student_status.grade}}</h1>
-                    {%if assessment.success %}
+                    <!-- {%if assessment.success %}
                         <div class="alert alert-success">
                             {{assessment.success}}
                         </div>
@@ -92,7 +92,7 @@
                             {%endif%}
                         </div>
 
-                    {%endif%}
+                    {%endif%} -->
                 {%endfor%}
 
             {%endif%}
