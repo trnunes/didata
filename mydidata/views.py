@@ -347,7 +347,7 @@ def calculate_grades(request, class_id, topic_uuid=None):
        
     return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_grade})
 
-
+@login_required
 def answer(request, question_uuid, test_id=None):
 
     question = get_object_or_404(Question, uuid=question_uuid)
