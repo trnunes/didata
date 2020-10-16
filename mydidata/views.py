@@ -914,7 +914,7 @@ def download_answers(request, topic_uuid, class_id):
     writer = csv.writer(response)
     first_row = ["Alunos"] + [q.text_escaped() for q in topic.question_set.all().order_by('index')]
     rows = [first_row]
-    writer.writerow(first_row)
+    
     for student in student_list:
         answer_row = ["%s %s"%(student.first_name, student.last_name)]
         for question in topic.question_set.all().order_by('index'):            
