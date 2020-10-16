@@ -15,18 +15,19 @@
                 {# Account Search Form #}
             </div>
             {# List of Accounts #}
-            <ul id="al-group" class="strip-list">
+            <div class="list-group" style="margin-bottom: 1rem;">
                 {% for classroom in class_list %}
-                    <li class="al-item">
-                        <a href="{{ classroom.get_absolute_url }}">{{ classroom.name }}</a>
-                        &nbsp
-                        |
-                        &nbsp
-                        <a style="color: #3371b7;" href="{{ classroom.get_percentage_progress_url }}">Ver progresso(%)</a>
-                        | <a href="{{ classroom.get_grades_url }}">Notas para Tópicos Fechados</a>
-                    </li>
+                    
+                        <div class="list-group-item list-group-item-action">
+                            <a href="{{ classroom.get_absolute_url }}" >{{ classroom.name }}</a>
+                            &nbsp
+                            |
+                            &nbsp
+                            <a style="color: #3371b7;" href="{{ classroom.get_percentage_progress_url }}">Ver progresso(%)</a>
+                            | <a href="{{ classroom.get_grades_url }}">Notas para Tópicos Fechados</a>
+                        </div>
                 {% endfor %}
-            </ul>
+            </div>
             {# Pagination Section #}
         </div>
     </div>

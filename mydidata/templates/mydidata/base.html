@@ -39,60 +39,13 @@
     </head>
     
     <body>
-    <main role="main">
-        {# Navigation Menu #}
-        <!-- <header>
-            <div class="navbar navbar-default navbar-static-top 
-            {% block nav-style %}{% endblock %}">
-                <div class="container p-none">
-                    <div class="navbar-header">
-                        <button type="button" class="navbar-toggle"
-                                data-toggle="collapse"
-                                data-target=".navbar-collapse">
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </button>
-                        <a class="navbar-brand" href="/mydidata">Didata</a>
-                    </div>
-                    <div class="collapse navbar-collapse">
-                        <ul class="nav navbar-nav navbar-right">
-                            {% if user.is_authenticated %}
-                                <li><a href="/mydidata/logout/">Sair</a></li>
-                                <li><a href="{% url 'mydidata:define_team' %}">Trabalhar em Equipe</a></li>
-                                <li><a href="{% url 'mydidata:disciplines' %}"
-                                       class="p-r-none">Disciplinas</a></li>
-                                <li><a href="{% url 'mydidata:my_progress' %}"
-                                       class="p-r-none">Meu Progresso</a></li>
-                                <li><a href="{% url 'mydidata:tests' %}"
-                                       class="p-r-none">Avaliações</a></li>
-								{% if user.is_superuser%}
-									<li><a href="{% url 'mydidata:classes' %}"
-	                                   class="p-r-none">Turmas</a></li>
-                                    <li><a href="{% url 'mydidata:resource_rooms' %}"
-                                       class="p-r-none">Turmas de Reforço</a></li>
-                                    
-								{% endif %}
-
-                            {% else %}
-                                <li><a href="/mydidata/login/">Login</a></li>
-								<li><a href="{% url 'mydidata:disciplines' %}"
-                                   class="p-r-none">Disciplinas</a></li>
-							
-                            {% endif %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </header> -->
-        
         <header>
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
-              <a class="navbar-brand" href="/mydidata">Aprenda Fazendo!</a>
-              <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <a class="navbar-brand" href="/mydidata">Aprenda Fazendo!</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
-              </button>
-              <div class="collapse navbar-collapse" id="navbarCollapse">
+                </button>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
                 <ul class="navbar-nav mr-auto">
                     {%if user.is_authenticated%}
                         <li class="nav-item active">
@@ -101,21 +54,21 @@
 
 
                     {%endif%}
-                  <li class="nav-item active">
+                    <li class="nav-item active">
                     <a class="nav-link" href="/mydidata">Home <span class="sr-only">(current)</span></a>
-                  </li>
-                  {% if not user.is_authenticated%}
+                    </li>
+                    {% if not user.is_authenticated%}
                     <li class="nav-item active">
                         <a class="nav-link" href="/mydidata/login/">Login</a>
                     </li>
-                  {%endif%}
-                  <li class="nav-item active">
+                    {%endif%}
+                    <li class="nav-item active">
                     <a class="nav-link" href="{% url 'mydidata:disciplines' %}"
-                                   >Assuntos</a>
-                  </li>
-                  <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:my_progress' %}"
+                                    >Assuntos</a>
+                    </li>
+                    <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:my_progress' %}"
                     >Meu Progresso</a></li>
-                  <!-- <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:tests' %}"                    
+                    <!-- <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:tests' %}"                    
                     >Avaliações</a></li> -->
                 {% if user.is_authenticated %}
                     <li class="nav-item active"><a class="nav-link" href="/mydidata/logout/">Sair</a></li>
@@ -132,32 +85,35 @@
 
                 </ul>
                 <form class="form-inline mt-2 mt-md-0" action="/mydidata/search">
-                  <input class="form-control mr-sm-2" type="text" name="keyword" placeholder="Search" aria-label="Search">
-                  <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                    <input class="form-control mr-sm-2" type="text" name="keyword" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
                 </form>
-              </div>
+                </div>
             </nav>
-          </header>
+        </header>
       
-    
-        {# The Document Body #}
-        <div id="site-wrapper" style="margin-top: 8px;">
-            {% block content %}
-                if you see this, something is wrong!
-            {% endblock content %}
-        </div>
-        {# The Footer #}
-    </main>
-    <!-- Footer -->
-<footer class="font-small py-4 bg-dark fixed-bottom">
 
-    <!-- Copyright -->
-    <div class="text-center text-white-50">© 2020 Copyright:
-      <a href="http://aprendafazendo.net">aprendafazendo.net</a>
-    </div>
-    <!-- Copyright -->
-  
-  </footer>
+        <main role="main">
+            {# Navigation Menu #}
+        
+            {# The Document Body #}
+            <div id="site-wrapper">
+                {% block content %}
+                    if you see this, something is wrong!
+                {% endblock content %}
+            </div>
+            {# The Footer #}
+        </main>
+    <!-- Footer -->
+        <footer class="font-small py-4 bg-dark fixed-bottom">
+
+            <!-- Copyright -->
+            <div class="text-center text-white-50">© 2020 Copyright:
+            <a href="http://aprendafazendo.net">aprendafazendo.net</a>
+            </div>
+            <!-- Copyright -->
+        
+        </footer>
   <!-- Footer -->
     </body>
     {# Set of blocks that can be used to display JavaScript files #}

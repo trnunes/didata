@@ -17,6 +17,7 @@ import boto3
 import re
 import json
 from django.db.models import Q
+import csv
 class HomePage(TemplateView):
     """
     Because our needs are so simple, all we have to do is
@@ -900,6 +901,32 @@ def resource_room_topics(request, uuid=None, resource_room_only = None):
     r_room = get_object_or_404(ResourceRoom, uuid=uuid)
     discipline = r_room.topics.all().first().discipline
     return HttpResponseRedirect('/mydidata/topics?discipline=' + discipline.uuid + '&resource_room_only=' + resource_room_only)
+
+
+def download_answers(request, topic_uuid, class_id):
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    klass = get_object_or_404(Classroom, pk=class_id)
+    student_list = klass.students.all().order_by('first_name').order_by('last_name')
+    filename = "respotas.csv"
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = "attachment; filename=\"%s\"" % filename
+
+    writer = csv.writer(response)
+    first_row = ["Alunos"] + [q.text_escaped() for q in topic.question_set.all().order_by('index')]
+    rows = [first_row]
+    
+    for student in student_list:
+        answer_row = ["%s %s"%(student.first_name, student.last_name)]
+        for question in topic.question_set.all().order_by('index'):
+            first_row.append(question.text_escaped())             
+            answer = Answer.objects.filter(question=question, student = student).first()
+            if answer:
+                answer_row.append(answer.text_escaped())
+        rows.append(answer_row)
+    
+    writer.writerows(rows)
+
+    return response
 
 @login_required()
 def define_team(request):

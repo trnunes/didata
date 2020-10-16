@@ -47,7 +47,7 @@ urlpatterns = [
     url(r'^multiple_choice_answer_detail/(?P<answer_id>[0-9]+)$',views.multiple_choice_answer_detail, name='multiple_choice_answer_detail'),    
     url(r'^discursive_answer/(?P<question_uuid>[\w-]+)/$',views.answer, name='discursive_answer'),
     url(r'^discursive_answer_test/(?P<question_uuid>[\w-]+)/(?P<test_id>[0-9]+)/$',views.discursive_answer, name='discursive_answer'),
-
+    url(r'^download_answers/(?P<topic_uuid>[\w-]+)/(?P<class_id>[0-9]+)/$',views.download_answers, name='download_answers'),
 
     url(r'^discursive_answer_detail/(?P<answer_id>[0-9]+)$',views.discursive_answer_detail, name='discursive_answer_detail'),
     url(r'^feedback/(?P<answer_id>[0-9]+)$',views.feedback, name='feedback'),

@@ -2,19 +2,33 @@
 -------------------------------------------------- */
 /* Padding below the footer and lighter body text */
 
-body {
-    padding-top: 3rem;
+main {
+    padding-top: 2rem;
     padding-bottom: 5rem;
     color: #5a5a5a;
   }
   
+  .black-overlay {
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    position: absolute; 
+
+  }
+#content-container {
+
+  margin-top: 20px;
+
+}
   
   /* CUSTOMIZE THE CAROUSEL
   -------------------------------------------------- */
   
   /* Carousel base class */
   .carousel {
-    margin-bottom: 4rem;
+    margin-bottom: 4rem;    
   }
   /* Since positioning the image, we need to help out the caption */
   .carousel-caption {
@@ -28,6 +42,7 @@ body {
     /* height: 32rem; */
     max-height: 32rem;
     background-color: #777;
+    position: relative !important;
   }
   .carousel-item > img {
     /* position: absolute; */

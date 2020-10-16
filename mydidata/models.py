@@ -369,7 +369,8 @@ class Answer(models.Model):
         full_name = self.student.first_name + " " + self.student.last_name
         return "Answer of %s for %s" % (full_name, str(self.question))
 
-    
+    def text_escaped(self):
+        return u'%s' % html.unescape(strip_tags(self.answer_text))
 
     def multiple_choice_correct(self):
         correct_choice = self.question.choice_set.filter(is_correct=True).first()
