@@ -42,7 +42,7 @@ main {
     /* height: 32rem; */
     max-height: 32rem;
     background-color: #777;
-    position: relative !important;
+    
   }
   .carousel-item > img {
     /* position: absolute; */
