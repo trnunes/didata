@@ -387,7 +387,7 @@ def answer(request, question_uuid, test_id=None):
                 tuserrelation.save()
                 redirect_url = reverse('mydidata:test_progress', args=(test.uuid,))
         else:
-            redirect_url = reverse('mydidata:topic_detail', args=(question.topic.uuid,))
+            redirect_url = question.next_question_url()
         
         if request.FILES.get('assignment_file', False):
             file_name = request.FILES['assignment_file'].name

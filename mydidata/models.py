@@ -263,6 +263,13 @@ class Question(models.Model):
         
         return answers
 
+    def next_question_url(self):
+        ordered_questions = list(self.topic.get_ordered_questions())
+        next_index = ordered_questions.index(self) + 1
+        if next_index >= len(ordered_questions):
+            return self.topic.get_absolute_url()
+        return ordered_questions[next_index].get_answer_url()
+
     def get_next_answer_url(self, student, test):
         if not student or not test:
             raise Exception("Student and Test refs cannot be null!")
@@ -488,8 +495,6 @@ class TestUserRelation(models.Model):
         self.save()
 
         return questions[try_questions[0]-1].get_answer_url(self.test)
-
-
 
     def set_index_list(self, index_list):
         self.index_list = str(index_list)

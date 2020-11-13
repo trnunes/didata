@@ -31,7 +31,7 @@
                                                     <a href="{{answer.get_detail_url}}"><i class="fa fa-paper-plane"></i></a>
                                                 {%else%}
                                                     {%if answer.is_ok%}
-                                                    <a href="{{answer.get_detail_url}}"><i class="fa fa-check-circle"></i></span></a>
+                                                    <a href="{{answer.get_detail_url}}"><i class="fa fa-check-circle"></i></a>
                                                     
                                                     {%else%}
                                                         <a href="{{answer.get_detail_url}}"><i class="fas fa-times-circle"></i></a>
@@ -41,7 +41,8 @@
                                             
                                         {%endfor%}
                                     {%else%}
-                                        <td><span class="badge">?</span></a><br></td>
+                                        <td><a 
+                                            href="{{ question.get_answer_url }}"><i class="fas fa-pencil-alt"></i></a><br></td>
                                     {%endif%}
                                 {%endfor%}
                             </tr>

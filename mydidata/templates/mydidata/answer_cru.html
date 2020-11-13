@@ -3,6 +3,14 @@
 
 {% block content %}
     <div id="content-container" class="container p-none">
+		<div aria-label="Page navigation example" >
+			<ul class="pagination" style="justify-content: space-between;">
+			  <li class="page-item"><a class="page-link" href="{{question.topic.get_absolute_url}}">Voltar para o Tópico</a></li>
+			  
+			</ul>
+  
+		</div>    
+
     	{% if form.errors %}
 		    {% for field in form %}
 		        {% for error in field.errors %}
