@@ -110,6 +110,12 @@ class Topic(models.Model, AdminURLMixin):
     
     def get_ordered_questions(self):
         return self.question_set.all().order_by('index')
+    
+    def get_deadline_for(self, classroom):
+        deadlines = Deadline.objects.filter(topic=self, classroom=classroom)
+        if not deadlines:
+            return ""
+        return deadlines.first().due_datetime
 
 class Test(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
@@ -357,7 +363,7 @@ class Answer(models.Model):
     feedback = RichTextUploadingField(null=True, blank=True, verbose_name="Correções")
     status = models.IntegerField(choices=STATUS_CHOICES, default=SENT, verbose_name="Avaliação")
     grade = models.FloatField(default=0.0, verbose_name="Nota")
-    question = models.ForeignKey(Question, on_delete=models.DO_NOTHING, verbose_name="Questão")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Questão")
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING, verbose_name="Estudante")
     test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Avaliação")
     choice = models.ForeignKey(Choice, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Alternativa")
@@ -499,3 +505,12 @@ class TestUserRelation(models.Model):
     def set_index_list(self, index_list):
         self.index_list = str(index_list)
 
+class Deadline(models.Model, AdminURLMixin):
+    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico")
+    classroom = models.ForeignKey(Classroom, on_delete=models.DO_NOTHING)
+    due_datetime = models.DateTimeField()
+
+    def datetime_to_str(self):
+        print("TIME: ", self.due_datetime)
+        formatedDate = self.due_datetime.strftime("%d/%m/%Y às %H:%M:%S")
+        return formatedDate

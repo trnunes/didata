@@ -3,6 +3,14 @@ register = template.Library()
 from django.urls import reverse
 
 @register.simple_tag
+def get_deadline(topic, classroom):
+	return topic.get_deadline_for(classroom)
+
+@register.simple_tag
+def get_clasroom_list(students):
+	return set([klass for student in students for klass in student.classroom_set.all()])
+
+@register.simple_tag
 def get_close_url(classroom, topic):
 	return reverse('mydidata:topic_close', args= (classroom.id, topic.uuid))
 	
