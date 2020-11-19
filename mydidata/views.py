@@ -92,7 +92,13 @@ class DisciplineList(ListView):
     context_object_name = 'disciplines'
 
     def get_queryset(self):
-        discipline_list = Discipline.objects.filter(enabled=True).order_by('name')
+        if self.request.user.is_authenticated:
+            discipline_list = []
+            classrooms = Classroom.objects.filter(students__id=self.request.user.id)
+            discipline_list = set([d for klass in classrooms for d in klass.disciplines.order_by('name').all()])
+            
+        else:
+            discipline_list = discipline_list = Discipline.objects.filter(enabled=True).order_by('name')
         return discipline_list
         
 
@@ -337,7 +343,7 @@ def calculate_grades(request, class_id, topic_uuid=None):
 
             for q in topic.question_set.all():
                 answer = Answer.objects.filter(student=student, question=q).first()
-                if answer and answer.is_ok(): sum_grades += answer.grade * q.weight
+                if answer: sum_grades += answer.grade * q.weight
                 sum_weights += q.weight
             wavg = 0
             if sum_weights: wavg = sum_grades/sum_weights
@@ -353,7 +359,12 @@ def answer(request, question_uuid, test_id=None):
 
     question = get_object_or_404(Question, uuid=question_uuid)
 
-    
+    if request.user.is_authenticated:
+        classrooms = Classroom.objects.filter(students__id = request.user.id)
+        for klass in classrooms:
+            closed_topics = klass.closed_topics.all()
+            if question.topic in closed_topics:
+                return redirect(question.topic.get_absolute_url())
 
     if request.POST:        
         print("POST Question UUID: ", question_uuid)        
