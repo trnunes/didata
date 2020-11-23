@@ -1,23 +1,25 @@
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from .models import Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation
+from .models import Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile
 from django.template import loader
 from django.http import Http404
 from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
-from .forms import SubscriberForm, TopicForm, QuestionForm, SuperuserAnswerForm, AnswerFormUploadOnly, get_answer_form
+from .forms import SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm, SuperuserAnswerForm, AnswerFormUploadOnly, get_answer_form
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
 from django.conf import settings
 from django.contrib import messages
+from django.db import transaction
 import boto3
 import re
 import json
 from django.db.models import Q
 import csv
+from .tasks import go_academico
 class HomePage(TemplateView):
     """
     Because our needs are so simple, all we have to do is
@@ -105,6 +107,9 @@ class DisciplineList(ListView):
     def dispatch(self, *args, **kwargs):
         return super(DisciplineList, self).dispatch(*args, **kwargs)
 
+def academico(request):
+    go_academico()
+
 def search(request):
     keyword = request.GET['keyword']
     if(not keyword):
@@ -153,6 +158,49 @@ def subscriber_new(request, classroom_id, template='mydidata/subscriber_new.html
         form = SubscriberForm()
 
     return render(request, template, {'form':form, 'classroom':classroom})
+
+@login_required
+@transaction.atomic
+def update_profile(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    if request.user != user and not request.user.is_superuser:
+        messages.error(request, "Você não tem autorização para alterar este usuário!")
+        render(request, 'mydidata/profile')
+    if request.method == 'POST':
+        user_form = UserUpdateForm(request.POST, instance = user)
+        profile_form = ProfileForm(request.POST, instance = user.profile)
+        if user_form.is_valid() and profile_form.is_valid():
+            first_name = user_form.cleaned_data['first_name']            
+            username = user_form.cleaned_data['username']
+            email = user_form.cleaned_data['email']
+            # Create the User record
+            user.username = username
+            user.first_name = first_name
+            user.email = email
+            
+            user.save()
+            
+            profile_form.save()
+            messages.success(request, "O usuário foi devidamente cadastrado!")
+        else:
+            messages.error(request, 'Por favor, corrija os erros abaixo')
+        return render(request, 'mydidata/profile.html', {
+            'user_form': user_form,
+            'profile_form': profile_form
+        })
+    else:
+        user_form = UserUpdateForm(instance=user)
+        try:
+            profile = user.profile
+        except Profile.DoesNotExist:
+            profile = Profile.objects.create(user=user)
+            profile.save()
+        profile_form = ProfileForm(instance=user.profile)
+        return render (request, 'mydidata/profile.html', {
+            'user_form': user_form,
+            'profile_form': profile_form
+        })
+        
 
 def topic_close(request, topic_uuid, class_id):
     print("CLASS: ", class_id)

@@ -42,11 +42,13 @@ INSTALLED_APPS = [
     'mydidata',
     'ckeditor',
     'ckeditor_uploader',    
-    'storages',
+    'storages',    
 ]
+
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'  # During development only
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 SENDGRID_ECHO_TO_STDOUT=True
+GECKODRIVER_PATH = os.environ.get("FIREFOX_BIN")
 print("SENDGRIP", SENDGRID_API_KEY)
 
 MIDDLEWARE = [

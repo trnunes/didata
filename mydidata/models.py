@@ -17,6 +17,8 @@ from django.urls import reverse
 from django.core.validators import FileExtensionValidator
 import random
 from django.utils.html import strip_tags
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 import html
 
 class AdminURLMixin(object):
@@ -35,6 +37,24 @@ class Greeting(models.Model):
 # Create your models here.
 # class User(models.Model):
 #     user_name = models.CharField(max_length=200)
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    student_id =  models.CharField(max_length=100, blank=True, verbose_name="Matrícula")
+    def __str__(self):
+        return self.username
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    try:
+        profile = instance.profile
+    except Profile.DoesNotExist:
+        Profile.objects.create(user=instance)
+    instance.profile.save()
 
 class Discipline(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
@@ -50,6 +70,7 @@ class Discipline(models.Model, AdminURLMixin):
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:discipline_detail', [self.uuid]
+
 
 class Topic(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
@@ -164,6 +185,7 @@ class Test(models.Model, AdminURLMixin):
 
 class Classroom(models.Model):
     uuid = ShortUUIDField(unique=True)
+    academic_site_id = models.IntegerField(verbose_name = "Identificador no Acadêmico", default=0)
     name = models.CharField(max_length=255, verbose_name="Nome")
     students = models.ManyToManyField(User, null=True, verbose_name="Estudantes")
     disciplines = models.ManyToManyField(Discipline, null=True, verbose_name="Disciplinas")

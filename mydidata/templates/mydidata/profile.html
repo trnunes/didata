@@ -1,0 +1,24 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Signup{% endblock title %}
+
+{% block content %}
+
+    <div id="content-container" class="container p-none">
+        <div class="side-p">
+            <form method="post">
+                {% csrf_token %}
+                
+                {{user_form.as_p}}
+
+
+    
+    
+                {{profile_form.as_p}}
+        
+                <button type="submit" class="btn btn-primary">Cadastrar</button>
+            </form>
+
+            {# Credit Card Section #}
+        </div>
+    </div>
+{% endblock content %}

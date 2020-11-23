@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Topic, Question, Choice, Discipline, Classroom, Answer, TestUserRelation
+from django.contrib.auth.forms import UserChangeForm
+from .models import Topic, Question, Profile, Choice, Discipline, Classroom, Answer, TestUserRelation
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms import modelform_factory
+from django.contrib.auth.models import User
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ('student_id',)
 
 class SubscriberForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ('first_name', 'email', 'username',)
     first_name = forms.CharField(
         required=True, widget=forms.TextInput(attrs={'class':'form-control'})
     )
@@ -20,6 +30,7 @@ class SubscriberForm(UserCreationForm):
     password1 = forms.CharField(
         widget=forms.TextInput(attrs={'class':'form-control', 'type':'password'})
     )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         del self.fields['password2']
@@ -30,7 +41,31 @@ class SubscriberForm(UserCreationForm):
     #     super(SubscriberForm,self).__init__(*args,**kwargs)
     #     self.fields['disciplines'] = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple, choices=self.classroom.disciplines.all().values_list('id', 'name'))
 
-
+class UserUpdateForm(UserChangeForm):
+    def __init__(self, *args, **kwargs):
+        super(UserUpdateForm, self).__init__(*args, **kwargs)
+        del self.fields['password']
+    
+    
+    class Meta:
+        model = User
+        fields=["first_name", "username", "email",]
+    
+    def clean_username(self):
+        # Since User.username is unique, this check is redundant,
+        # but it sets a nicer error message than the ORM. See #13147.
+        print("CLEANED DATA: ", self.cleaned_data)
+        username = self.cleaned_data["username"]
+        if self.instance.username == username:
+            return username
+        try:
+            User._default_manager.get(username=username)
+        except User.DoesNotExist:
+            return username
+        raise forms.ValidationError(
+            "Já existe um usuário com esse nome de usuário.",
+            code='duplicate_username',
+        )
 
 class TopicForm(forms.ModelForm):
     class Meta:

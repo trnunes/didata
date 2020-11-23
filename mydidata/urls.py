@@ -8,6 +8,7 @@ urlpatterns = [
      # Marketing pages
     url(r'^$', HomePage.as_view(), name="home"),
     url(r'^signup/(?P<classroom_id>[0-9]+)$', views.subscriber_new, name='sub_new'),
+    url(r'^update_profile/(?P<user_id>[0-9]+)$', views.update_profile, name='update_profile'),
     url(r'^search$', views.search, name='search'),
     url(r'^topic_next/(?P<current_id>[0-9]+)$', views.topic_next, name='topic_next'),    
     url(r'^login/$', auth_views.login, {'template_name': 'mydidata/login.html'}, name='login'),
@@ -25,6 +26,7 @@ urlpatterns = [
     url(r'^topic/assess/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_assess, name='topic_assess'),
     url(r'^topic/grades/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.calculate_grades, name='calculate_grades'),
     url(r'^topic/grades/(?P<class_id>[0-9]+)/$',views.calculate_grades, name='calculate_grades'),
+    url(r'^academico/', views.academico, name="academico"),
     
     url(r'^tests$', TestList.as_view(), name="tests"),
     url(r'^test_detail/(?P<uuid>[\w-]+)/$', views.test_detail, name='test_detail'),
