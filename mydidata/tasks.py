@@ -21,7 +21,7 @@ def go_academico():
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.binary_location = settings.GOOGLE_CHROME_PATH
-    browser = webdriver.Chrome(execution_path=settings.CHROMEDRIVER_PATH, chrome_options=chrome_options)
+    browser = webdriver.Chrome(executable_path=settings.CHROMEDRIVER_PATH, chrome_options=chrome_options)
 
     #login
     browser.get("http://www.academico.iff.edu.br")
