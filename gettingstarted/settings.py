@@ -48,8 +48,8 @@ INSTALLED_APPS = [
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'  # During development only
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 SENDGRID_ECHO_TO_STDOUT=True
-GOOGLE_CHROME_PATH = '/app/.apt/usr/bin/google_chrome'
-CHROMEDRIVER_PATH = '/app/.chromedriver/bin/chromedriver'
+GOOGLE_CHROME_PATH = os.environ.get('GOOGLE_CHROME_PATH')
+CHROMEDRIVER_PATH = os.environ.get('CHROMEDRIVER_PATH')
 print("SENDGRIP", SENDGRID_API_KEY)
 
 MIDDLEWARE = [
