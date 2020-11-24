@@ -112,7 +112,7 @@ class DisciplineList(ListView):
 def academico(request, class_id, topic_uuid):
     classroom = get_object_or_404(Classroom, pk=class_id)
     topic = get_object_or_404(Topic, uuid=topic_uuid)
-    diary = classroom.academic_site_id
+    diary = str(classroom.academic_site_id)
     milestone= "1BIM"
     if not diary:
         return
