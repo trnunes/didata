@@ -1,0 +1,230 @@
+1606246465840	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.6PkpZL93TSeM"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606246469680	Marionette	INFO	Listening on port 34723
+1606246469819	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045642&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606246484670	Marionette	INFO	Stopped listening on port 34723
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+1606246696894	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.4hOP3zRvyegw"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606246699690	Marionette	INFO	Listening on port 32983
+1606246699743	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045642&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606246713918	Marionette	INFO	Stopped listening on port 32983
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+1606246969233	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.C7jyBv3COaPO"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606246972349	Marionette	INFO	Listening on port 36397
+1606246972483	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045642&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606246988093	Marionette	INFO	Stopped listening on port 36397
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+1606248317621	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.85wkRAa38ZDu"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606248319423	Marionette	INFO	Listening on port 32919
+1606248319466	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045942&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606248333202	Marionette	INFO	Stopped listening on port 32919
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+1606248519256	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.kNWr3IjH8tLS"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606248520948	Marionette	INFO	Listening on port 33467
+1606248520986	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045942&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606248532573	Marionette	INFO	Stopped listening on port 33467
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+1606248822257	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.XdntqReUfYKp"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606248823951	Marionette	INFO	Listening on port 44235
+1606248823986	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045942&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+Exiting due to channel error.
+Exiting due to channel error.
+Exiting due to channel error.
+1606248946950	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.9uKffceLueXx"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606248948803	Marionette	INFO	Listening on port 34937
+1606248948870	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045942&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606248960994	Marionette	INFO	Stopped listening on port 34937
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+1606249742117	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.bqVUCqAcLgfj"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606249743732	Marionette	INFO	Listening on port 36957
+1606249743865	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045942&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606249755627	Marionette	INFO	Stopped listening on port 36957
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+1606249777847	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.1yUY58YFeGsJ"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606249779715	Marionette	INFO	Listening on port 42695
+1606249779767	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+1606249787516	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.j6RwOfDdHLT6"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606249789247	Marionette	INFO	Listening on port 37569
+1606249789338	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045942&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606249801135	Marionette	INFO	Stopped listening on port 37569
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+1606249843476	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.NngXEOa88PT9"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606249845183	Marionette	INFO	Listening on port 45317
+1606249845301	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045942&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606249856916	Marionette	INFO	Stopped listening on port 45317
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+Exiting due to channel error.
+Exiting due to channel error.
+Exiting due to channel error.
+1606249950478	mozrunner::runner	INFO	Running command: "/usr/bin/firefox" "-marionette" "-foreground" "-no-remote" "-profile" "/tmp/rust_mozprofile.5S9clsQshfLl"
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1606249952184	Marionette	INFO	Listening on port 42543
+1606249952299	Marionette	WARN	TLS certificate errors will be ignored for this session
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&COD_PAUTA=161148&ETAPA=1&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068&ACAO=LANCAR&COD_PAUTA=161148&COD_AVALIACAO=1045942&N_ETAPA=1BIM, line 403: ReferenceError: desc_avaliacao is not defined
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement
+JavaScript error: https://academico.iff.edu.br/qacademico/index.asp?t=3068, line 403: ReferenceError: desc_avaliacao is not defined
+1606249964023	Marionette	INFO	Stopped listening on port 42543
+JavaScript warning: https://academico.iff.edu.br/qacademico/lib/scripts/layer_aguardar.js, line 3: unreachable code after return statement

@@ -123,6 +123,13 @@ def academico(request, class_id, topic_uuid):
     }
     students_grades = []
     student_list = classroom.students.all().order_by('first_name')    
+    answers_texts = []
+    for student in student_list:
+        for q in topic.question_set.all():
+            answer = Answer.objects.filter(student=student, question=q).first()
+            if answer and answer.answer_text:
+                answers_texts.append(answer.text_escaped())
+
     for student in student_list:
         sum_topic_weight = 0
         final_grade = 0
@@ -131,14 +138,20 @@ def academico(request, class_id, topic_uuid):
         sum_topic_weight += topic.weight
         for q in topic.question_set.all():
             answer = Answer.objects.filter(student=student, question=q).first()
-            if answer: sum_grades += answer.grade * q.weight
+            a_grade = 0
+            if answer: 
+                a_grade = answer.grade
+                if answer.answer_text:
+                    if answers_texts.count(answer.text_escaped()) > 1:
+                        a_grade = a_grade/2
+            sum_grades += a_grade
             sum_weights += q.weight
-        wavg = 0
-        if sum_weights: wavg = sum_grades/sum_weights
-        final_grade += wavg * topic.weight
-        students_grades.append([student,  "{:2.1f}".format(wavg*10)])
+        
+        if sum_weights: wavg = sum_grades/sum_weights        
+        students_grades.append([student,  wavg*10])
        
-    go_academico(students_grades, assessment, milestone, diary, 'trnunes', 'thi@g0rinu')
+    errors = go_academico(students_grades, assessment, milestone, diary, 'trnunes', 'thi@g0rinu')
+    return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'topic': topic, 'errors': errors})
 
 def search(request):
     keyword = request.GET['keyword']
@@ -409,6 +422,14 @@ def calculate_grades(request, class_id, topic_uuid=None):
     
     student_list = classroom.students.all().order_by('first_name')    
     student_by_topic_grade = {}
+    answers_texts = []
+    for student in student_list:
+        for topic in topics:
+            for q in topic.question_set.all():
+                answer = Answer.objects.filter(student=student, question=q).first()
+                if answer and answer.answer_text:
+                    answers_texts.append(answer.text_escaped())
+
     for student in student_list:
         student_by_topic_grade[student] = []
         sum_topic_weight = 0
@@ -418,10 +439,19 @@ def calculate_grades(request, class_id, topic_uuid=None):
             sum_grades = 0
             sum_weights = 0
             sum_topic_weight += topic.weight
-
             for q in topic.question_set.all():
                 answer = Answer.objects.filter(student=student, question=q).first()
-                if answer: sum_grades += answer.grade * q.weight
+                if answer:
+                    a_grade = answer.grade
+                    print("ANSWERS: ", answers_texts)
+                    if answer.answer_text:
+                        print("RESPOSTA: ", answer.text_escaped())
+                        if answers_texts.count(answer.text_escaped()) > 1:
+                            a_grade = a_grade/2
+                            print("RESPOSTA IDÊNTICA: ", answer.text_escaped())
+                            answer.comments = "Resposta idêntica!"
+                            answer.save()
+                    sum_grades += a_grade * q.weight
                 sum_weights += q.weight
             wavg = 0
             if sum_weights: wavg = sum_grades/sum_weights

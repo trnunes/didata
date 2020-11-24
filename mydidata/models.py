@@ -389,6 +389,7 @@ class Answer(models.Model):
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING, verbose_name="Estudante")
     test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Avaliação")
     choice = models.ForeignKey(Choice, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Alternativa")
+    comments = models.TextField(blank=True)
 
     class Meta:
         verbose_name_plural = 'Respostas'
