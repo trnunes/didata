@@ -24,7 +24,9 @@
                     {% for s in topic_dict.keys%}
                         {% get_topic_percent topic_dict s as percents%}                                            
                         <tr>
-                        <td>{{s.first_name}}&nbsp{{s.last_name}}</td>
+                        <td>
+                            <a href='/mydidata/update_profile/{{s.id}}'>{{s.first_name}}&nbsp{{s.last_name}}</a>
+                        </td>
                         
                         {% for t_p in percents%}
                             {% get_topic t_p  as topic%}
@@ -36,5 +38,6 @@
                     
                 </tbody>
             </table>
+            <a herf='/mydidata/academico/{{classroom.id}}/{{topic.uuid}}'>Lançar no Acadêmico</a>
     </div>
 {% endblock %}

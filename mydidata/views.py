@@ -20,6 +20,8 @@ import json
 from django.db.models import Q
 import csv
 from .tasks import go_academico
+import datetime
+
 class HomePage(TemplateView):
     """
     Because our needs are so simple, all we have to do is
@@ -107,8 +109,36 @@ class DisciplineList(ListView):
     def dispatch(self, *args, **kwargs):
         return super(DisciplineList, self).dispatch(*args, **kwargs)
 
-def academico(request):
-    go_academico()
+def academico(request, class_id, topic_uuid):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    diary = classroom.academic_site_id
+    milestone= "1BIM"
+    if not diary:
+        return
+    assessment = {
+        'description': topic.topic_title,
+        'type': 'Trabalho',
+        'date': datetime.datetime.now().strftime("%d/%m/%Y")
+    }
+    students_grades = []
+    student_list = classroom.students.all().order_by('first_name')    
+    for student in student_list:
+        sum_topic_weight = 0
+        final_grade = 0
+        sum_grades = 0
+        sum_weights = 0
+        sum_topic_weight += topic.weight
+        for q in topic.question_set.all():
+            answer = Answer.objects.filter(student=student, question=q).first()
+            if answer: sum_grades += answer.grade * q.weight
+            sum_weights += q.weight
+        wavg = 0
+        if sum_weights: wavg = sum_grades/sum_weights
+        final_grade += wavg * topic.weight
+        students_grades.append([student,  "{:2.1f}".format(wavg*10)])
+       
+    go_academico(students_grades, assessment, milestone, diary, 'trnunes', 'thi@g0rinu')
 
 def search(request):
     keyword = request.GET['keyword']
@@ -400,7 +430,7 @@ def calculate_grades(request, class_id, topic_uuid=None):
         if sum_topic_weight: student_by_topic_grade[student].insert(0,["Nota", "{:2.1f}".format((final_grade/sum_topic_weight)*10)])
 
        
-    return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_grade})
+    return render(request, 'mydidata/percentage_progress.html', {'classroom': classroom, 'topics': topics, 'topic_dict': student_by_topic_grade})
 
 @login_required
 def answer(request, question_uuid, test_id=None):
