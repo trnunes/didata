@@ -18,7 +18,7 @@
                         <th>Nota</th>
                         
                         {%for topic in topics %}                        
-                            <th>{{topic.topic_title}}: <a href='/mydidata/academico/{{classroom.id}}/{{topic.uuid}}'>Lançar no Acadêmico</a></th>
+                            <th>{{topic.topic_title}}
                         {%endfor%}
                     </tr>
                     {% for s in topic_dict.keys%}
@@ -38,6 +38,67 @@
                     
                 </tbody>
             </table>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                Lançar no Acadêmico
+              </button>
+              
+              <!-- Modal -->
+              <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel">Acesso do Acadêmico</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+
+                    <div class="modal-body">
+                        {%for topic in topics %}
+                        <form id="login-form" method="post" 
+                                action="/mydidata/academico/{{classroom.id}}/{{topic.uuid}}/">
+                            {% csrf_token %}
+                            <table class="table">
+                                <tr>
+                                    <td><label for="username">Nome de Usuário</label></td>
+                                    <td><input id="username" name="username" 
+                                                type="text" class="form-control"></td>
+                                </tr>
+                                <tr>
+                                    <td><label for="password">Senha</label></td>
+                                    <td><input id="password" name="password" 
+                                                type="password" class="form-control"></td>
+                                </tr>
+                            
+                            </table>
+                            <div class="form-group">
+                                <label for="etapa">Selecione a etapa para o lançamento</label>
+                                <select class="form-control-sm" id="etapa" name="etapa">
+                                  <option>1BIM</option>
+                                  <option>2BIM</option>
+                                  <option>3BIM</option>
+                                  <option>4BIM</option>                                  
+                                </select>
+                              </div>
+                            {% if form.errors %}
+                                <p class=" label label-danger">
+                                    O login e a senha não combinam.                        
+                                </p>                    
+                            {% endif %}
             
+                            <input type="submit" value="Login" 
+                                    class="btn btn-primary pull-right" />
+                            
+                            
+                        </form>
+                        {% endfor %}
+      
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>        
     </div>
 {% endblock %}

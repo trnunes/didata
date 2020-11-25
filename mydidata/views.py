@@ -113,45 +113,52 @@ def academico(request, class_id, topic_uuid):
     classroom = get_object_or_404(Classroom, pk=class_id)
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     diary = str(classroom.academic_site_id)
-    milestone= "1BIM"
-    if not diary:
-        return
-    assessment = {
-        'description': topic.topic_title,
-        'type': 'Trabalho',
-        'date': datetime.datetime.now().strftime("%d/%m/%Y")
-    }
-    students_grades = []
-    student_list = classroom.students.all().order_by('first_name')    
-    answers_texts = []
-    for student in student_list:
-        for q in topic.question_set.all():
-            answer = Answer.objects.filter(student=student, question=q).first()
-            if answer and answer.answer_text:
-                answers_texts.append(answer.text_escaped())
+    if request.POST:
+        login = request.POST.get('username')
+        password = request.POST.get('password')
+        milestone= request.POST.get('etapa')
+        if not diary:
+            return
+        assessment = {
+            'description': topic.topic_title,
+            'type': 'Trabalho',
+            'date': datetime.datetime.now().strftime("%d/%m/%Y")
+        }
+        students_grades = []
+        student_list = classroom.students.all().order_by('first_name')    
+        answers_texts = []
+        for student in student_list:
+            for q in topic.question_set.all():
+                answer = Answer.objects.filter(student=student, question=q).first()
+                if answer and answer.answer_text:
+                    answers_texts.append(answer.text_escaped())
 
-    for student in student_list:
-        sum_topic_weight = 0
-        final_grade = 0
-        sum_grades = 0
-        sum_weights = 0
-        sum_topic_weight += topic.weight
-        for q in topic.question_set.all():
-            answer = Answer.objects.filter(student=student, question=q).first()
-            a_grade = 0
-            if answer: 
-                a_grade = answer.grade
-                if answer.answer_text:
-                    if answers_texts.count(answer.text_escaped()) > 1:
-                        a_grade = a_grade/2
-            sum_grades += a_grade
-            sum_weights += q.weight
-        
-        if sum_weights: wavg = sum_grades/sum_weights        
-        students_grades.append([student,  wavg*10])
-       
-    errors = go_academico(students_grades, assessment, milestone, diary, 'trnunes', 'thi@g0rinu')
-    return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'topic': topic, 'errors': errors})
+        for student in student_list:
+            sum_topic_weight = 0
+            final_grade = 0
+            sum_grades = 0
+            sum_weights = 0
+            sum_topic_weight += topic.weight
+            for q in topic.question_set.all():
+                answer = Answer.objects.filter(student=student, question=q).first()
+                a_grade = 0
+                if answer: 
+                    a_grade = answer.grade
+                    if answer.answer_text:
+                        if answers_texts.count(answer.text_escaped()) > 1:
+                            a_grade = a_grade/2
+                sum_grades += a_grade
+                sum_weights += q.weight
+            
+            if sum_weights: wavg = sum_grades/sum_weights        
+            students_grades.append([student,  wavg*10])
+        errors = []
+        try:
+            errors = go_academico(students_grades, assessment, milestone, diary, login, password)
+        except:
+            errors = students_grades
+            
+        return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'topic': topic, 'errors': errors})
 
 def search(request):
     keyword = request.GET['keyword']

@@ -20,7 +20,7 @@ def go_academico(students_grades, assessment, milestone, diary, login, password)
     chrome_options.binary_location = settings.GOOGLE_CHROME_PATH
     browser = webdriver.Chrome(executable_path=settings.CHROMEDRIVER_PATH, chrome_options=chrome_options)
     # browser = webdriver.Firefox(executable_path="./geckodriver")
-    #login
+    #login    
     browser.get("http://www.academico.iff.edu.br")
     browser.find_element_by_partial_link_text("PROFESSOR").click()
     browser.find_element_by_xpath("//input[@name='LOGIN']").send_keys(login)
