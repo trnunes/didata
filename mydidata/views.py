@@ -109,6 +109,7 @@ class DisciplineList(ListView):
     def dispatch(self, *args, **kwargs):
         return super(DisciplineList, self).dispatch(*args, **kwargs)
 
+@login_required
 def academico(request, class_id, topic_uuid):
     classroom = get_object_or_404(Classroom, pk=class_id)
     topic = get_object_or_404(Topic, uuid=topic_uuid)
@@ -124,41 +125,14 @@ def academico(request, class_id, topic_uuid):
             'type': 'Trabalho',
             'date': datetime.datetime.now().strftime("%d/%m/%Y")
         }
-        students_grades = []
-        student_list = classroom.students.all().order_by('first_name')    
-        answers_texts = []
-        for student in student_list:
-            for q in topic.question_set.all():
-                answer = Answer.objects.filter(student=student, question=q).first()
-                if answer and answer.answer_text:
-                    answers_texts.append(answer.text_escaped())
-
-        for student in student_list:
-            sum_topic_weight = 0
-            final_grade = 0
-            sum_grades = 0
-            sum_weights = 0
-            sum_topic_weight += topic.weight
-            for q in topic.question_set.all():
-                answer = Answer.objects.filter(student=student, question=q).first()
-                a_grade = 0
-                if answer: 
-                    a_grade = answer.grade
-                    if answer.answer_text:
-                        if answers_texts.count(answer.text_escaped()) > 1:
-                            a_grade = a_grade/2
-                sum_grades += a_grade
-                sum_weights += q.weight
-            
-            if sum_weights: wavg = sum_grades/sum_weights        
-            students_grades.append([student,  wavg*10])
+        students_grades = topic.calculate_grades(classroom)
         errors = []
         try:
             errors = go_academico(students_grades, assessment, milestone, diary, login, password)
         except:
             errors = students_grades
-            
-        return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'topic': topic, 'errors': errors})
+
+        return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'title': topic.topic_title, 'errors': errors})
 
 def search(request):
     keyword = request.GET['keyword']
@@ -419,55 +393,44 @@ def percentage_progress(request, class_id):
     return render(request, 'mydidata/percentage_progress.html', {'topics': topics, 'topic_dict': student_by_topic_percentage})
 
 @login_required
-def calculate_grades(request, class_id, topic_uuid=None):
+def calculate_grades(request, class_id, topic_uuid):
     classroom = get_object_or_404(Classroom, pk=class_id)
-    if topic_uuid:
-        topics = [get_object_or_404(Topic, uuid=topic_uuid)]
-    else:
-        discipline = classroom.disciplines.all().first()
-        topics = classroom.closed_topics.all()
-    
-    student_list = classroom.students.all().order_by('first_name')    
-    student_by_topic_grade = {}
-    answers_texts = []
-    for student in student_list:
-        for topic in topics:
-            for q in topic.question_set.all():
-                answer = Answer.objects.filter(student=student, question=q).first()
-                if answer and answer.answer_text:
-                    answers_texts.append(answer.text_escaped())
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    students_grades = topic.calculate_grades(classroom)
+    return render(request, 'mydidata/percentage_progress.html', {'topic': topic, 'classroom': classroom, 'students_grades': students_grades})
 
-    for student in student_list:
-        student_by_topic_grade[student] = []
-        sum_topic_weight = 0
-        final_grade = 0
+@login_required
+def test_to_academico(request, class_id, test_uuid):
+    test = get_object_or_404(Test, uuid=test_uuid)
+    classroom = get_object_or_404(Classroom, pk=class_id)    
 
-        for topic in topics:
-            sum_grades = 0
-            sum_weights = 0
-            sum_topic_weight += topic.weight
-            for q in topic.question_set.all():
-                answer = Answer.objects.filter(student=student, question=q).first()
-                if answer:
-                    a_grade = answer.grade
-                    print("ANSWERS: ", answers_texts)
-                    if answer.answer_text:
-                        print("RESPOSTA: ", answer.text_escaped())
-                        if answers_texts.count(answer.text_escaped()) > 1:
-                            a_grade = a_grade/2
-                            print("RESPOSTA IDÊNTICA: ", answer.text_escaped())
-                            answer.comments = "Resposta idêntica!"
-                            answer.save()
-                    sum_grades += a_grade * q.weight
-                sum_weights += q.weight
-            wavg = 0
-            if sum_weights: wavg = sum_grades/sum_weights
-            final_grade += wavg * topic.weight
-            student_by_topic_grade[student].append([topic,  "{:2.1f}".format(wavg*10)])
-        if sum_topic_weight: student_by_topic_grade[student].insert(0,["Nota", "{:2.1f}".format((final_grade/sum_topic_weight)*10)])
+    grades_by_student = test.calculate_grades(classroom)
 
-       
-    return render(request, 'mydidata/percentage_progress.html', {'classroom': classroom, 'topics': topics, 'topic_dict': student_by_topic_grade})
+    diary = str(classroom.academic_site_id)
+
+    if request.POST:
+        login = request.POST.get('username')
+        password = request.POST.get('password')
+        milestone= request.POST.get('etapa')
+        if not diary:
+            return
+        assessment = {
+            'description': test.title,
+            'type': 'Prova',
+            'date': datetime.datetime.now().strftime("%d/%m/%Y")
+        }
+        students_grades = []
+        for student in grades_by_student.keys():
+            students_grades.append((student, grades_by_student[student]['grade']))
+
+        errors = []
+        try:
+            errors = go_academico(students_grades, assessment, milestone, diary, login, password)
+        except:
+            errors = students_grades
+
+        return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'title': test.title, 'errors': errors})
+
 
 @login_required
 def answer(request, question_uuid, test_id=None):
@@ -508,10 +471,10 @@ def answer(request, question_uuid, test_id=None):
             answer.test = test
             redirect_url = question.get_next_answer_url(request.user, test)
             if not redirect_url:
-                
+                klass = Classroom.objects.filter(students__id = request.user.id).first()
                 tuserrelation.is_closed = True
                 tuserrelation.save()
-                redirect_url = reverse('mydidata:test_progress', args=(test.uuid,))
+                redirect_url = reverse('mydidata:test_progress', args=(test.uuid, klass.id,))
         else:
             redirect_url = question.next_question_url()
         
@@ -807,46 +770,18 @@ def discursive_answer(request, question_uuid, test_id = None):
 
 
 @login_required()
-def test_progress(request, uuid, class_id=None):
+def test_progress(request, uuid, class_id):
     test = get_object_or_404(Test, uuid=uuid)
-    students = [request.user]
-    classroom = None
-    if class_id:
-        classroom = Classroom.objects.filter(pk=class_id).first()
-
-    if request.user.is_superuser and class_id:
+    classroom = get_object_or_404(Classroom, pk=class_id)    
+    students = []
+    if not request.user.is_superuser:
+        students = [request.user]
+    else:
         students = classroom.students.all().order_by('first_name')
 
-    student_grade = {}
-    assessment = {}    
-    for student in students:
-        test_user = TestUserRelation.objects.filter(test=test, student=student).first()
-        total_weight = 0
-        sum_weights = 0
-        final_grade = 0
-        student_grade[student] = {}
-        if test_user:
-            for q in test_user.current_questions():
-                answer = Answer.objects.filter(student=student, question=q, test=test).first()
-                if answer:
-                    answer.correct()        
-                    sum_weights += answer.grade * q.weight
-                total_weight += q.weight
-            final_grade = 0
-            if sum_weights: final_grade = (sum_weights/total_weight) * 10
-            
-            student_grade[student]['grade'] = "{:2.1f}".format(final_grade)
-            student_grade[student]['test_user'] = test_user
-            if final_grade < 6:
-                assessment['fail'] = "Infelizmente você não atingiu a nota mínima necessária."
-                if test_user.has_next_try():
-                    assessment['next_try_link'] = reverse('mydidata:next_try', args=(test_user.id,))
-            else:
-                assessment['success'] = "Parabéns, você concluiu com sucesso esta avaliação!"
-        else:
-            student_grade[student]['grade'] = '?'
-
-    return render(request, 'mydidata/test_progress.html', {'classroom':classroom, 'students': students, 'test':test, 'student_grades': student_grade, 'assessment':assessment,})
+    grades_by_student = test.calculate_grades(classroom, students)
+    
+    return render(request, 'mydidata/test_progress.html', {'classroom':classroom, 'students': students, 'test':test, 'student_grades': grades_by_student,})
 
 @login_required()
 def next_try(request, test_user_id):
@@ -929,15 +864,19 @@ def topic_detail(request, uuid):
             test_user_relation = TestUserRelation.objects.create(student=request.user, test=test)
             test_user_relation.generate_question_index()
             test_user_relation.save()
+    
     context = {
         'topic': topic,
         'questions': questions,
         'test_user_relation': test_user_relation
     }
+    if request.user.is_authenticated:
+        klass = Classroom.objects.filter(students__id = request.user.id).first()
+        context['classroom'] = klass
 
-    if topic.has_assessment_question and questions and request.user.is_authenticated:
-        context['question'] = questions[0]
-        questions = questions[1:]
+        if topic.has_assessment_question and questions:
+            context['question'] = questions[0]
+            questions = questions[1:]
     
     return render(request, 'mydidata/topic_detail.html', context)
 

@@ -8,7 +8,7 @@
     <div id="content-container" class="container p-none">
             {%for topic in topics%}
 
-                <h2>{{topic.topic_title}}</h2>
+                <h2><a href="{{topic.get_absolute_url}}">{{topic.topic_title}}</a></h2>
                 {%get_clasroom_list students as klasses%}
                 {% for klass in klasses%}
                     {%get_deadline topic klass as deadline%}

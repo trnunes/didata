@@ -8,7 +8,7 @@
             {%if test_user_relation and test_user_relation.is_closed%}
                 <div class="alert alert-primary" role="alert">
                     A avaliação desta etapa já foi concluída!
-                    <a class="alert-link" href="{%url 'mydidata:test_progress' test_user_relation.test.uuid %}"> Clique aqui para verificar suas respostas. </a>
+                    <a class="alert-link" href="{%url 'mydidata:test_progress' test_user_relation.test.uuid classroom.id %}"> Clique aqui para verificar suas respostas. </a>
                 </div>
             {%endif%}
             <div aria-label="Page navigation example" >

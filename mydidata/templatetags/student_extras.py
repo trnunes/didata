@@ -14,9 +14,9 @@ def get_resource_room_url(student):
 	return url
 
 @register.simple_tag
-def get_student(error):
-	return error[0]
+def get_student(student_grade):
+	return student_grade[0]
 
 @register.simple_tag
-def get_grade(error):
-	return error[1]
+def get_grade(student_grade):
+	return "{:2.1f}".format(student_grade[1]).replace(".", ",")

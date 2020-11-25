@@ -30,6 +30,7 @@ class AdminURLMixin(object):
             args=(self.id,))
 
 
+
 # Create your models here.
 class Greeting(models.Model):
     when = models.DateTimeField('date created', auto_now_add=True)
@@ -71,6 +72,43 @@ class Discipline(models.Model, AdminURLMixin):
     def get_absolute_url(self):
         return 'mydidata:discipline_detail', [self.uuid]
 
+class GradingStrategy(object):
+    def calculate(self, questions, students, test=None):
+        students_grades = []
+        answers_texts = []
+        for student in students:
+            for q in questions:
+                if test:
+                    answer = Answer.objects.filter(student=student, question=q, test=test).first()
+                else:
+                    answer = Answer.objects.filter(student=student, question=q).first()
+                
+                if answer and answer.answer_text:
+                    answers_texts.append(answer.text_escaped())
+
+        for student in students:
+            sum_grades = 0
+            sum_weights = 0
+            
+            for q in questions:
+                if test:
+                    answer = Answer.objects.filter(student=student, question=q, test=test).first()
+                else:
+                    answer = Answer.objects.filter(student=student, question=q).first()
+                a_grade = 0
+                if answer:
+                    answer.correct()
+                    a_grade = answer.grade
+                    if answer.answer_text:
+                        if answers_texts.count(answer.text_escaped()) > 1:
+                            a_grade = a_grade/2
+                sum_grades += a_grade
+                sum_weights += q.weight
+            
+            if sum_weights: 
+                wavg = sum_grades/sum_weights        
+            students_grades.append([student,  wavg*10])
+        return students_grades
 
 class Topic(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
@@ -137,6 +175,14 @@ class Topic(models.Model, AdminURLMixin):
         if not deadlines:
             return ""
         return deadlines.first().due_datetime
+    
+    def calculate_grades(self, classroom):
+        grader = GradingStrategy()
+        return grader.calculate(self.question_set.all(), classroom.students.all())
+    
+    def penalize_repeated(self):
+        return []
+
 
 class Test(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
@@ -182,6 +228,27 @@ class Test(models.Model, AdminURLMixin):
     
     def get_ordered_questions(self):
         return self.questions.order_by('index').all()
+    
+    def calculate_grades(self, classroom, students = []):
+        grader = GradingStrategy()
+        grades_by_student = {}
+        if not students:
+            students = classroom.students.all().order_by('first_name')
+        
+        for student in students:
+            test_user = TestUserRelation.objects.filter(test=self, student=student).first()
+            grades_by_student[student] = {}
+            if test_user:
+                student_grade = grader.calculate(test_user.current_questions(), [student], self)[0]
+                grades_by_student[student]['grade'] = student_grade[1]
+                grades_by_student[student]['test_user'] = test_user
+                if student_grade[1] < 6:
+                    if test_user.has_next_try():
+                        grades_by_student[student]['next_try_link'] = reverse('mydidata:next_try', args=(test_user.id,))
+            else:
+                grades_by_student[student]['grade'] = "?"
+        return grades_by_student
+
 
 class Classroom(models.Model):
     uuid = ShortUUIDField(unique=True)
@@ -195,7 +262,7 @@ class Classroom(models.Model):
 
     class Meta:
         verbose_name_plural = 'Turmas'
-
+    
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:class_progress', [self.id]
@@ -423,10 +490,6 @@ class Answer(models.Model):
     def correct(self):
         if not self.question.is_discursive():
             return self.multiple_choice_correct()
-
-        self.status = self.CORRECT
-        if not self.grade:
-            self.grade = 1
         self.save()
 
     def is_correct(self):        
@@ -537,3 +600,4 @@ class Deadline(models.Model, AdminURLMixin):
         print("TIME: ", self.due_datetime)
         formatedDate = self.due_datetime.strftime("%d/%m/%Y às %H:%M:%S")
         return formatedDate
+
