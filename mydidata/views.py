@@ -127,11 +127,9 @@ def academico(request, class_id, topic_uuid):
         }
         students_grades = topic.calculate_grades(classroom)
         errors = []
-        try:
-            errors = go_academico(students_grades, assessment, milestone, diary, login, password)
-        except:
-            errors = students_grades
-
+        
+        errors = go_academico(students_grades, assessment, milestone, diary, login, password)
+        
         return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'title': topic.topic_title, 'errors': errors})
 
 def search(request):
@@ -424,11 +422,9 @@ def test_to_academico(request, class_id, test_uuid):
             students_grades.append((student, grades_by_student[student]['grade']))
 
         errors = []
-        try:
-            errors = go_academico(students_grades, assessment, milestone, diary, login, password)
-        except:
-            errors = students_grades
-
+        
+        errors = go_academico(students_grades, assessment, milestone, diary, login, password)
+        
         return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'title': test.title, 'errors': errors})
 
 
