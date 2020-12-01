@@ -28,7 +28,8 @@ urlpatterns = [
     url(r'^topic/grades/(?P<class_id>[0-9]+)/$',views.calculate_grades, name='calculate_grades'),
     url(r'^academico/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$', views.academico, name="academico"),
     url(r'^test_to_academico/(?P<class_id>[0-9]+)/(?P<test_uuid>[\w-]+)/$', views.test_to_academico, name="test_to_academico"),
-    
+    url(r'^send_mail/(?P<class_id>[0-9]+)/$', views.send_mail_to_class, name="send_mail_to_class"),
+
     url(r'^tests$', TestList.as_view(), name="tests"),
     url(r'^test_detail/(?P<uuid>[\w-]+)/$', views.test_detail, name='test_detail'),
     url(r'^start_test/(?P<uuid>[\w-]+)/$', views.start_test, name="start_test"),

@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from .models import Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile
+from .models import Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline
 from django.template import loader
 from django.http import Http404
 from django.urls import reverse
@@ -21,6 +21,8 @@ from django.db.models import Q
 import csv
 from .tasks import go_academico
 import datetime
+from django.utils import timezone
+from datetime import timedelta
 
 class HomePage(TemplateView):
     """
@@ -1042,3 +1044,26 @@ def detect_copies(request, question_uuid):
 
 
     return render(request, 'mydidata/copy_detector.html', {'question': question, 'answers': [a.student for a in answers]})
+
+@login_required()
+def send_mail_to_class(request, class_id):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    deadlines = Deadline.objects.filter(classroom=classroom)
+    localtime = timezone.localtime()
+    
+    t_diff = timedelta(hours=24)
+    is_dst = localtime.tzinfo._dst.seconds != 0
+    #veririfica se estã em horário de verão e desconta mais uma hora
+    if is_dst:
+        localtime -= timedelta(hours=1)
+        t_diff = timedelta(hours=24 + 1)
+    user = request.user
+    print("LOCALTIME: ", localtime)
+    for d in deadlines:
+        local_due_date = timezone.localtime(d.due_datetime)
+        print("Time Diff", local_due_date - localtime)
+        print("DUE TIME: ", local_due_date)
+        print((d.due_datetime - localtime)  <= t_diff)
+        if (d.due_datetime - localtime)  <= t_diff:
+            topic = d.topic 
+            user.email_user("AprendaFazendo: prazo para atividades em %s encerram hoje!"%topic.topic_title, "Acesse suas atividades em: https://aprendafazendo.net/%s"%topic.uuid )
