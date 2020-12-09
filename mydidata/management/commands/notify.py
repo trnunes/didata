@@ -28,7 +28,7 @@ class Command(BaseCommand):
                 topic = d.topic 
                 classroom = d.classroom
                 message_subject = "AprendaFazendo: prazo para atividades em %s encerram hoje!"%topic.topic_title
-                message_body = "Acesse suas atividades em: https://aprendafazendo.net/%s"%topic.uuid
+                message_body = "Acesse suas atividades em: https://aprendafazendo.net/mydidata/topic_detail/%s"%topic.uuid
                 for student in classroom.students.all():
                     try:
                         result = send_mail(message_subject, message_body, None, [student.email])
