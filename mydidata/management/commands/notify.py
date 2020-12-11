@@ -17,14 +17,13 @@ class Command(BaseCommand):
         if is_dst:
             localtime -= timedelta(hours=1)
             t_diff = timedelta(hours=24)
-        
         print("LOCALTIME: ", localtime)
         for d in deadlines:
             local_due_date = timezone.localtime(d.due_datetime)
             print("Time Diff", local_due_date - localtime)
             print("DUE TIME: ", local_due_date)
             print((d.due_datetime - localtime)  < t_diff)
-            if (d.due_datetime - localtime)  <= t_diff and (d.due_datetime < localtime):
+            if (d.due_datetime - localtime)  <= t_diff and (d.due_datetime >= localtime):
                 topic = d.topic 
                 classroom = d.classroom
                 message_subject = "AprendaFazendo: prazo para atividades em %s encerram hoje!"%topic.topic_title
