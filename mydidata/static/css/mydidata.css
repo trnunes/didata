@@ -3,7 +3,7 @@
 /* Padding below the footer and lighter body text */
 
 main {
-    padding-top: 3rem;
+    margin-top: 2rem;
     padding-bottom: 5rem;
     color: #5a5a5a;
   }
@@ -19,7 +19,7 @@ main {
   }
 #content-container {
 
-  margin-top: 20px;
+  padding-top: 15px;
 
 }
   
