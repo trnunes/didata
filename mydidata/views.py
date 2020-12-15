@@ -7,7 +7,7 @@ from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
-from .forms import SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm, SuperuserAnswerForm, AnswerFormUploadOnly, get_answer_form
+from .forms import TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm, SuperuserAnswerForm, AnswerFormUploadOnly, get_answer_form
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -110,6 +110,16 @@ class DisciplineList(ListView):
 
     def dispatch(self, *args, **kwargs):
         return super(DisciplineList, self).dispatch(*args, **kwargs)
+
+@login_required
+def topic_edit(request, topic_uuid):
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    form = TopicForm(instance=topic)
+    if request.POST:
+        if form.is_valid():
+            form.save()
+
+    return render(request, 'mydidata/topic_edit.html', context={'form': form})
 
 @login_required
 def academico(request, class_id, topic_uuid):

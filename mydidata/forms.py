@@ -78,12 +78,8 @@ class TopicForm(forms.ModelForm):
                     'class':'col-md-12 form-control'
                 }
             ),
-            'topic_content': forms.Textarea(
-                attrs={
-                    'placeholder':'Conteúdo',
-                    'class':'form-control'
-                }
-            ),
+            'topic_content': forms.CharField(widget=CKEditorUploadingWidget(), label="Conteúdo", required=False),
+
             'order': forms.TextInput(
                 attrs={
                     'placeholder':'Ordem',

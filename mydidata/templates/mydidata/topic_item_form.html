@@ -1,21 +1,31 @@
-<form id="gi-form"
-      action="{% if topic.uuid %}{{ topic.get_update_url }}{% else %}{% url 'mydidata:topic_new' %}{% endif %}"
-      method="post">
-    {% csrf_token %}
-    <div id="gi-h-w">
-        <h3 class="gi-mh">{{ form.topic_title }}</h3>
-        <span>{{ form.topic_title.errors }}</span>
-    </div>
-    <div class="row">
-        <div class="col-md-9">
-            <p>{{ form.topic_content }}</p>
-            <span>{{ form.topic_content.errors }}</span>
-        </div>
-        <div class="col-md-3">
-            <p class="nm">{{ form.order }}</p>
-            <span>{{ form.order.errors }}</span>
-        </div>
-    </div>
-    <input id="gi-form-submit" class="btn btn-primary" type="submit" value="Salvar">
-    <p>{{ form.non_field_errors }}</p>
-</form>
+{% extends 'mydidata/base.html'%}
+{% block title %} Tópico {{topic.topic_title}} {% endblock title%}
+
+
+{% block content %}
+    {% if form.errors %}
+        {% for field in form %}
+            {% for error in field.errors %}
+                <div class="alert alert-dagner">
+                    <strong> {{error | escape}}</strong>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
+        {% for error in form.non_field_errors %}
+                <div>
+                    <strong> {{ error | escape}}</strong>
+                </div>
+        {% endfor%}
+    {%endif%}
+
+    <form id="gi-form"
+          
+          method="post">
+        {% csrf_token %}
+        {{form.media}}
+        {{ form.as_p }}
+
+        <input id="gi-form-submit" class="btn btn-primary" type="submit" value="Salvar">
+    </form>
+{% endblock content%}

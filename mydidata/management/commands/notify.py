@@ -11,12 +11,14 @@ class Command(BaseCommand):
         notification_errors = []
         deadlines = Deadline.objects.all()
         localtime = timezone.localtime()
-        t_diff = timedelta(hours=24)
+        t_diff = timedelta(hours=48)
         is_dst = localtime.tzinfo._dst.seconds != 0
         #veririfica se estã em horário de verão e desconta mais uma hora
+        delta_24 = timedelta(hours=24) 
         if is_dst:
             localtime -= timedelta(hours=1)
-            t_diff = timedelta(hours=24)
+            t_diff = timedelta(hours=48)
+
         print("LOCALTIME: ", localtime)
         for d in deadlines:
             local_due_date = timezone.localtime(d.due_datetime)
@@ -24,9 +26,15 @@ class Command(BaseCommand):
             print("DUE TIME: ", local_due_date)
             print((d.due_datetime - localtime)  < t_diff)
             if (d.due_datetime - localtime)  <= t_diff and (d.due_datetime >= localtime):
-                topic = d.topic 
+                if d.due_datetime -localtime >= delta_24:
+                    due = "amanhã às 23:59:59"
+                else:
+                    due = "hoje às 23:59:59"
+                
+                topic = d.topic
                 classroom = d.classroom
-                message_subject = "AprendaFazendo: prazo para atividades em %s encerram hoje!"%topic.topic_title
+                
+                message_subject = "Lembrete: Prazo para Atividades em %s encerram %s."%(topic.topic_title, due)
                 message_body = "Acesse suas atividades em: https://aprendafazendo.net/mydidata/topic_detail/%s"%topic.uuid
                 for student in classroom.students.all():
                     try:
