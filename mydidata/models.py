@@ -494,7 +494,7 @@ class Answer(models.Model):
 
     def is_correct(self):        
         self.status == self.CORRECT
-
+    
     def is_ok(self):
         return self.status == self.CORRECT
 
