@@ -23,7 +23,11 @@
             
             <div class="list-group" style="margin-bottom: 1rem;">
                 {% for topic in topics %}
-                    <a href="{{ topic.get_absolute_url }}" class="list-group-item list-group-item-action">{{ topic.topic_title }}</a>
+                    {%if topic.enabled %}
+                        <a href="{{ topic.get_absolute_url }}" class="list-group-item list-group-item-action"><strong>{{ topic.topic_title }}</strong></a>
+                    {%else%}
+                        <a href="{{ topic.get_absolute_url }}" class="list-group-item list-group-item-action  disabled">{{ topic.topic_title }}</a>
+                    {%endif%}
                 {% endfor %}
 
     

@@ -86,7 +86,7 @@ class TopicList(ListView):
         discipline_id = self.request.GET.get('discipline', None)
         resource_room_only = self.request.GET.get('resource_room_only', False) == "True"
         discipline = Discipline.objects.get(uuid=discipline_id)
-        topic_list = Topic.objects.filter(discipline=discipline, is_resource=resource_room_only, is_assessment=False).order_by('order')
+        topic_list = Topic.objects.filter(discipline=discipline, is_resource=resource_room_only, is_assessment=False, visible=True).order_by('order')
         
         return topic_list
     def dispatch(self, *args, **kwargs):
