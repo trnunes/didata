@@ -17,9 +17,10 @@ class Command(BaseCommand):
         delta_24 = timedelta(hours=24) 
         if is_dst:
             localtime -= timedelta(hours=1)
-            t_diff = timedelta(hours=48)
 
         print("LOCALTIME: ", localtime)
+        
+        classrooms_dict = {}
         for d in deadlines:
             local_due_date = timezone.localtime(d.due_datetime)
             print("Time Diff", local_due_date - localtime)
@@ -33,16 +34,27 @@ class Command(BaseCommand):
                 
                 topic = d.topic
                 classroom = d.classroom
+                if not classrooms_dict.get(classroom, False):
+                    classrooms_dict[classroom] = ""
                 
-                message_subject = "Lembrete: Prazo para Atividades em %s encerram %s."%(topic.topic_title, due)
-                message_body = "Acesse suas atividades em: https://aprendafazendo.net/mydidata/topic_detail/%s"%topic.uuid
-                for student in classroom.students.all():
-                    try:
-                        result = send_mail(message_subject, message_body, None, [student.email])
-                        if not result:
-                            notification_errors.append((student.email, message_subject, message_body))
-                    except:
-                        notification_errors.append((student.email, message_subject, message_body))
+                
+                message_subject = "AprendaFazendo - Atenção! Prazo para envio de atividades encerrando."
+                
+                
+                classrooms_dict[classroom] += "<li><strong>%s</strong>: %s. Veja <a href='https://aprendafazendo.net/mydidata/topic_detail/%s'><strong>aqui<strong/></a> </li> "%(topic.topic_title, due, topic.uuid)
+                
+        for classroom, message in classrooms_dict.items():
+            
+           for student in classroom.students.all():
+               try:
+                   message_body = "<ul> %s </ul>"%message
+                   result = send_mail(message_subject, message_body, None, [student.email], html_message=message)
+                   if not result:
+                       notification_errors.append((student.email, message_subject, message_body))
+               except:
+                   notification_errors.append((student.email, message_subject, message_body))
+            
+
         if notification_errors:
             for error in notification_errors:
                 error_message_body = "Email: %s\nSubject: %s\nBody: %s"%error

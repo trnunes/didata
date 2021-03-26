@@ -19,6 +19,8 @@ import random
 from django.utils.html import strip_tags
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
+from datetime import timedelta
 import html
 
 class AdminURLMixin(object):
@@ -597,6 +599,12 @@ class Deadline(models.Model, AdminURLMixin):
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico")
     classroom = models.ForeignKey(Classroom, on_delete=models.DO_NOTHING)
     due_datetime = models.DateTimeField()
+    
+    def __str__(self):
+        return "%s para %s vence em %s"%(self.topic.topic_title, self.classroom.name, self.get_local_due_date())
+
+    def get_local_due_date(self):
+        return timezone.localtime(self.due_datetime).strftime("%d/%m/%Y às %H:%M:%S")
 
     def datetime_to_str(self):
         print("TIME: ", self.due_datetime)
