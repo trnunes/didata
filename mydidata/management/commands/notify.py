@@ -41,7 +41,7 @@ class Command(BaseCommand):
                 message_subject = "AprendaFazendo - Atenção! Prazo para envio de atividades encerrando."
                 
                 
-                classrooms_dict[classroom] += "<li><strong>%s</strong>: %s. Veja <a href='https://aprendafazendo.net/mydidata/topic_detail/%s'><strong>aqui<strong/></a> </li> "%(topic.topic_title, due, topic.uuid)
+                classrooms_dict[classroom] += "<li><strong>%s</strong>: %s. Veja <a href='https://aprendafazendo.net/mydidata/topic_detail/%s'><strong>aqui</strong></a> </li> "%(topic.topic_title, due, topic.uuid)
                 
         for classroom, message in classrooms_dict.items():
             
