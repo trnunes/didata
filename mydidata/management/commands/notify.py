@@ -47,8 +47,10 @@ class Command(BaseCommand):
             
            for student in classroom.students.all():
                try:
-                   message_body = "<ul> %s </ul>"%message
-                   result = send_mail(message_subject, message_body, None, [student.email], html_message=message)
+                   
+                   message_body = "<html><body><h2>%s</h2><br/><ul> %s </ul> </body></html>"%(classroom.name, message)
+                   result = send_mail(message_subject, message_body, None, [student.email], html_message=message_body)
+                   
                    if not result:
                        notification_errors.append((student.email, message_subject, message_body))
                except:
