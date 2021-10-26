@@ -48,8 +48,8 @@ virtualenv = "==15.1.0"
 virtualenv-clone = "==0.2.6"
 whitenoise = "==3.3.1"
 google-cloud-language = "*"
-psycopg2 = "*"
 pyyaml = "*"
+psycopg2 = "==2.8.6"
 
 
 [dev-packages]
