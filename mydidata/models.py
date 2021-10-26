@@ -126,7 +126,9 @@ class Topic(models.Model, AdminURLMixin):
     has_assessment_question = models.BooleanField(default=True, verbose_name="Possui questão avaliativa?")
     enabled = models.BooleanField(default=True, verbose_name="Habilitado/Desabilitado")
     visible = models.BooleanField(default=True, verbose_name="Visível/Invisível")
-    
+    publish_date = models.DateTimeField(verbose_name="Data de Publicação", null=True)
+    thumbnail = models.ImageField(upload_to='images/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage(), verbose_name="Imagem de Capa")
+    subject = models.CharField(max_length=200, verbose_name="Tópico", default="Variados")
     class Meta:
         verbose_name_plural = 'Tópicos'
 
@@ -136,7 +138,7 @@ class Topic(models.Model, AdminURLMixin):
     
     def next_url(self):
         topics = []
-        topics.extend(self.discipline.topic_set.all())
+        topics.extend(self.discipline.topic_set.filter(visible=True).all())
         topics.sort(key=lambda topic: topic.order)
         self_index = topics.index(self)
 
@@ -147,7 +149,7 @@ class Topic(models.Model, AdminURLMixin):
     def previous_url(self):
 
         topics = []
-        topics.extend(self.discipline.topic_set.all())
+        topics.extend(self.discipline.topic_set.filter(visible=True).all())
         topics.sort(key=lambda topic: topic.order)
         self_index = topics.index(self)
         if self_index == 0:

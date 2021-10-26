@@ -32,6 +32,26 @@ class HomePage(TemplateView):
     """
     template_name = 'mydidata/home.html'
 
+    def get_context_data(self, *args, **kwargs):
+        context = super(HomePage, self).get_context_data(*args, **kwargs)
+        desc_orderd_topics = list(Topic.objects.filter(publish_date__isnull=False, visible=True).order_by('-publish_date')) 
+        
+        odd_topics = [desc_orderd_topics[i] for i in range(1, len(desc_orderd_topics), 2)]
+        even_topics = [desc_orderd_topics[i] for i in range(2, len(desc_orderd_topics), 2)]
+        context['topics_left'] = odd_topics
+        context['topics_right'] = even_topics
+        categories = list(set([c for t in Topic.objects.all() for c in t.subject.split(",")]))
+        categories_right = [categories[i] for i in range(0, len(categories), 2)]
+        categories_left = [categories[i] for i in range(1, len(categories), 2)]
+        
+
+        context['categories_right'] = categories_right
+        context['categories_left'] = categories_left
+        
+        context['main'] = desc_orderd_topics[0]
+
+        return context
+
 
 class ClassList(ListView):
     model = Classroom
@@ -158,6 +178,11 @@ def topic_next(request, current_id):
         return HttpResponseRedirect('/mydidata/topics?discipline=' + topic.discipline.uuid)
     return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(next_topic.uuid,)))
     
+def topics_by_subject(request, subject):
+    print("SUBJECT: ", subject)
+    topics = Topic.objects.filter(Q(subject__icontains=subject), visible=True).order_by("-publish_date")
+    return render(request, 'mydidata/topic_list.html', {'topics': topics})
+
 def subscriber_new(request, classroom_id, template='mydidata/subscriber_new.html'):
     classroom = get_object_or_404(Classroom, pk=classroom_id)
     if request.method == 'POST':
