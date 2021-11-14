@@ -178,8 +178,9 @@ def topic_next(request, current_id):
         return HttpResponseRedirect('/mydidata/topics?discipline=' + topic.discipline.uuid)
     return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(next_topic.uuid,)))
     
-def topics_by_subject(request, subject):
-    print("SUBJECT: ", subject)
+def topics_by_subject(request):
+    print("SUBJECT: ", request.GET.get("subject", None))
+    subject = request.GET.get("subject", None)
     topics = Topic.objects.filter(Q(subject__icontains=subject), visible=True).order_by("-publish_date")
     return render(request, 'mydidata/topic_list.html', {'topics': topics})
 
