@@ -43,9 +43,15 @@
                         <div class="col-md-9">
                             
                             <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Corrigir Automaticamente</a>
+                            {%if answer.question.next_question_url%}
+                                <a class="btn btn-primary btn-lg" role="button" href="{{answer.question.next_question_url}}">Próxima Questão</a>
+                    
+                            {%endif%}
 
                         </div>
                     {%endif%}
+                    
+                    
                     {% if user.is_superuser %}
                         <div class="col-md-9"> <a href="{% url 'mydidata:feedback' answer.id %}"
                                                   class="p-r-none">Fornecer Feedback</a>

@@ -1094,6 +1094,11 @@ def get_corrections(request, answer_id):
     print("response json: ", response_json)
     answer.feedback = response_json["results"][0]["corrections"]
     answer.grade = response_json["results"][0]['grade']/10
+    
+    if answer.grade >= 0.95:
+        answer.status = Answer.CORRECT
+    else:
+        answer.status = Answer.INCORRECT
     answer.save
     # print(json.loads(response.body))
     print(response)
