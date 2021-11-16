@@ -4,6 +4,13 @@
     <div id="content-container" class="container p-none">
         <div >
             <div id="gi-container" class="ad-container2">
+                <div aria-label="Page navigation example" >
+                    <ul class="pagination" style="justify-content: space-between;">
+                      <li class="page-item"><a class="page-link" href="{{answer.question.topic.get_absolute_url}}">Voltar para o Tópico</a></li>
+                      
+                    </ul>
+          
+                </div>    
                 <div class="gi-header">
                     <h3 class="ad-mh">
                         <span>{{answer.student.username}}:&nbsp{{answer.student.first_name}}&nbsp{{answer.student.last_name}}</span>
@@ -16,21 +23,38 @@
                     </div>
                     
                     <div class="col-md-9">
-                        <h3 class="gi-sh">Resposta</h3>
-                        <p>{{ answer.answer_text | safe}}</p>
+                        <h3 class="gi-sh">Resposta</h3> 
+                        (<a href="{{ answer.question.get_answer_url }}" class="p-r-none">Editar <i class="fas fa-pencil-alt"></i></a>)
+                        <p>{{ answer.answer_text | safe}}
+                            
+                        </p>
                         <p>{{ answer.file_link | safe }}</p>
                     </div>
                     <div class="col-md-9">
                         <h3 class="gi-sh">Correções</h3>
-                        <p>{{ answer.feedback | safe}}</p>
+                        <p><font color='red'>{{ answer.feedback | safe}}</font></p>
                     </div>
+                    <div class="col-md-9">
+                        <h3 class="gi-sh">Nota</h3>
+                        <p><font color='red'>{{ answer.grade}}</font></p>
+                    </div>
+                    
+                    {%if answer.id and answer.answer_text and answer.question.ref_keywords%}
+                        <div class="col-md-9">
+                            
+                            <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Corrigir Automaticamente</a>
+
+                        </div>
+                    {%endif%}
                     {% if user.is_superuser %}
                         <div class="col-md-9"> <a href="{% url 'mydidata:feedback' answer.id %}"
                                                   class="p-r-none">Fornecer Feedback</a>
-                    {% else %}
-                        <div class="col-md-9"> <a href="{{ answer.question.get_answer_url }}"
-                          class="p-r-none">Mudar Resposta</a>
                     {% endif%}
+                    
+                    
+                    
+                    
+                    
                     </div>
 
                 </div>

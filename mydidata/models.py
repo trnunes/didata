@@ -317,7 +317,8 @@ class ResourceRoom(models.Model):
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
     index = models.PositiveSmallIntegerField(default=1, verbose_name='Ordem')
-    question_text = RichTextUploadingField(verbose_name='Texto')    
+    question_text = RichTextUploadingField(verbose_name='Texto')
+    ref_keywords = models.TextField(verbose_name="Palavras-Chave", blank=True)
     file_types_accepted = models.CharField(max_length=255, verbose_name="Tipos de arquivos aceitos", null=True, blank="True")
     text_required = models.BooleanField(default=False, verbose_name='Resposta de texto obrigatória?')
     weight = models.PositiveSmallIntegerField(default=1, verbose_name='Peso')

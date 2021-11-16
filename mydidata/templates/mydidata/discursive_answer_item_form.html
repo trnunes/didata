@@ -6,8 +6,9 @@
 
 
 {% if answer and answer.feedback %}
-    <h3 class="gi-sh">Correções Solicitadas</h3>
+<h3 class="gi-sh">Correções Solicitadas e Nota</h3>
     <p><font color='red'>{{ answer.feedback | safe}}</font></p>
+    
 {% endif %}
 {%with answer_form_url=action_url%}
 {%if test%}	
@@ -25,6 +26,7 @@
 
 
 <input type="submit" value="Salvar" />
+
 
 </form>
 {%endwith%}

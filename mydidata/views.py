@@ -23,6 +23,8 @@ from .tasks import go_academico
 import datetime
 from django.utils import timezone
 from datetime import timedelta
+import requests
+from django.http import JsonResponse
 
 class HomePage(TemplateView):
     """
@@ -529,6 +531,9 @@ def answer(request, question_uuid, test_id=None):
             }
             return render(request, 'mydidata/answer_cru.html', context)
         print("REDIRECT URL: ", redirect_url)
+        if question.is_discursive:
+            return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, "next": redirect_url})
+
         return HttpResponseRedirect(redirect_url)
 
 
@@ -776,7 +781,7 @@ def discursive_answer(request, question_uuid, test_id = None):
             if test_id:
                 redirect_url = reverse('mydidata:test_detail', args=(test.uuid,))
             else:
-                redirect_url = reverse('mydidata:topic_detail', args=(question.topic.uuid,))
+                render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, })
 
             return HttpResponseRedirect(redirect_url)
         else:            
@@ -1068,6 +1073,37 @@ def define_team(request):
                 'mydidata/define_team.html', 
                 {'studentList': studentsToSelect, 'selectedMembers': selectedMembers,}
         )
+
+def get_corrections(request, answer_id):
+    print("ANSWER: ", answer_id)
+    answer = get_object_or_404(Answer, pk=answer_id)
+    keywords = answer.question.ref_keywords.split(";")
+    json_req = {
+        "answers": [
+            {
+                "student": 1,
+                "text": answer.answer_text
+            }
+        ],
+        "ref_answers": [keywords] 
+    }
+    print(json_req)
+    
+    response = requests.post("http://pontuando.herokuapp.com/mydidata/assess_answers/", json=json_req)
+    response_json = response.json()
+    print("response json: ", response_json)
+    answer.feedback = response_json["results"][0]["corrections"]
+    answer.grade = response_json["results"][0]['grade']/10
+    answer.save
+    # print(json.loads(response.body))
+    print(response)
+    print(response.json())
+    
+    return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, })
+    
+
+
+
 @login_required()
 def detect_copies(request, question_uuid):
 
