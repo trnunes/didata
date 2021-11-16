@@ -1104,7 +1104,7 @@ def get_corrections(request, answer_id):
     print(response)
     print(response.json())
     
-    return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, })
+    return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, "next"})
     
 
 
