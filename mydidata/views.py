@@ -1099,7 +1099,7 @@ def get_corrections(request, answer_id):
         answer.status = Answer.CORRECT
     else:
         answer.status = Answer.INCORRECT
-    answer.save
+    answer.save()
     # print(json.loads(response.body))
     print(response)
     print(response.json())
