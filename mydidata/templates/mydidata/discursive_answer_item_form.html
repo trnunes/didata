@@ -30,6 +30,17 @@
 
 </form>
 {%endwith%}
+{%if answer.id and answer.answer_text and answer.question.ref_keywords%}
+    <div class="col-md-9">
+        
+        <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Corrigir Automaticamente</a>
+        {%if answer.question.next_question_url%}
+            <a class="btn btn-primary btn-lg" role="button" href="{{answer.question.next_question_url}}">Próxima Questão</a>
+                    
+        {%endif%}
+
+    </div>
+{%endif%}
 {% if user.is_superuser %}
 	{%get_copy_detect_url question.uuid as detect_url%}
 	<a href='{{ detect_url }}'>Detectar Cópias</a>
