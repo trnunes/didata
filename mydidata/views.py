@@ -1082,7 +1082,7 @@ def get_corrections(request, answer_id):
         "answers": [
             {
                 "student": 1,
-                "text": answer.answer_text
+                "text": answer.text_escaped()
             }
         ],
         "ref_answers": [keywords] 
