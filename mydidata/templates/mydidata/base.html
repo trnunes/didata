@@ -66,9 +66,10 @@
                     <a class="nav-link" href="{% url 'mydidata:disciplines' %}"
                                     >Meus Cursos</a>
                     </li>
-                    {%if user.is_superuser%}
+                    
                         <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:my_progress' %}"
                             >Atividades</a></li>
+                    {%if user.is_superuser%}
                         <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:tests' %}"                    
                         >Avaliações</a></li>
                     {%endif%}
