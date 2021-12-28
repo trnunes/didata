@@ -101,9 +101,9 @@ class GradingStrategy(object):
                 if answer:
                     answer.correct()
                     a_grade = answer.grade
-                    if answer.answer_text:
+                    if answer.answer_text and question.punish_copies:
                         if answers_texts.count(answer.text_escaped()) > 1:
-                            a_grade = a_grade/2
+                            a_grade = a_grade*(question.punishment_percent/100)
                 sum_grades += a_grade
                 sum_weights += q.weight
             
@@ -323,6 +323,8 @@ class Question(models.Model):
     text_required = models.BooleanField(default=False, verbose_name='Resposta de texto obrigatória?')
     weight = models.PositiveSmallIntegerField(default=1, verbose_name='Peso')
     file_upload_only = models.BooleanField(default=False, verbose_name="Aceitar somente upload de arquivos?")
+    punish_copies = models.BooleanField(default=False,verbose_name="punir cópias exatas?")
+    punishment_percent = models.PositiveSmallIntegerField(default=30, verbose_name="Percentual da Punição")
 
     DIFFICULTY_LIST = (
         (1, 'Difícil'),
