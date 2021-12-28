@@ -101,9 +101,9 @@ class GradingStrategy(object):
                 if answer:
                     answer.correct()
                     a_grade = answer.grade
-                    if answer.answer_text and question.punish_copies:
+                    if answer.answer_text and q.punish_copies:
                         if answers_texts.count(answer.text_escaped()) > 1:
-                            a_grade = a_grade*(question.punishment_percent/100)
+                            a_grade = a_grade*(q.punishment_percent/100)
                 sum_grades += a_grade
                 sum_weights += q.weight
             
