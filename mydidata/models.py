@@ -101,9 +101,9 @@ class GradingStrategy(object):
                 if answer:
                     answer.correct()
                     a_grade = answer.grade
-                    if answer.answer_text:
+                    if answer.answer_text and q.punish_copies:
                         if answers_texts.count(answer.text_escaped()) > 1:
-                            a_grade = a_grade/2
+                            a_grade = a_grade*(1-(q.punishment_percent/100))
                 sum_grades += a_grade
                 sum_weights += q.weight
             
@@ -126,7 +126,9 @@ class Topic(models.Model, AdminURLMixin):
     has_assessment_question = models.BooleanField(default=True, verbose_name="Possui questão avaliativa?")
     enabled = models.BooleanField(default=True, verbose_name="Habilitado/Desabilitado")
     visible = models.BooleanField(default=True, verbose_name="Visível/Invisível")
-    
+    publish_date = models.DateTimeField(verbose_name="Data de Publicação", null=True, blank=True)
+    thumbnail = models.ImageField(upload_to='images/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage(), verbose_name="Imagem de Capa")
+    subject = models.CharField(max_length=200, verbose_name="Tópico", default="Variados")
     class Meta:
         verbose_name_plural = 'Tópicos'
 
@@ -136,7 +138,7 @@ class Topic(models.Model, AdminURLMixin):
     
     def next_url(self):
         topics = []
-        topics.extend(self.discipline.topic_set.all())
+        topics.extend(self.discipline.topic_set.filter(visible=True).all())
         topics.sort(key=lambda topic: topic.order)
         self_index = topics.index(self)
 
@@ -147,7 +149,7 @@ class Topic(models.Model, AdminURLMixin):
     def previous_url(self):
 
         topics = []
-        topics.extend(self.discipline.topic_set.all())
+        topics.extend(self.discipline.topic_set.filter(visible=True).all())
         topics.sort(key=lambda topic: topic.order)
         self_index = topics.index(self)
         if self_index == 0:
@@ -315,11 +317,14 @@ class ResourceRoom(models.Model):
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
     index = models.PositiveSmallIntegerField(default=1, verbose_name='Ordem')
-    question_text = RichTextUploadingField(verbose_name='Texto')    
+    question_text = RichTextUploadingField(verbose_name='Texto')
+    ref_keywords = models.TextField(verbose_name="Palavras-Chave", blank=True)
     file_types_accepted = models.CharField(max_length=255, verbose_name="Tipos de arquivos aceitos", null=True, blank="True")
     text_required = models.BooleanField(default=False, verbose_name='Resposta de texto obrigatória?')
     weight = models.PositiveSmallIntegerField(default=1, verbose_name='Peso')
     file_upload_only = models.BooleanField(default=False, verbose_name="Aceitar somente upload de arquivos?")
+    punish_copies = models.BooleanField(default=False,verbose_name="punir cópias exatas?")
+    punishment_percent = models.PositiveSmallIntegerField(default=30, verbose_name="Percentual da Punição")
 
     DIFFICULTY_LIST = (
         (1, 'Difícil'),

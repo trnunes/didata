@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^search$', views.search, name='search'),
     url(r'^topic_next/(?P<current_id>[0-9]+)$', views.topic_next, name='topic_next'),
     url(r'^topic_edit/(?P<topic_uuid>[\w-]+)/$', views.topic_edit, name='topic_edit'),
+    url(r'^topics_by_subject$', views.topics_by_subject, name='topics_by_subject'),
     url(r'^login/$', auth_views.login, {'template_name': 'mydidata/login.html'}, name='login'),
     url(r'^logout/$', auth_views.logout, {'next_page': '/mydidata/login/'}, name='logout'),
     url(r'^topics$', TopicList.as_view(), name="topics"),
@@ -45,6 +46,7 @@ urlpatterns = [
     url(r'^next_try/(?P<test_user_id>[0-9]+)/$', views.next_try, name='next_try'),
     url(r'^detect_copies/(?P<question_uuid>[\w-]+)/$',views.detect_copies, name='detect_copies'),
     url(r'^finish_test/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/(?P<key>[\w-]+)/$',views.finish_test, name='finish_test'),
+    url(r'^get_corrections/(?P<answer_id>[0-9]+)/$',views.get_corrections, name='get_corrections'),
 
     url(r'^question_detail/$', views.question_detail, name="question_detail"),
     url(r'^multiple_choice_answer/(?P<question_uuid>[\w-]+)/$',views.answer, name='multiple_choice_answer'),

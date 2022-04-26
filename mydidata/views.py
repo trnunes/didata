@@ -23,6 +23,8 @@ from .tasks import go_academico
 import datetime
 from django.utils import timezone
 from datetime import timedelta
+import requests
+from django.http import JsonResponse
 
 class HomePage(TemplateView):
     """
@@ -31,6 +33,26 @@ class HomePage(TemplateView):
     in the next lesson.
     """
     template_name = 'mydidata/home.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(HomePage, self).get_context_data(*args, **kwargs)
+        desc_orderd_topics = list(Topic.objects.filter(publish_date__isnull=False, visible=True).order_by('-publish_date')) 
+        
+        odd_topics = [desc_orderd_topics[i] for i in range(1, len(desc_orderd_topics), 2)]
+        even_topics = [desc_orderd_topics[i] for i in range(2, len(desc_orderd_topics), 2)]
+        context['topics_left'] = odd_topics
+        context['topics_right'] = even_topics
+        categories = list(set([c for t in Topic.objects.all() for c in t.subject.split(",")]))
+        categories_right = [categories[i] for i in range(0, len(categories), 2)]
+        categories_left = [categories[i] for i in range(1, len(categories), 2)]
+        
+
+        context['categories_right'] = categories_right
+        context['categories_left'] = categories_left
+        
+        context['main'] = desc_orderd_topics[0]
+
+        return context
 
 
 class ClassList(ListView):
@@ -158,6 +180,12 @@ def topic_next(request, current_id):
         return HttpResponseRedirect('/mydidata/topics?discipline=' + topic.discipline.uuid)
     return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(next_topic.uuid,)))
     
+def topics_by_subject(request):
+    print("SUBJECT: ", request.GET.get("subject", None))
+    subject = request.GET.get("subject", None)
+    topics = Topic.objects.filter(Q(subject__icontains=subject), visible=True).order_by("-publish_date")
+    return render(request, 'mydidata/topic_list.html', {'topics': topics})
+
 def subscriber_new(request, classroom_id, template='mydidata/subscriber_new.html'):
     classroom = get_object_or_404(Classroom, pk=classroom_id)
     if request.method == 'POST':
@@ -503,6 +531,9 @@ def answer(request, question_uuid, test_id=None):
             }
             return render(request, 'mydidata/answer_cru.html', context)
         print("REDIRECT URL: ", redirect_url)
+        if question.is_discursive:
+            return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, "next": redirect_url})
+
         return HttpResponseRedirect(redirect_url)
 
 
@@ -750,7 +781,7 @@ def discursive_answer(request, question_uuid, test_id = None):
             if test_id:
                 redirect_url = reverse('mydidata:test_detail', args=(test.uuid,))
             else:
-                redirect_url = reverse('mydidata:topic_detail', args=(question.topic.uuid,))
+                render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, })
 
             return HttpResponseRedirect(redirect_url)
         else:            
@@ -1042,6 +1073,42 @@ def define_team(request):
                 'mydidata/define_team.html', 
                 {'studentList': studentsToSelect, 'selectedMembers': selectedMembers,}
         )
+
+def get_corrections(request, answer_id):
+    print("ANSWER: ", answer_id)
+    answer = get_object_or_404(Answer, pk=answer_id)
+    keywords = answer.question.ref_keywords.split(";")
+    json_req = {
+        "answers": [
+            {
+                "student": 1,
+                "text": answer.text_escaped()
+            }
+        ],
+        "ref_answers": [keywords] 
+    }
+    print(json_req)
+    
+    response = requests.post("http://pontuando.herokuapp.com/mydidata/assess_answers/", json=json_req)
+    response_json = response.json()
+    print("response json: ", response_json)
+    answer.feedback = response_json["results"][0]["corrections"]
+    answer.grade = response_json["results"][0]['grade']/10
+    
+    if answer.grade >= 0.95:
+        answer.status = Answer.CORRECT
+    else:
+        answer.status = Answer.INCORRECT
+    answer.save()
+    # print(json.loads(response.body))
+    print(response)
+    print(response.json())
+    
+    return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer,})
+    
+
+
+
 @login_required()
 def detect_copies(request, question_uuid):
 

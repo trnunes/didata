@@ -6,8 +6,9 @@
 
 
 {% if answer and answer.feedback %}
-    <h3 class="gi-sh">Correções Solicitadas</h3>
+<h3 class="gi-sh">Correções Solicitadas e Nota</h3>
     <p><font color='red'>{{ answer.feedback | safe}}</font></p>
+    
 {% endif %}
 {%with answer_form_url=action_url%}
 {%if test%}	
@@ -26,8 +27,20 @@
 
 <input type="submit" value="Salvar" />
 
+
 </form>
 {%endwith%}
+{%if answer.id and answer.answer_text and answer.question.ref_keywords%}
+    <div class="col-md-9">
+        
+        <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Analisar Resposta</a>
+        {%if answer.question.next_question_url%}
+            <a class="btn btn-primary btn-lg" role="button" href="{{answer.question.next_question_url}}">Próxima Questão</a>
+                    
+        {%endif%}
+
+    </div>
+{%endif%}
 {% if user.is_superuser %}
 	{%get_copy_detect_url question.uuid as detect_url%}
 	<a href='{{ detect_url }}'>Detectar Cópias</a>
