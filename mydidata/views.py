@@ -352,13 +352,13 @@ def resource_room_progress(request, uuid):
     return render(request, 'mydidata/topic_progress.html', {'students': students, 'topics':topics,})
 
 @login_required 
-def my_progress(request):
+def my_progress(request, discipline_uuid):
+    discipline = get_object_or_404(Discipline, uuid=discipline_uuid)
+
     student = request.user
     topics = []
-    d = Discipline.objects.filter(students__id = request.user.id)
-    print("Disciplines: ", d)
-    for discipline in Discipline.objects.filter(students__id = request.user.id):
-        topics.extend(Topic.objects.filter(discipline=discipline, is_assessment=False).order_by('order'))
+
+    topics.extend(Topic.objects.filter(discipline=discipline, is_assessment=False).order_by('order'))
     
     klass = Classroom.objects.filter(students__id = request.user.id).first()
     r_klass = ResourceRoom.objects.filter(students__id = request.user.id).first()
