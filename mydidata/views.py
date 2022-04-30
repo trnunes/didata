@@ -7,7 +7,7 @@ from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
-from .forms import TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm, SuperuserAnswerForm, AnswerFormUploadOnly, get_answer_form
+from .forms import SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm, SuperuserAnswerForm, AnswerFormUploadOnly, get_answer_form
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -532,7 +532,8 @@ def answer(request, question_uuid, test_id=None):
             return render(request, 'mydidata/answer_cru.html', context)
         print("REDIRECT URL: ", redirect_url)
         if question.is_discursive:
-            return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, "next": redirect_url})
+            form = SuperuserAnswerFormSimplified(instance = answer)
+            return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, 'form': form, "next": redirect_url})
 
         return HttpResponseRedirect(redirect_url)
 
@@ -558,7 +559,7 @@ def answer(request, question_uuid, test_id=None):
 def discursive_answer_detail(request, answer_id):
     answer = Answer.objects.get(pk=answer_id)
 
-    return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, })
+    return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, "form": SuperuserAnswerFormSimplified(instance=answer)})
 
 @login_required()
 def multiple_choice_answer_detail(request, answer_id):
@@ -569,12 +570,12 @@ def multiple_choice_answer_detail(request, answer_id):
 def feedback(request, answer_id):
     answer = get_object_or_404(Answer, pk=answer_id)
     question = answer.question
-    form = SuperuserAnswerForm(instance=answer)
+    form = SuperuserAnswerFormSimplified(instance=answer)
     classroom = Classroom.objects.filter(students__id=answer.student.id).first()
 
     if request.POST:
-        form = SuperuserAnswerForm(request.POST, instance=answer)
-
+        form = SuperuserAnswerFormSimplified(request.POST, instance=answer)
+        print(form.errors)
         form.save()
         
         students = classroom.students.all().order_by('first_name');
@@ -586,7 +587,7 @@ def feedback(request, answer_id):
             if next_student_found:
                 next_answer = Answer.objects.filter(student=student, question=question).first()
                 if next_answer:
-                    form = SuperuserAnswerForm(instance=next_answer)
+                    form = SuperuserAnswerFormSimplified(instance=next_answer)
                     context = {
                         'question': question,
                         'form': form,
@@ -1095,10 +1096,14 @@ def get_corrections(request, answer_id):
     answer.feedback = response_json["results"][0]["corrections"]
     answer.grade = response_json["results"][0]['grade']/10
     
-    if answer.grade >= 0.95:
-        answer.status = Answer.CORRECT
+    if answer.grade > 0.8:
+        answer.eval(Answer.CORRECT)
+    elif answer.grade > 0.6 and answer.grade <= 0.8:
+        answer.eval(Answer.ALMOST_CORRECT)
+    elif answer.grade > 0.3 and answer.grade <= 0.6:
+        answer.eval(Answer.ALMOST_INCORRECT)
     else:
-        answer.status = Answer.INCORRECT
+        answer.eval(Answer.INCORRECT)
     answer.save()
     # print(json.loads(response.body))
     print(response)

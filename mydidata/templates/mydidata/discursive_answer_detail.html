@@ -35,8 +35,8 @@
                         <p><font color='red'>{{ answer.feedback | safe}}</font></p>
                     </div>
                     <div class="col-md-9">
-                        <h3 class="gi-sh">Nota</h3>
-                        <p><font color='red'>{{ answer.grade}}</font></p>
+                        <h3 class="gi-sh">Avaliação</h3>
+                        <p><font color='red'>{{ answer.get_evaluation_message}}</font></p>
                     </div>
                     
                     {%if answer.id and answer.answer_text and answer.question.ref_keywords%}

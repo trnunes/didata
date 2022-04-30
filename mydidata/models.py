@@ -368,11 +368,35 @@ class Question(models.Model):
         return answers
 
     def next_question_url(self):
+        question = self.next_question()
+        if not question:
+            return self.topic.get_absolute_url()
+        return question.get_answer_url()
+
+    def next_question(self):
         ordered_questions = list(self.topic.get_ordered_questions())
         next_index = ordered_questions.index(self) + 1
         if next_index >= len(ordered_questions):
-            return self.topic.get_absolute_url()
-        return ordered_questions[next_index].get_answer_url()
+            return None
+        return ordered_questions[next_index]
+        
+    def get_next_answer_for_student(self, student):
+        question = self.next_question()
+        answers = Answer.objects.filter(student=student, question=question)
+        while question and not answers:
+            question = question.next_question()
+            answers = Answer.objects.filter(student=student, question=question)
+        
+        if not answers:
+            return None
+        return answers.first()
+            
+        
+
+        
+
+
+
 
     def get_next_answer_url(self, student, test):
         if not student or not test:
@@ -449,17 +473,26 @@ class Answer(models.Model):
     CORRECT = 2
     INCORRECT = 3
     UPDATED = 4
-    STATUS_CHOICES = (
+    ALMOST_CORRECT = 5
+    ALMOST_INCORRECT = 6
+    ACCEPTABLE = 7
+    STATUS_CHOICES = [
         (SENT, 'Enviada'),
-        (CORRECT, 'Correta'),
-        (INCORRECT, 'Incorreta'),
         (UPDATED, 'Reenviada'),
-    )
+    ]
+
+    EVAL_CHOICES = [
+        (CORRECT, 'Excelente! (1.0)'),
+        (ALMOST_CORRECT, 'Quase Perfeita (0.8)'),
+        (ACCEPTABLE, 'Aceitável (0.6)'),
+        (ALMOST_INCORRECT, 'Apresenta muitos erros (0.3)'),
+        (INCORRECT, 'Errada (0.0)'),
+    ]
 
     answer_text = RichTextUploadingField(null=True, blank=True, verbose_name="Texto")
     assignment_file = models.FileField(upload_to='assignments/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage(), verbose_name="Arquivo")
-    feedback = RichTextUploadingField(null=True, blank=True, verbose_name="Correções")
-    status = models.IntegerField(choices=STATUS_CHOICES, default=SENT, verbose_name="Avaliação")
+    feedback = models.TextField(null=True, blank=True, verbose_name="Correções")
+    status = models.IntegerField(choices=(STATUS_CHOICES + EVAL_CHOICES), default=SENT, verbose_name="Avaliação")
     grade = models.FloatField(default=0.0, verbose_name="Nota")
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Questão")
     student = models.ForeignKey(User, on_delete=models.DO_NOTHING, verbose_name="Estudante")
@@ -513,6 +546,18 @@ class Answer(models.Model):
     def is_sent(self):
         return self.status == self.SENT
 
+    def eval(self, status):
+        if status == self.CORRECT:
+            self.grage = 1.0
+        if status == self.ALMOST_CORRECT:
+            self.grade = 0.8
+        if status == self.ACCEPTABLE:
+            self.grade = 0.6
+        if status == self.ALMOST_INCORRECT:
+            self.grade = 0.3
+        if status == self.INCORRECT:
+            self.grade = 0.0
+        
     def file_link(self):
          if self.assignment_file:
              return "<a href='%s' target=\"_blank\">Baixar o Arquivo da Resposta</a>" % (self.assignment_file.url,)
@@ -521,6 +566,9 @@ class Answer(models.Model):
     
     file_link.allow_tags = True
 
+    def get_evaluation_message(self):
+        return [c[1] for c in Answer.EVAL_CHOICES if c[0] == self.status]
+    
     def get_answer_file_id(self):
         return self.student.first_name + "__" + self.student.last_name + "__" + str(self.student.id) + "__" + self.question.uuid
     

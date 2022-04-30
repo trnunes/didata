@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from random import choices
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import UserChangeForm
@@ -226,18 +227,79 @@ class SuperuserAnswerForm(forms.ModelForm):
         }
 
         fields += ['feedback', 'status', 'grade']
-        widgets['feedback'] = forms.CharField(widget=CKEditorUploadingWidget(), label="Correções",
-                                              required=False)
+        
+        
         labels['feedback'] = 'Correções Aqui'
         
     def clean_grade(self):
+        self.instance.eval(self.cleaned_data.get("status"))
+        print(self.cleaned_data.get("status") == Answer.INCORRECT)
         if self.cleaned_data.get("status") == Answer.CORRECT:
-            if not self.cleaned_data.get('grade'):
-                return 1
-        return self.cleaned_data.get("grade")
+            
+            return 1
+        
+        if self.cleaned_data.get("status") == Answer.INCORRECT:
+            return 0.2
+        
+        if self.cleaned_data.get("status") == Answer.ALMOST_INCORRECT:
+            return 0.4
+        
+        if self.cleaned_data.get("status") == Answer.ALMOST_CORRECT:
+            return 0.8
+
+        return 0
 
     def is_valid(self):
-        return True;
+        return True
+
+class SuperuserAnswerFormSimplified(forms.ModelForm):
+    status = forms.ChoiceField(widget=forms.RadioSelect, choices=Answer.EVAL_CHOICES)
+    class Meta:
+        model = Answer
+        fields = ["answer_text", "status", 'feedback', 'grade']
+        field_order = ["status", "feedback", "grade"]
+        labels = {
+            'answer_text': 'Resposta Enviada',
+        }
+        
+        labels['feedback'] = 'Correções Aqui'
+    
+    def clean_grade(self):
+        print("Cleaning data: ", float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT)
+        if float(self.cleaned_data.get("status")) == Answer.CORRECT:
+            self.cleaned_data["grade"] = 0
+            
+            
+        if float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT:
+            self.cleaned_data["grade"] = 0.8
+        
+        if float(self.cleaned_data.get("status")) == Answer.ALMOST_INCORRECT:
+            self.cleaned_data["grade"] = 0.4
+        
+        if float(self.cleaned_data.get("status")) == Answer.INCORRECT:
+            self.cleaned_data["grade"] = 0.2
+        
+        return self.cleaned_data["grade"]
+                
+    # def clean_status(self):
+        # print("Cleaning status")
+        # if self.cleaned_data.get("status") == Answer.CORRECT:
+            # self.cleaned_data["grade"] = 0
+            # 
+            # 
+        # if self.cleaned_data.get("status") == Answer.ALMOST_CORRECT:
+            # return 0.8
+        # 
+        # if self.cleaned_data.get("status") == Answer.ALMOST_INCORRECT:
+            # return 0.4
+        # 
+        # if self.cleaned_data.get("status") == Answer.INCORRECT:
+            # return 0.2
+        # 
+        # return self.cleaned_data.get("status")
+    def is_valid(self):
+        print("Is Valid")
+        return True
 
 def get_answer_form(*args, **kwargs):
     
