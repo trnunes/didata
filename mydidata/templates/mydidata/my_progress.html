@@ -38,13 +38,13 @@
                                             <td>
                                                 
                                                 {%if answer.is_sent%}
-                                                    <a href="{{answer.get_detail_url}}"><i class="fa fa-paper-plane"></i></a>
+                                                    <a href="{{answer.get_detail_url}}"><i class="bi bi-cloud-check"></i></a>
                                                 {%else%}
                                                     {%if answer.is_ok%}
-                                                    <a href="{{answer.get_detail_url}}"><i class="fa fa-check-circle"></i></a>
+                                                    <a href="{{answer.get_detail_url}}"><i class="bi bi-check-circle-fill"></i></a>
                                                     
                                                     {%else%}
-                                                        <a href="{{answer.get_detail_url}}"><i title= "Correções solicitadas" style="color: red" class="fas fa-exclamation-triangle"></i></a>
+                                                        <a href="{{answer.get_detail_url}}"><i title= "Correções solicitadas" style="color: red" class="bi bi-exclamation-triangle-fill"></i></a>
                                                     {%endif%}
                                                 {%endif%}
                                             </td>
@@ -52,7 +52,7 @@
                                         {%endfor%}
                                     {%else%}
                                         <td><a 
-                                            href="{{ question.get_answer_url }}"><i class="fas fa-pencil-alt"></i></a><br></td>
+                                            href="{{ question.get_answer_url }}"><i class="bi bi-pencil-square"></i></a><br></td>
                                     {%endif%}
                                 {%endfor%}
                             </tr>
