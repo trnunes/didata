@@ -13,8 +13,9 @@ import unidecode
 from django.conf import settings
 
 def go_academico(students_grades, assessment, milestone, diary, login, password):
-    chrome_options = webdriver.ChromeOptions()
     
+    chrome_options = webdriver.ChromeOptions()
+
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--no-sandbox')
