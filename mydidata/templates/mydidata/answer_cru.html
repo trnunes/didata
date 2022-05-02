@@ -26,8 +26,9 @@
 		    {% endfor %}
 		{% endif %}
 		
-        <h2 class="ad-mh">Resposta de: {{user.first_name}}&nbsp;{{user.last_name}}</h2>
+        
 		{% with answer=form.instance%}
+		<h2 class="ad-mh">Resposta de: {{answer.student.first_name}}&nbsp;{{answer.student.last_name}}</h2>
 			<div id="answer_form">
 				{% include 'mydidata/discursive_answer_item_form.html' %}
 			</div>
@@ -40,6 +41,40 @@
 	<script>
 		$('#answer_form ul').addClass('list-group');
 		$('#answer_form ul li').addClass('list-group-item');
+		$("#save_next_answer").on("click", function(e){
+            e.preventDefault();
+			$('input[type=hidden][name=redirect_to]').val("{{next_answer_url}}")
+			$('#form_feedback').submit();
+            
+        });
+		$("#save_next_student").on("click", function(e){
+		    e.preventDefault();
+			$('input[type=hidden][name=redirect_to]').val("{{next_student_answer_url}}")
+		    $('#form_feedback').submit();
+		});
+		$('input[type=radio][name=status]').change(function(e){
+
+			switch(parseInt(this.value)){
+				case 2:
+					$('#id_grade').val("1.0");
+					break;
+				case 5:
+					$('#id_grade').val("0.8");
+					break;
+				case 7:
+					$('#id_grade').val("0.6");
+					break
+				case 6:
+					$('#id_grade').val("0.3");
+					break
+				default:
+					$('#id_grade').val("0.0");
+					break
+				
+
+			}
+
+		});
 	</script>
 
 {% endblock footer_javascript_page %}

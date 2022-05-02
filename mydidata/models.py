@@ -161,6 +161,10 @@ class Topic(models.Model, AdminURLMixin):
     def get_absolute_url(self):
         return 'mydidata:topic_detail', [self.uuid]
 
+    
+    def get_absolute_url_questionary_anchor(self):
+        return self.get_absolute_url() + "#cd-table"
+    
     @models.permalink
     def get_update_url(self):
         return 'mydidata:topic_update', [self.uuid]
@@ -369,9 +373,10 @@ class Question(models.Model):
 
     def next_question_url(self):
         question = self.next_question()
-        if not question:
-            return self.topic.get_absolute_url()
-        return question.get_answer_url()
+        if question:
+            return question.get_answer_url()
+        return ""
+        
 
     def next_question(self):
         ordered_questions = list(self.topic.get_ordered_questions())
@@ -382,6 +387,7 @@ class Question(models.Model):
         
     def get_next_answer_for_student(self, student):
         question = self.next_question()
+        print("Next Question: ", question)
         answers = Answer.objects.filter(student=student, question=question)
         while question and not answers:
             question = question.next_question()
@@ -426,6 +432,7 @@ class Question(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:question_detail', [self.uuid]
+    
 
     @models.permalink
     def get_update_url(self):
@@ -517,6 +524,27 @@ class Answer(models.Model):
     def text_escaped(self):
         return u'%s' % html.unescape(strip_tags(self.answer_text))
 
+    def get_next_for_student(self):
+        next_answer = self.question.get_next_answer_for_student(self.student)
+        # print("Next Answer Question: ", next_answer.question.question_text)
+        # print("Next Answer Student: ", next_answer.student)
+        
+        return next_answer
+    
+    def get_next_answer_for_class(self, classroom):
+
+        students = list(classroom.students.all().order_by('first_name').all())
+        next_answer = None
+        for index, student in enumerate(students):
+            if student.id == self.student.id and index < len(students):
+                while not next_answer and index < len(students) - 1:
+                    index += 1
+                    next_answer = Answer.objects.filter(student=students[index], question=self.question).first()
+                    if next_answer:
+                        return reverse('mydidata:feedback', args=(next_answer.id,))
+
+        return ""
+
     def multiple_choice_correct(self):
         correct_choice = self.question.choice_set.filter(is_correct=True).first()
         print("CORRECT: ",  correct_choice)
@@ -546,9 +574,11 @@ class Answer(models.Model):
     def is_sent(self):
         return self.status == self.SENT
 
-    def eval(self, status):
+    def evaluate(self, status):
+        print("STATUS RECEIVED: ", status)
+        self.status = status
         if status == self.CORRECT:
-            self.grage = 1.0
+            self.grade = 1.0
         if status == self.ALMOST_CORRECT:
             self.grade = 0.8
         if status == self.ACCEPTABLE:
@@ -557,6 +587,7 @@ class Answer(models.Model):
             self.grade = 0.3
         if status == self.INCORRECT:
             self.grade = 0.0
+        self.save()
         
     def file_link(self):
          if self.assignment_file:
@@ -572,6 +603,10 @@ class Answer(models.Model):
     def get_answer_file_id(self):
         return self.student.first_name + "__" + self.student.last_name + "__" + str(self.student.id) + "__" + self.question.uuid
     
+    @models.permalink
+    def feedback_url(self):
+        return "mydidata:feedback", [self.id]
+
     @models.permalink
     def get_detail_url(self):
         if not self.question.is_discursive():

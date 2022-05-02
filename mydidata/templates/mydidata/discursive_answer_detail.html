@@ -43,10 +43,11 @@
                         <div class="col-md-9">
                             
                             <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Analisar Resposta</a>
-                            {%if answer.question.next_question_url%}
-                                <a class="btn btn-primary btn-lg" role="button" href="{{answer.question.next_question_url}}">Próxima Questão</a>
+                            <a class="btn btn-primary btn-lg" role="button" href="{{ answer.question.get_answer_url }}">Editar Resposta</a>
+                            
+                            <!-- {%if answer.question.next_question_url%} -->
                     
-                            {%endif%}
+                            <!-- {%endif%} -->
 
                         </div>
                     {%endif%}

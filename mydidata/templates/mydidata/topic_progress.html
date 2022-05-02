@@ -48,15 +48,29 @@
                                 {%if answers%}
                                     {%for answer in answers%}
                                         <td>
-                                            
                                             {%if answer.is_sent%}
-                                                 <a href="{{answer.get_detail_url}}"><i class="fa fa-paper-plane"></i></a>
+                                                {%if user.is_superuser%}
+                                                    <a href="{{answer.feedback_url}}"><i class="fa fa-paper-plane"></i></a>
+                                                {%else%}                                                
+                                                    <a href="{{answer.get_detail_url}}"><i class="fa fa-paper-plane"></i></a>
+                                                {%endif%}
+
+                                                 
                                             {%else%}
                                                 {%if answer.is_ok%}
-                                                 <a href="{{answer.get_detail_url}}"><i class="fa fa-check-circle"></i></span></a>
+                                                    {%if user.is_superuser%}
+                                                        <a href="{{answer.feedback_url}}"><i class="fa fa-check-circle"></i></a>
+                                                    {%else%}                                                
+                                                        <a href="{{answer.get_detail_url}}"><i class="fa fa-check-circle"></i></a>
+                                                    {%endif%}
                                                 
                                                  {%else%}
-                                                     <a href="{{answer.get_detail_url}}"><i style="color: red" class="fas fa-exclamation-triangle"></i></a>
+                                                    {%if user.is_superuser%}
+                                                        <a href="{{answer.feedback_url}}"><i style="color: red" class="fas fa-exclamation-triangle"></i></a>
+                                                    {%else%}                                                
+                                                        <a href="{{answer.get_detail_url}}"><i style="color: red" class="fas fa-exclamation-triangle"></i></a>
+                                                    {%endif%}
+                                                                                          
                                                  {%endif%}
                                             {%endif%}
                                         </td>

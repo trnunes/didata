@@ -148,6 +148,7 @@ class AnswerForm(forms.ModelForm):
             'assignment_file': 'Arquivo da Resposta',            
         }
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         question = kwargs.pop('question', None)
         super(forms.ModelForm, self).__init__(*args, **kwargs)
         # self.fields['choice'] = forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=question.choice_set, label="Selecione a sua resposta", empty_label=None)
@@ -212,51 +213,50 @@ class AnswerForm(forms.ModelForm):
             raise ValidationError(_("Sua resposta não pode ser em branco! Por favor, escreva a sua reposta na caixa de texto abaixo."))
         return text
 
-class SuperuserAnswerForm(forms.ModelForm):
-    status = forms.MultipleChoiceField(choices=Answer.STATUS_CHOICES, widget=forms.CheckboxSelectMultiple()),
-    class Meta:
-        model = Answer
-        fields = ['answer_text', 'assignment_file']
-
-        widgets = {
-            'answer_text': forms.CharField(widget=CKEditorUploadingWidget(), label="Resposta", required=False),
-
-        }
-        labels = {
-            'answer_text': 'Resposta Aqui',
-        }
-
-        fields += ['feedback', 'status', 'grade']
-        
-        
-        labels['feedback'] = 'Correções Aqui'
-        
-    def clean_grade(self):
-        self.instance.eval(self.cleaned_data.get("status"))
-        print(self.cleaned_data.get("status") == Answer.INCORRECT)
-        if self.cleaned_data.get("status") == Answer.CORRECT:
-            
-            return 1
-        
-        if self.cleaned_data.get("status") == Answer.INCORRECT:
-            return 0.2
-        
-        if self.cleaned_data.get("status") == Answer.ALMOST_INCORRECT:
-            return 0.4
-        
-        if self.cleaned_data.get("status") == Answer.ALMOST_CORRECT:
-            return 0.8
-
-        return 0
-
-    def is_valid(self):
-        return True
+# class SuperuserAnswerForm(forms.ModelForm):
+    # status = forms.MultipleChoiceField(choices=Answer.STATUS_CHOICES, widget=forms.CheckboxSelectMultiple()),
+    # class Meta:
+        # model = Answer
+        # fields = ['answer_text', 'assignment_file']
+# 
+        # widgets = {
+            # 'answer_text': forms.CharField(widget=CKEditorUploadingWidget(), label="Resposta", required=False),
+# 
+        # }
+        # labels = {
+            # 'answer_text': 'Resposta Aqui',
+        # }
+# 
+        # fields += ['feedback', 'status', 'grade']
+        # 
+        # 
+        # labels['feedback'] = 'Correções Aqui'
+        # 
+    # def clean_grade(self):
+        # if float(self.cleaned_data.get("status")) == Answer.CORRECT:
+            # self.cleaned_data["grade"] = 1.0
+# 
+            # 
+            # 
+        # if float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT:
+            # self.cleaned_data["grade"] = 0.8
+        # 
+        # if float(self.cleaned_data.get("status")) == Answer.ALMOST_INCORRECT:
+            # self.cleaned_data["grade"] = 0.4
+        # 
+        # if float(self.cleaned_data.get("status")) == Answer.INCORRECT:
+            # self.cleaned_data["grade"] = 0.0
+        # 
+        # return self.cleaned_data["grade"]
+# 
+    # def is_valid(self):
+        # return True
 
 class SuperuserAnswerFormSimplified(forms.ModelForm):
     status = forms.ChoiceField(widget=forms.RadioSelect, choices=Answer.EVAL_CHOICES)
     class Meta:
         model = Answer
-        fields = ["answer_text", "status", 'feedback', 'grade']
+        fields = ["answer_text", "assignment_file", "status", 'feedback', 'grade', ]
         field_order = ["status", "feedback", "grade"]
         labels = {
             'answer_text': 'Resposta Enviada',
@@ -264,22 +264,23 @@ class SuperuserAnswerFormSimplified(forms.ModelForm):
         
         labels['feedback'] = 'Correções Aqui'
     
-    def clean_grade(self):
-        print("Cleaning data: ", float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT)
-        if float(self.cleaned_data.get("status")) == Answer.CORRECT:
-            self.cleaned_data["grade"] = 0
-            
-            
-        if float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT:
-            self.cleaned_data["grade"] = 0.8
-        
-        if float(self.cleaned_data.get("status")) == Answer.ALMOST_INCORRECT:
-            self.cleaned_data["grade"] = 0.4
-        
-        if float(self.cleaned_data.get("status")) == Answer.INCORRECT:
-            self.cleaned_data["grade"] = 0.2
-        
-        return self.cleaned_data["grade"]
+    # def clean_grade(self):
+        # print("Cleaning data: ", float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT)
+        # if float(self.cleaned_data.get("status")) == Answer.CORRECT:
+            # self.cleaned_data["grade"] = 1.0
+            # self.ins
+            # 
+            # 
+        # if float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT:
+            # self.cleaned_data["grade"] = 0.8
+        # 
+        # if float(self.cleaned_data.get("status")) == Answer.ALMOST_INCORRECT:
+            # self.cleaned_data["grade"] = 0.4
+        # 
+        # if float(self.cleaned_data.get("status")) == Answer.INCORRECT:
+            # self.cleaned_data["grade"] = 0.0
+        # 
+        # return self.cleaned_data["grade"]
                 
     # def clean_status(self):
         # print("Cleaning status")
@@ -302,5 +303,8 @@ class SuperuserAnswerFormSimplified(forms.ModelForm):
         return True
 
 def get_answer_form(*args, **kwargs):
-    
+    user = kwargs.get("user", None)
+    if user and user.is_superuser:
+        return SuperuserAnswerFormSimplified(instance=kwargs.get("instance"))
+
     return AnswerForm(*args, **kwargs)

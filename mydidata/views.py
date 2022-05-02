@@ -7,7 +7,7 @@ from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
-from .forms import SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm, SuperuserAnswerForm, AnswerFormUploadOnly, get_answer_form
+from .forms import SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm,  AnswerFormUploadOnly, get_answer_form
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -468,6 +468,9 @@ def test_to_academico(request, class_id, test_uuid):
         return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'title': test.title, 'errors': errors})
 
 
+
+
+
 @login_required
 def answer(request, question_uuid, test_id=None):
 
@@ -486,7 +489,9 @@ def answer(request, question_uuid, test_id=None):
             return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
                 #TODO insert test logic here
         answer = Answer.find(student=request.user, question=question, test_id=test_id)
+        
         form = get_answer_form(request.POST, request.FILES, instance=answer, question=question)
+        
         answer = form.instance
         answer.question = question
         answer.student = request.user
@@ -512,7 +517,7 @@ def answer(request, question_uuid, test_id=None):
                 tuserrelation.save()
                 redirect_url = reverse('mydidata:test_progress', args=(test.uuid, klass.id,))
         else:
-            redirect_url = question.next_question_url()
+            redirect_url = question.topic.get_absolute_url()
         
         if request.FILES.get('assignment_file', False):
             file_name = request.FILES['assignment_file'].name
@@ -533,19 +538,15 @@ def answer(request, question_uuid, test_id=None):
         print("REDIRECT URL: ", redirect_url)
         if question.is_discursive:
             form = SuperuserAnswerFormSimplified(instance = answer)
-            return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, 'form': form, "next": redirect_url})
+            # return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, 'form': form, "next": redirect_url})
+            return HttpResponseRedirect(question.topic.get_absolute_url_questionary_anchor())
 
         return HttpResponseRedirect(redirect_url)
 
 
-    form = get_answer_form(question=question)
     if request.user.is_authenticated:
         answer = Answer.find(student=request.user, question=question, test_id=test_id)
-        if answer:
-            print("Answer found: ", answer.answer_text, answer.assignment_file)
-        else:
-            print("Answer not found")
-        form = get_answer_form(instance=answer, question=question)
+        form = get_answer_form(instance=answer, question=question, user=request.user)
 
     context = {
         'question': question,        
@@ -573,40 +574,41 @@ def feedback(request, answer_id):
     form = SuperuserAnswerFormSimplified(instance=answer)
     classroom = Classroom.objects.filter(students__id=answer.student.id).first()
 
+    next_answer_for_student_url = reverse('mydidata:class_progress', args=(classroom.id,))
+    
+    next_student_answer = answer.get_next_answer_for_class(classroom) or reverse('mydidata:class_progress', args=(classroom.id,))
+    print("Next student answer: ", next_student_answer)
+
+    next_answer_for_student = answer.get_next_for_student()
+    
+    if(next_answer_for_student):
+        next_answer_for_student_url = reverse('mydidata:feedback', args=(next_answer_for_student.id,))
+    
+
     if request.POST:
         form = SuperuserAnswerFormSimplified(request.POST, instance=answer)
         print(form.errors)
         form.save()
-        
-        students = classroom.students.all().order_by('first_name');
-
-        next_student_found = False
-        student_index = 1
-
-        for student in students:
-            if next_student_found:
-                next_answer = Answer.objects.filter(student=student, question=question).first()
-                if next_answer:
-                    form = SuperuserAnswerFormSimplified(instance=next_answer)
-                    context = {
-                        'question': question,
-                        'form': form,
-                        'answer': next_answer,
-                        'classroom': classroom,
-                        'action_url': reverse('mydidata:feedback', args=(next_answer.id,)),
-                    }
-                    return render(request, 'mydidata/answer_cru.html', context)
-
-            if student.id == answer.student.id and student_index < students.count(): next_student_found = True
-            student_index += 1
-
-        return redirect('mydidata:class_progress', class_id=classroom.id)
-
+        print("Next Answer Mine: ", next_answer_for_student)
+        context = {
+            'question': question,
+            'form': form,
+            'answer': answer,
+            'classroom': classroom,
+            'next_student_answer_url': next_student_answer,
+            'next_answer_url': next_answer_for_student_url,
+            'action_url': reverse('mydidata:feedback', args=(answer_id,)),
+        }
+        print("POST: ", request.POST)
+        print("REDIRECT TO: ", request.POST.get("redirect_to"))
+        return HttpResponseRedirect(request.POST.get("redirect_to"))
 
     context = {
         'question': question,
         'form': form,
         'action_url': reverse('mydidata:feedback', args=(answer_id,)),
+        'next_student_answer_url': next_student_answer,
+        'next_answer_url': next_answer_for_student_url,
     }
     return render(request, 'mydidata/answer_cru.html', context)
 
@@ -1077,13 +1079,13 @@ def define_team(request):
 
 def get_corrections(request, answer_id):
     print("ANSWER: ", answer_id)
-    answer = get_object_or_404(Answer, pk=answer_id)
-    keywords = answer.question.ref_keywords.split(";")
+    answer_obj = get_object_or_404(Answer, pk=answer_id)
+    keywords = answer_obj.question.ref_keywords.split(";")
     json_req = {
         "answers": [
             {
                 "student": 1,
-                "text": answer.text_escaped()
+                "text": answer_obj.text_escaped()
             }
         ],
         "ref_answers": [keywords] 
@@ -1093,23 +1095,25 @@ def get_corrections(request, answer_id):
     response = requests.post("http://pontuando.herokuapp.com/mydidata/assess_answers/", json=json_req)
     response_json = response.json()
     print("response json: ", response_json)
-    answer.feedback = response_json["results"][0]["corrections"]
-    answer.grade = response_json["results"][0]['grade']/10
+    answer_obj.feedback = response_json["results"][0]["corrections"]
+    grade = response_json["results"][0]['grade']
+
+    print("GRADE RECEIVED FROM SERV: ", grade)
     
-    if answer.grade > 0.8:
-        answer.eval(Answer.CORRECT)
-    elif answer.grade > 0.6 and answer.grade <= 0.8:
-        answer.eval(Answer.ALMOST_CORRECT)
-    elif answer.grade > 0.3 and answer.grade <= 0.6:
-        answer.eval(Answer.ALMOST_INCORRECT)
+    if grade > 8:
+        answer_obj.evaluate(Answer.CORRECT)
+    elif grade > 6 and grade <= 8:
+        answer_obj.evaluate(Answer.ALMOST_CORRECT)
+    elif grade > 3 and grade <= 6:
+        answer_obj.evaluate(Answer.ALMOST_INCORRECT)
     else:
-        answer.eval(Answer.INCORRECT)
-    answer.save()
+        answer_obj.evaluate(Answer.INCORRECT)
+    
     # print(json.loads(response.body))
     print(response)
     print(response.json())
-    
-    return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer,})
+    print("GRADE in OBJECT: ", answer_obj.grade)
+    return feedback(request, answer_obj.id)
     
 
 

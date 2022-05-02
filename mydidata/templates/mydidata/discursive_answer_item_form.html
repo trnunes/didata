@@ -5,11 +5,24 @@
 
 
 
-{% if answer and answer.feedback %}
-<h3 class="gi-sh">Correções Solicitadas e Nota</h3>
-    <p><font color='red'>{{ answer.feedback | safe}}</font></p>
+{% if answer %}
+    <h3 class="gi-sh">Avaliação</h3>
+    {%if answer.feedback%}
+        
+        <p><font color='red'>{{ answer.feedback | safe}}</font></p>
+        {%if answer.grade >= 0.6%}
+            <p><font color='blue'>Nota Parcial: {{ answer.grade}}</font></p>
+        {%else%}
+            <p><font color='red'>Nota Parcial: {{ answer.grade}}</font></p>
+        {%endif%}
+    {%endif%}
+    {%if answer.is_ok%}
+        <h4><font color='blue'>Resposta correta. Parabéns!</font></h4>
+    {%endif%}
     
 {% endif %}
+
+
 {%with answer_form_url=action_url%}
 {%if test%}	
 	{%append_test_param action_url test as answer_form_url%}
@@ -17,30 +30,34 @@
 
 
 
-<form enctype="multipart/form-data" action="{{ answer_form_url }}" method="post">
-
+<form enctype="multipart/form-data" action="{{ answer_form_url }}" id="form_feedback" method="post">
+<input type="hidden" name="redirect_to" value="{{answer_form_url}}"/>
 {% csrf_token %}
     
 {{ form.media }}
 {{ form.as_p }}
 
+{% if user.is_superuser%}
+    <input type="submit" class="btn btn-primary btn-lg" id="save_next_answer" value="Salvar e Próximo Resposta" />
+    <input type="submit" class="btn btn-primary btn-lg" id="save_next_student" value="Salvar e Próximo Aluno" />
+{%else%}
+    <input type="submit" class="btn btn-primary btn-lg" value="Salvar" />
+{% endif%}
 
-<input type="submit" value="Salvar" />
+{%if answer.id and answer.answer_text and answer.question.ref_keywords%}
+        
+        <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Analisar Resposta</a>
 
+{%endif%}
 
 </form>
 {%endwith%}
-{%if answer.id and answer.answer_text and answer.question.ref_keywords%}
-    <div class="col-md-9">
-        
-        <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Analisar Resposta</a>
-        {%if answer.question.next_question_url%}
-            <a class="btn btn-primary btn-lg" role="button" href="{{answer.question.next_question_url}}">Próxima Questão</a>
-                    
-        {%endif%}
 
-    </div>
-{%endif%}
+
+
+
+
+
 {% if user.is_superuser %}
 	{%get_copy_detect_url question.uuid as detect_url%}
 	<a href='{{ detect_url }}'>Detectar Cópias</a>
