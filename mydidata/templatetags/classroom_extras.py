@@ -40,5 +40,4 @@ def get_grades_url(classroom, topic):
 
 @register.simple_tag
 def get_test_progress(classroom, test):
-	print(classroom, ": ", test)
 	return reverse('mydidata:test_progress', args=(test.uuid, classroom.id))

@@ -181,7 +181,6 @@ def topic_next(request, current_id):
     return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(next_topic.uuid,)))
     
 def topics_by_subject(request):
-    print("SUBJECT: ", request.GET.get("subject", None))
     subject = request.GET.get("subject", None)
     topics = Topic.objects.filter(Q(subject__icontains=subject), visible=True).order_by("-publish_date")
     return render(request, 'mydidata/topic_list.html', {'topics': topics})
@@ -265,8 +264,6 @@ def update_profile(request, user_id):
         
 
 def topic_close(request, topic_uuid, class_id):
-    print("CLASS: ", class_id)
-    print("TOPIC: ", topic_uuid)
     klass = get_object_or_404(Classroom, pk=class_id)
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     klass.closed_topics.add(topic)
@@ -275,8 +272,6 @@ def topic_close(request, topic_uuid, class_id):
     return redirect('mydidata:class_progress', class_id=class_id, )
 
 def topic_open(request, topic_uuid, class_id):
-    print("CLASS: ", class_id)
-    print("TOPIC: ", topic_uuid)
     klass = get_object_or_404(Classroom, pk=class_id)
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     klass.closed_topics.remove(topic)
@@ -302,13 +297,9 @@ def topic_assess(request, topic_uuid, class_id):
                 a.correct()
                 a.save()
 
-                print(a.is_ok(), " - ", a.status == Answer.CORRECT)
-
     return redirect('mydidata:class_progress', class_id=class_id, )
 
 def test_close(request, uuid, class_id):
-    print("CLASS: ", class_id)
-    print("TOPIC: ", topic_uuid)
     klass = get_object_or_404(Classroom, pk=class_id)
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     klass.closed_topics.add(topic)
@@ -317,8 +308,6 @@ def test_close(request, uuid, class_id):
     return redirect('mydidata:class_progress', class_id=class_id, )
 
 def test_open(request, uuid, class_id):
-    print("CLASS: ", class_id)
-    print("TOPIC: ", topic_uuid)
     klass = get_object_or_404(Classroom, pk=class_id)
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     klass.closed_topics.remove(topic)
@@ -484,7 +473,6 @@ def answer(request, question_uuid, test_id=None):
                 return redirect(question.topic.get_absolute_url())
 
     if request.POST:        
-        print("POST Question UUID: ", question_uuid)        
         if not request.user.is_authenticated:
             return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
                 #TODO insert test logic here
@@ -529,13 +517,11 @@ def answer(request, question_uuid, test_id=None):
             #TODO insert logic for team work
 
         else:
-            print("FORM ERROR: ")
             context = {
                 'question': question,            
                 'form': form,
             }
             return render(request, 'mydidata/answer_cru.html', context)
-        print("REDIRECT URL: ", redirect_url)
         if question.is_discursive:
             form = SuperuserAnswerFormSimplified(instance = answer)
             # return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, 'form': form, "next": redirect_url})
@@ -552,7 +538,6 @@ def answer(request, question_uuid, test_id=None):
         'question': question,        
         'form': form,
     }
-    print("GET: ", question.uuid)
     return render(request, 'mydidata/answer_cru.html', context)
 
 
@@ -577,7 +562,6 @@ def feedback(request, answer_id):
     next_answer_for_student_url = reverse('mydidata:class_progress', args=(classroom.id,))
     
     next_student_answer = answer.get_next_answer_for_class(classroom) or reverse('mydidata:class_progress', args=(classroom.id,))
-    print("Next student answer: ", next_student_answer)
 
     next_answer_for_student = answer.get_next_for_student()
     
@@ -587,9 +571,7 @@ def feedback(request, answer_id):
 
     if request.POST:
         form = SuperuserAnswerFormSimplified(request.POST, instance=answer)
-        print(form.errors)
         form.save()
-        print("Next Answer Mine: ", next_answer_for_student)
         context = {
             'question': question,
             'form': form,
@@ -599,8 +581,6 @@ def feedback(request, answer_id):
             'next_answer_url': next_answer_for_student_url,
             'action_url': reverse('mydidata:feedback', args=(answer_id,)),
         }
-        print("POST: ", request.POST)
-        print("REDIRECT TO: ", request.POST.get("redirect_to"))
         return HttpResponseRedirect(request.POST.get("redirect_to"))
 
     context = {
@@ -942,8 +922,6 @@ def test_detail(request, uuid):
     classroom = Classroom.objects.filter(students__id=request.user.id).first()    
     questions = list(test.questions.order_by('index').all())
 
-    print("Questions: ", len(questions))
-
     tu = TestUserRelation.objects.filter(student=request.user, test=test).first()
     
     if (not tu):
@@ -952,7 +930,6 @@ def test_detail(request, uuid):
         tu.generate_question_index()
         tu.save()
 
-    print("SIZE", tu.index_list_as_array())
     reordered_questions = [questions[i-1] for i in tu.index_list_as_array()]
 
     context = {
@@ -989,7 +966,6 @@ def test_new(request, topic_id):
 def question_detail(request, uuid):
 
     question = Question.objects.get(uuid=uuid)
-    print("MY QUESTION", question.question_text)
     urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))', question.question_text)
     for url in urls:
         if url.find("upload"):
@@ -1068,17 +1044,12 @@ def define_team(request):
         classrooms = Classroom.objects.filter(students__id = request.user.id)
         studentsToSelect = [student for classroom in classrooms for student in classroom.students.all()]
         studentsToSelect.sort(key=lambda student: student.first_name)
-        print("Session data")
-
-        print("SELECTED MEMBERS: ")
-        print(selectedMembers)
         return render(request, 
                 'mydidata/define_team.html', 
                 {'studentList': studentsToSelect, 'selectedMembers': selectedMembers,}
         )
 
 def get_corrections(request, answer_id):
-    print("ANSWER: ", answer_id)
     answer_obj = get_object_or_404(Answer, pk=answer_id)
     keywords = answer_obj.question.ref_keywords.split(";")
     json_req = {
@@ -1090,16 +1061,12 @@ def get_corrections(request, answer_id):
         ],
         "ref_answers": [keywords] 
     }
-    print(json_req)
     
     response = requests.post("http://pontuando.herokuapp.com/mydidata/assess_answers/", json=json_req)
     response_json = response.json()
-    print("response json: ", response_json)
     answer_obj.feedback = response_json["results"][0]["corrections"]
     grade = response_json["results"][0]['grade']
 
-    print("GRADE RECEIVED FROM SERV: ", grade)
-    
     if grade > 8:
         answer_obj.evaluate(Answer.CORRECT)
     elif grade > 6 and grade <= 8:
@@ -1109,10 +1076,6 @@ def get_corrections(request, answer_id):
     else:
         answer_obj.evaluate(Answer.INCORRECT)
     
-    # print(json.loads(response.body))
-    print(response)
-    print(response.json())
-    print("GRADE in OBJECT: ", answer_obj.grade)
     return feedback(request, answer_obj.id)
     
 
@@ -1144,12 +1107,8 @@ def send_mail_to_class(request, class_id):
         localtime -= timedelta(hours=1)
         t_diff = timedelta(hours=24 + 1)
     user = request.user
-    print("LOCALTIME: ", localtime)
     for d in deadlines:
         local_due_date = timezone.localtime(d.due_datetime)
-        print("Time Diff", local_due_date - localtime)
-        print("DUE TIME: ", local_due_date)
-        print((d.due_datetime - localtime)  <= t_diff)
         if (d.due_datetime - localtime)  <= t_diff:
             topic = d.topic 
             user.email_user("AprendaFazendo: prazo para atividades em %s encerram hoje!"%topic.topic_title, "Acesse suas atividades em: https://aprendafazendo.net/%s"%topic.uuid )

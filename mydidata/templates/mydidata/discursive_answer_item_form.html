@@ -32,6 +32,10 @@
 
 <form enctype="multipart/form-data" action="{{ answer_form_url }}" id="form_feedback" method="post">
 <input type="hidden" name="redirect_to" value="{{answer_form_url}}"/>
+{%if user.is_superuser%}
+<h3 class="gi-sh">Resposta Enviada</h3>
+<p>{{ answer.answer_text | safe}}</p>
+{%endif%}
 {% csrf_token %}
     
 {{ form.media }}

@@ -18,14 +18,10 @@ class Command(BaseCommand):
         if is_dst:
             localtime -= timedelta(hours=1)
 
-        print("LOCALTIME: ", localtime)
         
         classrooms_dict = {}
         for d in deadlines:
             local_due_date = timezone.localtime(d.due_datetime)
-            print("Time Diff", local_due_date - localtime)
-            print("DUE TIME: ", local_due_date)
-            print((d.due_datetime - localtime)  < t_diff)
             if (d.due_datetime - localtime)  <= t_diff and (d.due_datetime >= localtime):
                 if d.due_datetime -localtime >= delta_24:
                     due = "amanhã às 23:59:59"

@@ -41,7 +41,6 @@ def go_academico(students_grades, assessment, milestone, diary, login, password)
     # tempo para aparecer os diários
     time.sleep(2)
 
-    print("------CADASTRANDO NOTAS---------")
 
     erros = []
 
@@ -99,5 +98,4 @@ def go_academico(students_grades, assessment, milestone, diary, login, password)
 
     browser.find_element_by_xpath("//input[@value='Salvar']").click()
     browser.close()
-    print("Errors: ", erros)
     return erros

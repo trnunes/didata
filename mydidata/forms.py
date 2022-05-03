@@ -55,7 +55,6 @@ class UserUpdateForm(UserChangeForm):
     def clean_username(self):
         # Since User.username is unique, this check is redundant,
         # but it sets a nicer error message than the ORM. See #13147.
-        print("CLEANED DATA: ", self.cleaned_data)
         username = self.cleaned_data["username"]
         if self.instance.username == username:
             return username
@@ -124,7 +123,6 @@ class AnswerFormUploadOnly(forms.ModelForm):
         if not file and question.file_types_accepted:
             raise ValidationError(_("Você deve enviar um arquivo como anexo a esta questão! Clique no botão \"Escolher Arquivo\" e depois envie a resposta."))
 
-        print("FILE in FORM UPLOAD: ", file)
         file_type = file.name.split(".")[-1]
         if question.file_types_accepted and not file_type in question.file_types_accepted and not "todos" in question.file_types_accepted:
             raise ValidationError(_("Arquivo de resposta inválido para esta questão. Apenas os tipos %(tipos)s são aceitos!"), 
@@ -178,13 +176,11 @@ class AnswerForm(forms.ModelForm):
         file = self.cleaned_data.get("assignment_file")
         question = self.instance.question
         if not file and not question.file_types_accepted:
-            print("Não chegou arquivo")
             return file
 
         if not file and question.file_types_accepted:
             raise ValidationError(_("Você deve enviar um arquivo como anexo a esta questão! Clique no botão \"Escolher Arquivo\" e depois envie a resposta."))
 
-        print("FILE in answer form: ", file)
         file_type = file.name.split(".")[-1]
         if question.file_types_accepted and not file_type in question.file_types_accepted and not "todos" in question.file_types_accepted:
             raise ValidationError(_("Arquivo de resposta inválido para esta questão. Apenas os tipos %(tipos)s são aceitos!"), 
@@ -208,7 +204,6 @@ class AnswerForm(forms.ModelForm):
         if closed_for_student:
             raise ValidationError(_("Questão fechada para envio de respostas!"))
         text = self.cleaned_data.get("answer_text")
-        print("TEXTO: ", text)
         if question.text_required and not text:
             raise ValidationError(_("Sua resposta não pode ser em branco! Por favor, escreva a sua reposta na caixa de texto abaixo."))
         return text
@@ -256,12 +251,15 @@ class SuperuserAnswerFormSimplified(forms.ModelForm):
     status = forms.ChoiceField(widget=forms.RadioSelect, choices=Answer.EVAL_CHOICES)
     class Meta:
         model = Answer
-        fields = ["answer_text", "assignment_file", "status", 'feedback', 'grade', ]
+        fields = [ "assignment_file", "status", 'feedback', 'grade', ]
         field_order = ["status", "feedback", "grade"]
-        labels = {
-            'answer_text': 'Resposta Enviada',
-        }
-        
+        labels = {}
+        # labels = {
+            # 'answer_text': 'Resposta Enviada',
+        # }
+        # widgets = {
+            # 'answer_text': forms.Textarea(attrs={'cols': 80, 'rows': 20}),
+        # }
         labels['feedback'] = 'Correções Aqui'
     
     # def clean_grade(self):
@@ -299,7 +297,6 @@ class SuperuserAnswerFormSimplified(forms.ModelForm):
         # 
         # return self.cleaned_data.get("status")
     def is_valid(self):
-        print("Is Valid")
         return True
 
 def get_answer_form(*args, **kwargs):

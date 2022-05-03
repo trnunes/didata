@@ -50,7 +50,6 @@ SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
 SENDGRID_ECHO_TO_STDOUT=True
 GOOGLE_CHROME_PATH = os.environ.get('GOOGLE_CHROME_PATH')
 CHROMEDRIVER_PATH = os.environ.get('CHROMEDRIVER_PATH')
-print("SENDGRIP", SENDGRID_API_KEY)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -100,7 +99,6 @@ import dj_database_url
 DATABASES['default'] =  dj_database_url.config()
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-print("DATABASES: ", DATABASES)
 # Allow all host headers
 ALLOWED_HOSTS = ['*']        
 
