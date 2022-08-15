@@ -25,7 +25,7 @@
 
 {%with answer_form_url=action_url%}
 {%if test%}	
-	{%append_test_param action_url test as answer_form_url%}
+	{%get_test_url answer.question test as answer_form_url%}
 {%endif%}
 
 

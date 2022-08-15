@@ -22,7 +22,10 @@ def get_question_status(question, student, test=None):
         return "Respondida!"
     else:
         return ""
-        
+@register.simple_tag
+def get_test_url(question, test):
+    return reverse('mydidata:test_answer', args=(question.uuid, test.id,))
+
 @register.simple_tag
 def get_choice_label_class(answer, choice):
     if answer.choice == choice and answer.choice.is_correct:

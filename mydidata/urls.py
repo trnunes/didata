@@ -47,6 +47,7 @@ urlpatterns = [
     url(r'^detect_copies/(?P<question_uuid>[\w-]+)/$',views.detect_copies, name='detect_copies'),
     url(r'^finish_test/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/(?P<key>[\w-]+)/$',views.finish_test, name='finish_test'),
     url(r'^get_corrections/(?P<answer_id>[0-9]+)/$',views.get_corrections, name='get_corrections'),
+    url(r'^correct_topic/(?P<topic_uuid>[\w-]+)/(?P<class_id>[0-9]+)/$',views.correct_topic, name='correct_topic'),
 
     url(r'^question_detail/$', views.question_detail, name="question_detail"),
     url(r'^multiple_choice_answer/(?P<question_uuid>[\w-]+)/$',views.answer, name='multiple_choice_answer'),
@@ -55,7 +56,9 @@ urlpatterns = [
     url(r'^discursive_answer/(?P<question_uuid>[\w-]+)/$',views.answer, name='discursive_answer'),
     url(r'^discursive_answer_test/(?P<question_uuid>[\w-]+)/(?P<test_id>[0-9]+)/$',views.discursive_answer, name='discursive_answer'),
     url(r'^download_answers/(?P<topic_uuid>[\w-]+)/(?P<class_id>[0-9]+)/$',views.download_answers, name='download_answers'),
-
+    
+    url(r'^test_answer/(?P<question_uuid>[\w-]+)/(?P<test_id>[0-9]+)/$',views.test_answer, name='test_answer'),
+    
     url(r'^discursive_answer_detail/(?P<answer_id>[0-9]+)$',views.discursive_answer_detail, name='discursive_answer_detail'),
     url(r'^feedback/(?P<answer_id>[0-9]+)$',views.feedback, name='feedback'),
     url(r'^test/new/(?P<topic_id>[\w-]+)/$',views.test_new, name='test_new'),
@@ -67,5 +70,6 @@ urlpatterns = [
     url(r'^class_progress/(?P<class_id>[\w-]+)/$',views.class_progress, name='class_progress'),
     url(r'^resource_room_progress/(?P<uuid>[\w-]+)/$',views.resource_room_progress, name='resource_room_progress'),    
     url(r'^define_team/$',views.define_team, name='define_team'),
+    url(r'^test_job/$',views.test_job, name='test_job'),
     
 ]

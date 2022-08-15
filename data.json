@@ -1,0 +1,13 @@
+{
+    "answers": [
+        {
+            "student": 1,
+            "text": "Uma senha forte é aquela que há mais variações de caracteres: letra maiúscula, minúscula, números e caracteres especiais. É i,portante ter uma senha forte pois dificulta bastante o trabalho de programas de cracking de senha."
+        }
+    ],
+    "ref_answers": [
+        [
+            "combinações"
+        ]
+    ]
+}

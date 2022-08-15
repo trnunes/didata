@@ -210,9 +210,40 @@ class Test(models.Model, AdminURLMixin):
         return self in classroom.closed_tests.all()
 
     def is_closed_for(self, user):
-        test_user = TestUserRelation.objects.filter(test=self, student=user).first()
-        return (test_user and test_user.is_closed)
 
+        test_user = TestUserRelation.objects.filter(test=self, student=user).first()
+        classrooms = Classroom.objects.filter(students__id = user.id)
+        for klass in classrooms:
+            if self.is_closed(klass):
+                return True
+        
+        return (test_user and test_user.is_closed)
+    
+    def close_for(self, student):
+        test_user = self.get_or_create_test_user_relation(student)
+        test_user.is_closed = True
+        test_user.save()
+
+        
+
+    def get_or_create_test_user_relation(self, user):
+        test_user = TestUserRelation.objects.filter(student=user, test=self).first()
+        if not test_user:
+            test_user = TestUserRelation.objects.create(student=user, test=self)
+            test_user.generate_question_index()
+            test_user.save()
+        return test_user
+
+    def next_question(self, user, question):
+        if self.is_closed_for(user):
+            return None
+        tu = self.get_or_create_test_user_relation(user)
+        current_questions = tu.current_questions()
+        question_index = current_questions.index(question)
+        if question_index < len(current_questions) - 1:
+            return current_questions[question_index + 1]
+        return None 
+        
     def questions_range(self):
         return range(self.limit_per_try)
 
@@ -300,6 +331,16 @@ class Classroom(models.Model):
 
     def in_class(self, test):
         return test in self.tests.all()
+    
+    def get_answers_for_topic(self, topic):
+        questions = topic.get_ordered_questions()
+        answers = []
+        for q in questions:
+            answers += list(Answer.objects.filter(question = q, student__id__in=[s.id for s in self.students.all()]))
+        
+        return answers
+    
+    
 
 class ResourceRoom(models.Model):
     uuid = ShortUUIDField(unique=True)
@@ -436,7 +477,11 @@ class Question(models.Model):
     @models.permalink
     def get_delete_url(self):
         return 'mydidata:question_delete', [self.id]
-        
+    
+    @models.permalink
+    def get_answer_url_for_test(self, test):
+        return 'mydidata:test_answer', (self.uuid, test.id)
+
     @models.permalink
     def get_answer_url(self, test=None):
         params = [self.uuid]
@@ -625,6 +670,7 @@ class TestUserRelation(models.Model):
     def __str__(self):
         return str(self.student.first_name + " " + self.student.last_name + ": " + self.test.title)
     def index_list_as_array(self):
+        print("INDEX_LIST:", self.index_list)
         return eval(self.index_list)
 
     def generate_question_index(self):

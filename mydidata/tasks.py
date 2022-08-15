@@ -11,6 +11,58 @@ import codecs
 import re
 import unidecode
 from django.conf import settings
+from background_task import background
+from .models import Answer
+import requests
+from django.shortcuts import get_object_or_404
+import json
+@background(schedule=60)
+def count_words(text):
+    return len(text.split(" "))
+
+@background(schedule=0)
+def correct_answers(answers_list):
+
+    for answer_id in answers_list:
+        answer_obj = get_object_or_404(Answer, pk=answer_id)
+        
+        keywords = answer_obj.question.ref_keywords.split(";")
+        if not answer_obj.question.ref_keywords:
+            continue
+        json_req = {
+            "answers": [
+                {
+                    "student": 1,
+                    "text": answer_obj.text_escaped()
+                }
+            ],
+            "ref_answers": [keywords] 
+        }
+
+        # try:
+
+        response = requests.post("http://pontuando.herokuapp.com/mydidata/assess_answers/", json=json_req)
+        print("ERROR: ", response.content)
+        response_json = response.json()
+
+        answer_obj.feedback = response_json["results"][0]["corrections"]
+        grade = response_json["results"][0]['grade']
+
+        if grade > 8:
+            answer_obj.evaluate(Answer.CORRECT)
+        elif grade > 6 and grade <= 8:
+            answer_obj.evaluate(Answer.ALMOST_CORRECT)
+        elif grade > 3 and grade <= 6:
+            answer_obj.evaluate(Answer.ALMOST_INCORRECT)
+        else:
+            answer_obj.evaluate(Answer.INCORRECT)
+        print(response_json)
+        # except:
+            # print("ERROR: ", json_req)
+            # 
+            # pass
+
+    
 
 def go_academico(students_grades, assessment, milestone, diary, login, password):
     

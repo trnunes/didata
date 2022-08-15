@@ -1,3 +1,4 @@
+from http.client import HTTPResponse
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from .models import Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline
@@ -7,6 +8,7 @@ from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
+from background_task.models import Task
 from .forms import SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm,  AnswerFormUploadOnly, get_answer_form
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
@@ -19,7 +21,7 @@ import re
 import json
 from django.db.models import Q
 import csv
-from .tasks import go_academico
+from .tasks import go_academico, correct_answers
 import datetime
 from django.utils import timezone
 from datetime import timedelta
@@ -457,6 +459,22 @@ def test_to_academico(request, class_id, test_uuid):
         return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'title': test.title, 'errors': errors})
 
 
+
+@login_required
+def test_answer(request, question_uuid, test_id):
+    question = get_object_or_404(Question, uuid=question_uuid)
+    test = get_object_or_404(Test, pk=test_id)
+    
+    if request.POST:
+        answer = Answer.find(student=request.user, question=question, test_id=test_id)
+        if test.is_closed_for(request.user):
+            return HttpResponseRedirect(reverse('mydidata:test_detail', args=(test.uuid,)))
+            
+            #redirect to_test detail
+    
+    
+    return HttpResponseRedirect(reverse('mydidata:test_detail', args=(test.uuid,)))
+        
 
 
 
@@ -905,14 +923,9 @@ def topic_detail(request, uuid):
 @login_required
 def start_test(request, uuid):
     test = get_object_or_404(Test, uuid=uuid)
-    test_user = TestUserRelation.objects.filter(student=request.user, test=test).first()
-    if not test_user:
-        test_user = TestUserRelation.objects.create(student=request.user, test=test)
-        test_user.generate_question_index()
-        test_user.save()
-
+    test_user = test.get_or_create_test_user_relation(request.user)
     first_question = test_user.current_questions()[0]
-    return HttpResponseRedirect(first_question.get_answer_url(test))
+    return HttpResponseRedirect(first_question.get_answer_url_for_test(test))
 
     
 @login_required
@@ -921,14 +934,9 @@ def test_detail(request, uuid):
 
     classroom = Classroom.objects.filter(students__id=request.user.id).first()    
     questions = list(test.questions.order_by('index').all())
-
-    tu = TestUserRelation.objects.filter(student=request.user, test=test).first()
+    tu = test.get_or_create_test_user_relation(request.user)
     
-    if (not tu):
-        import random
-        tu = TestUserRelation.objects.create(student=request.user, test=test)
-        tu.generate_question_index()
-        tu.save()
+
 
     reordered_questions = [questions[i-1] for i in tu.index_list_as_array()]
 
@@ -1049,35 +1057,24 @@ def define_team(request):
                 {'studentList': studentsToSelect, 'selectedMembers': selectedMembers,}
         )
 
+def test_job(request):
+    count_words("test with words")
+    tasks = Task.objects.all().last()
+    print(tasks)
+    return HttpResponseRedirect("/")
+
 def get_corrections(request, answer_id):
     answer_obj = get_object_or_404(Answer, pk=answer_id)
-    keywords = answer_obj.question.ref_keywords.split(";")
-    json_req = {
-        "answers": [
-            {
-                "student": 1,
-                "text": answer_obj.text_escaped()
-            }
-        ],
-        "ref_answers": [keywords] 
-    }
-    
-    response = requests.post("http://pontuando.herokuapp.com/mydidata/assess_answers/", json=json_req)
-    response_json = response.json()
-    answer_obj.feedback = response_json["results"][0]["corrections"]
-    grade = response_json["results"][0]['grade']
-
-    if grade > 8:
-        answer_obj.evaluate(Answer.CORRECT)
-    elif grade > 6 and grade <= 8:
-        answer_obj.evaluate(Answer.ALMOST_CORRECT)
-    elif grade > 3 and grade <= 6:
-        answer_obj.evaluate(Answer.ALMOST_INCORRECT)
-    else:
-        answer_obj.evaluate(Answer.INCORRECT)
-    
+    correct_answers.now([answer_id])
     return feedback(request, answer_obj.id)
+
+def correct_topic(request, class_id, topic_uuid):
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    klass = get_object_or_404(Classroom, pk=class_id)
     
+    correct_answers([a.id for a in klass.get_answers_for_topic(topic)])
+    
+    return HttpResponseRedirect(topic.get_absolute_url())
 
 
 

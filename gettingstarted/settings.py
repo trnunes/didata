@@ -40,9 +40,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mydidata',
+    'background_task',
     'ckeditor',
     'ckeditor_uploader',    
-    'storages',    
+    'storages',
+    
 ]
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'  # During development only
