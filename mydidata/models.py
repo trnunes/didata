@@ -199,6 +199,7 @@ class Test(models.Model, AdminURLMixin):
     title = models.CharField(max_length=200, default="test", verbose_name="Título")
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico")
     limit_per_try = models.IntegerField(default=5)
+    max_tries = models.IntegerField(default=2, verbose_name="Tentativas")
     key = models.CharField(max_length=200, default="testkey", verbose_name="Frase de Envio")
     class Meta:
         verbose_name_plural = 'Avaliações'
@@ -219,6 +220,9 @@ class Test(models.Model, AdminURLMixin):
         
         return (test_user and test_user.is_closed)
     
+    def get_answers(self, student):
+        return Answer.objects.filter(student=student, question__id__in=self.get_ordered_questions(), test=self)
+
     def close_for(self, student):
         test_user = self.get_or_create_test_user_relation(student)
         test_user.is_closed = True
@@ -233,13 +237,27 @@ class Test(models.Model, AdminURLMixin):
             test_user.generate_question_index()
             test_user.save()
         return test_user
+    
+    def has_next_try(self, user):
+        return self.get_or_create_test_user_relation(user).tries < self.max_tries
+    
+    def next_try(self, student):
+        if not self.has_next_try(student):
+            raise Exception("Amount of tries exceeded the limit: %s"%self.max_tries)
 
+        test_user_rel = self.get_or_create_test_user_relation(student)
+        self.get_answers(student).delete()
+        test_user_rel.tries += 1
+        test_user_rel.save()
+        return test_user_rel.tries
+    
     def next_question(self, user, question):
         if self.is_closed_for(user):
             return None
         tu = self.get_or_create_test_user_relation(user)
         current_questions = tu.current_questions()
         question_index = current_questions.index(question)
+
         if question_index < len(current_questions) - 1:
             return current_questions[question_index + 1]
         return None 
@@ -284,7 +302,7 @@ class Test(models.Model, AdminURLMixin):
                 grades_by_student[student]['grade'] = student_grade[1]
                 grades_by_student[student]['test_user'] = test_user
                 if student_grade[1] < 6:
-                    if test_user.has_next_try():
+                    if self.has_next_try(test_user.student):
                         grades_by_student[student]['next_try_link'] = reverse('mydidata:next_try', args=(test_user.id,))
             else:
                 grades_by_student[student]['grade'] = "?"
@@ -664,11 +682,14 @@ class TestUserRelation(models.Model):
     test = models.ForeignKey(Test, on_delete=models.DO_NOTHING)
     index_list = models.CharField(max_length=255, verbose_name=_("índices"),)
     is_closed = models.BooleanField(default=False)
+    tries = models.IntegerField(default=1)
     key = models.CharField(max_length=255, verbose_name=_("Chave de Envio"), default="stub_key")
     class Meta:
         verbose_name_plural = 'Índices de Questões'
+    
     def __str__(self):
         return str(self.student.first_name + " " + self.student.last_name + ": " + self.test.title)
+    
     def index_list_as_array(self):
         print("INDEX_LIST:", self.index_list)
         return eval(self.index_list)
@@ -685,7 +706,8 @@ class TestUserRelation(models.Model):
         index_array = self.index_list_as_array()
         return [list(self.test.questions.order_by('uuid'))[i-1] for i in index_array ]
 
-    def has_next_try(self):
+
+    def has_next_try_diff_questions(self):
         questions = list(self.test.questions.order_by('uuid').all())
         index_array = self.index_list_as_array()
         max_index = max(index_array)    
@@ -693,7 +715,7 @@ class TestUserRelation(models.Model):
             return False
         return True
 
-    def next_try(self):
+    def next_try_diff_questions(self):
         
         questions = list(self.test.questions.order_by('uuid').all())
         question_index_array = [questions.index(q)+1 for q in questions]

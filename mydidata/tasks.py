@@ -16,6 +16,7 @@ from .models import Answer
 import requests
 from django.shortcuts import get_object_or_404
 import json
+
 @background(schedule=60)
 def count_words(text):
     return len(text.split(" "))

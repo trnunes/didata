@@ -70,6 +70,6 @@ urlpatterns = [
     url(r'^class_progress/(?P<class_id>[\w-]+)/$',views.class_progress, name='class_progress'),
     url(r'^resource_room_progress/(?P<uuid>[\w-]+)/$',views.resource_room_progress, name='resource_room_progress'),    
     url(r'^define_team/$',views.define_team, name='define_team'),
-    url(r'^test_job/$',views.test_job, name='test_job'),
+    url(r'^test_job/(?P<answer_id>[0-9]+)$',views.test_job, name='test_job'),
     
 ]

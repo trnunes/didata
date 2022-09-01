@@ -1,3 +1,5 @@
+from __future__ import with_statement
+from ast import With
 from http.client import HTTPResponse
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
@@ -27,6 +29,7 @@ from django.utils import timezone
 from datetime import timedelta
 import requests
 from django.http import JsonResponse
+import subprocess
 
 class HomePage(TemplateView):
     """
@@ -540,7 +543,7 @@ def answer(request, question_uuid, test_id=None):
                 'form': form,
             }
             return render(request, 'mydidata/answer_cru.html', context)
-        if question.is_discursive:
+        if question.is_discursive():
             form = SuperuserAnswerFormSimplified(instance = answer)
             # return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, 'form': form, "next": redirect_url})
             return HttpResponseRedirect(question.topic.get_absolute_url_questionary_anchor())
@@ -826,7 +829,12 @@ def test_progress(request, uuid, class_id):
 @login_required()
 def next_try(request, test_user_id):
     test_user_rel = get_object_or_404(TestUserRelation, pk=test_user_id)
-    return HttpResponseRedirect(test_user_rel.next_try())
+    test = test_user_rel.test
+    test_user_rel.is_closed = False
+    test_user_rel.save()
+    current_try = test.next_try(test_user_rel.student)
+    url = test.get_ordered_questions().first().get_answer_url(test)
+    return HttpResponseRedirect(url)
     
 @login_required()
 def test_results_wavg(request, class_id, uuid):
@@ -1057,16 +1065,27 @@ def define_team(request):
                 {'studentList': studentsToSelect, 'selectedMembers': selectedMembers,}
         )
 
-def test_job(request):
-    count_words("test with words")
-    tasks = Task.objects.all().last()
-    print(tasks)
+def test_job(request, answer_id):
+    answer_obj = get_object_or_404(Answer, pk=answer_id)
+    with open(answer_id + ".c", "w") as file:
+        file.write(answer_obj.text_escaped().replace("\xa0", ""))
+
+    r = subprocess.call(["gcc", "/home/thiago/projects/aprendafazendo/12740.c"])
+    print("COMPILE RESULTS: ", r)
+    subprocess.call("./a.out")
     return HttpResponseRedirect("/")
+
+
+
 
 def get_corrections(request, answer_id):
     answer_obj = get_object_or_404(Answer, pk=answer_id)
     correct_answers.now([answer_id])
-    return feedback(request, answer_obj.id)
+    if request.user.is_superuser:
+
+        return feedback(request, answer_obj.id)
+    else:
+        return HttpResponseRedirect(answer_obj.get_detail_url())
 
 def correct_topic(request, class_id, topic_uuid):
     topic = get_object_or_404(Topic, uuid=topic_uuid)

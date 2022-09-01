@@ -34,17 +34,8 @@
                                 {%if answers%}
                                     {%for answer in answers%}
                                         <td>
-                                            
-                                            {%if answer.is_sent%}
-                                                 <a href="{{answer.get_detail_url}}"><i class="fa fa-paper-plane"></i></a>
-                                            {%else%}
-                                                {%if answer.is_ok%}
-                                                 <a href="{{answer.get_detail_url}}"><i class="fa fa-check-circle"></i></span></a>
-                                                
-                                                 {%else%}
-                                                     <a href="{{answer.get_detail_url}}"><i class="fas fa-times-circle"></i></a>
-                                                 {%endif%}
-                                            {%endif%}
+                                            {% get_icon_class answer student as url_and_icon_class%}
+                                            <a href="{{url_and_icon_class.0}}"><i style="{{url_and_icon_class.1}}" class="{{url_and_icon_class.2}}"></i></a>
                                         </td>
                                         
                                     {%endfor%}
@@ -146,19 +137,19 @@
                 {% for student, student_status in student_grades.items %}
                     <h1>Aproveitamento: {{student_status.grade}}</h1>
                     <h2> <a href="{{test.topic.get_absolute_url}}"> Clique para retornar</a></h2>
-                    <!-- {%if assessment.success %}
+                    
+                    {%if student_status.grade >= 6%}
                         <div class="alert alert-success">
                             {{assessment.success}}
                         </div>
                     {%else%}
                         <div class="alert alert-danger" role="alert">
-                            {{assessment.fail}} 
-                            {%if assessment.next_try_link%}
-                                Você pode tentar mais uma vez clicando <a href="{{assessment.next_try_link}}" class="alert-link">aqui!</a\>!
+                            {%if student_status.next_try_link%}
+                                Você pode tentar mais uma vez clicando <a href="{{student_status.next_try_link}}" class="alert-link">aqui!</a\>!
                             {%endif%}
                         </div>
 
-                    {%endif%} -->
+                    {%endif%}
                 {%endfor%}
 
             {%endif%}
