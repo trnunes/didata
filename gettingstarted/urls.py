@@ -9,6 +9,9 @@ import mydidata.views
 from django.conf import settings
 from django.views.static import serve
 from django.http import HttpResponseRedirect
+from django.views.generic.base import RedirectView
+from django.contrib.staticfiles.storage import staticfiles_storage
+
 # Examples:
 # url(r'^$', 'gettingstarted.views.home', name='home'),
 # url(r'^blog/', include('blog.urls')),
@@ -17,6 +20,10 @@ urlpatterns = [
     url(r'^$', lambda r: HttpResponseRedirect('mydidata/')),
 	url(r'^', include('django.contrib.auth.urls')),
     url(r'^accounts/', auth_views.login, {'template_name': 'mydidata/login.html'}),
+    path(
+        "ads.txt",
+        RedirectView.as_view(url=staticfiles_storage.url("ads.txt")),
+    ),
     # url(r'^db', mydidata.views.db, name='db'),
     url(r'^mydidata/', include('mydidata.urls')),
     path('admin/', admin.site.urls),
