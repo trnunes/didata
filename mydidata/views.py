@@ -131,7 +131,7 @@ class DisciplineList(ListView):
             discipline_list = set([d for klass in classrooms for d in klass.disciplines.order_by('name').all()])
             
         else:
-            discipline_list = discipline_list = Discipline.objects.filter(enabled=True).order_by('name')
+            discipline_list = Discipline.objects.filter(enabled=True).order_by('name')
         return discipline_list
         
 
