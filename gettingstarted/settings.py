@@ -42,10 +42,12 @@ INSTALLED_APPS = [
     'mydidata',
     'background_task',
     'ckeditor',
+    'django.contrib.sitemaps',
     'ckeditor_uploader',    
     'storages',
     
 ]
+
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'  # During development only
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")

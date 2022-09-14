@@ -11,6 +11,9 @@ from django.views.static import serve
 from django.http import HttpResponseRedirect
 from django.views.generic.base import RedirectView
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.contrib.sitemaps.views import sitemap
+from .sitemap import MySiteSitemap
+
 
 # Examples:
 # url(r'^$', 'gettingstarted.views.home', name='home'),
@@ -24,6 +27,8 @@ urlpatterns = [
         "ads.txt",
         RedirectView.as_view(url=staticfiles_storage.url("ads.txt")),
     ),
+    path('sitemap.xml', sitemap, {'sitemaps': {"aprendafazendo": MySiteSitemap}},
+     name='django.contrib.sitemaps.views.sitemap'),
     # url(r'^db', mydidata.views.db, name='db'),
     url(r'^mydidata/', include('mydidata.urls')),
     path('admin/', admin.site.urls),

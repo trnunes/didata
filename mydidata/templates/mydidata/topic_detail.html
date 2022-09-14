@@ -1,5 +1,10 @@
 {% extends 'mydidata/base.html' %}
-
+{%block page_description%}
+    <meta name="description" content="{{topic.description}}">
+{%endblock page_description%}
+{%block title%}
+    {{topic.topic_title}}
+{%endblock title%}
 {% block content %}
     <div id="content-container" class="container p-none">
         <hr class="my-3" />
