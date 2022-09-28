@@ -115,6 +115,7 @@ class GradingStrategy(object):
 class Topic(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     topic_title = models.CharField(max_length=200, verbose_name="Título")
+    label = models.CharField(verbose_name="Rótulo", max_length=200, blank=True, null=True)
     topic_content = RichTextUploadingField(blank=True, null=True, verbose_name="Conteúdo")
     description = models.TextField(verbose_name="Descrição", default="Conteúdo relacionado à informática básica, técnicas de programação, desenvolvimento de apps")
     order = models.IntegerField(verbose_name="Ordem")
@@ -131,6 +132,7 @@ class Topic(models.Model, AdminURLMixin):
     thumbnail = models.ImageField(upload_to='images/%Y/%m/%d', null=True, blank=True, storage=PublicMediaStorage(), verbose_name="Imagem de Capa")
     subject = models.CharField(max_length=200, verbose_name="Tópico", default="Variados")
     updated = models.DateTimeField(auto_now=True)
+    
     class Meta:
         verbose_name_plural = 'Tópicos'
 

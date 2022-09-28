@@ -7,7 +7,7 @@ app_name = 'mydidata'
 urlpatterns = [
      # Marketing pages
     url(r'^$', HomePage.as_view(), name="home"),
-    
+    url(r'^content/(?P<label>[\w-]+)$', views.content, name='content'),
     url(r'^signup/(?P<classroom_id>[0-9]+)$', views.subscriber_new, name='sub_new'),
     url(r'^update_profile/(?P<user_id>[0-9]+)$', views.update_profile, name='update_profile'),
     url(r'^search$', views.search, name='search'),

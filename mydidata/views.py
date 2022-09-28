@@ -138,6 +138,12 @@ class DisciplineList(ListView):
     def dispatch(self, *args, **kwargs):
         return super(DisciplineList, self).dispatch(*args, **kwargs)
 
+def content(request, label):
+    topics = Topic.objects.filter(label=label)
+    if topics:
+        return HttpResponseRedirect(reverse('mydidata:topic_detail', args=(topics.first().uuid,)))
+    return render('mydidata/home.html')
+
 @login_required
 def topic_edit(request, topic_uuid):
     topic = get_object_or_404(Topic, uuid=topic_uuid)
