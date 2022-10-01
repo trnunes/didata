@@ -26,7 +26,9 @@ def correct_answers(answers_list):
 
     for answer_id in answers_list:
         answer_obj = get_object_or_404(Answer, pk=answer_id)
-        
+        if answer_obj.question.expected_output:
+            return answer_obj.correct_c_programming_answer()
+            
         keywords = answer_obj.question.ref_keywords.split(";")
         if not answer_obj.question.ref_keywords:
             continue

@@ -30,6 +30,7 @@ from datetime import timedelta
 import requests
 from django.http import JsonResponse
 import subprocess
+import os
 
 class HomePage(TemplateView):
     """
@@ -1073,12 +1074,7 @@ def define_team(request):
 
 def test_job(request, answer_id):
     answer_obj = get_object_or_404(Answer, pk=answer_id)
-    with open(answer_id + ".c", "w") as file:
-        file.write(answer_obj.text_escaped().replace("\xa0", ""))
 
-    r = subprocess.call(["gcc", "/home/thiago/projects/aprendafazendo/12740.c"])
-    print("COMPILE RESULTS: ", r)
-    subprocess.call("./a.out")
     return HttpResponseRedirect("/")
 
 

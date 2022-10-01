@@ -48,7 +48,7 @@
     <input type="submit" class="btn btn-primary btn-lg" value="Salvar" />
 {% endif%}
 
-{%if answer.id and answer.answer_text and answer.question.ref_keywords%}
+{%if answer.id and answer.answer_text and answer.question.ref_keywords or answer.question.expected_output%}
         
         <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Analisar Resposta</a>
 
