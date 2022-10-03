@@ -632,17 +632,34 @@ class Answer(models.Model):
             os.remove("./" + str(self.id) + ".c")
             self.feedback = "A resposta possui erros de compilação. Corrija e envie novamente até a finalização do tópico!"
             return self.evaluate(self.INCORRECT)
-        cmd = subprocess.Popen(['./' + str(self.id)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding="utf8") 
-
-        input = "\n".join([i.strip() for i in self.question.test_inputs.split(",")])
-        output = cmd.communicate(input=input)
+        inputs = self.question.test_inputs.split(";")
+        outputs = []
+        for input in inputs:
+            cmd = subprocess.Popen(['./' + str(self.id)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding="utf8") 
+            input = "\n".join([i.strip() for i in input.split(",")])
+            output = cmd.communicate(input=input)
+            outputs.append(output)
+        
         os.remove("./" + str(self.id) + ".c")
         os.remove("./" + str(self.id))
+        expected_outputs = self.question.expected_output.split(";")
+        errors = []
+        for expected, output in zip(expected_outputs, outputs):
+            print("%s expected %s"%(output, expected))
+            if expected not in str(output):
+                print(" NOT FOUND: %s expected %s"%(output, expected))
+                errors.append((input, expected))
+
         
-        if self.question.expected_output in str(output):
+        if not errors:
+            self.feedback = "Programa passou nos testes!"
             return self.evaluate(self.CORRECT)
         
-        self.feedback = "Sua resposta compila corretamente mas apresenta erros de lógica: %s.\n Reveja e reenvie até a finalização do tópico!"%str(output)
+        error_str = ""
+        for e in errors:
+            error_str += "<br/>Entrada enviada: %s. Saída Esperada: %s"%(e[0], e[1])
+
+        self.feedback = "Sua resposta compila corretamente mas apresenta erros de lógica." + error_str
         return self.evaluate(self.ALMOST_INCORRECT)
 
         
