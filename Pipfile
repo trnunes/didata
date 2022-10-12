@@ -51,7 +51,7 @@ pyyaml = "*"
 psycopg2 = "==2.8.6"
 django-background-tasks = "*"
 undetected-chromedriver = "*"
-selenium = "*"
+selenium = "==4.1.5"
 
 
 [dev-packages]
