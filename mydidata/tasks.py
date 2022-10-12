@@ -79,6 +79,7 @@ def go_academico(students_grades, assessment, milestone, diary, login, password)
     # browser = webdriver.Firefox(executable_path="./geckodriver")
     #login    
     browser.get("http://www.academico.iff.edu.br")
+    
     browser.find_element_by_partial_link_text("PROFESSOR").click()
     browser.find_element_by_xpath("//input[@name='LOGIN']").send_keys(login)
     browser.find_element_by_xpath("//input[@name='SENHA']").send_keys(password)
@@ -154,3 +155,35 @@ def go_academico(students_grades, assessment, milestone, diary, login, password)
     browser.find_element_by_xpath("//input[@value='Salvar']").click()
     browser.close()
     return erros
+
+def correct_whole_topic(class_id, topic_uuid):
+    import undetected_chromedriver.v2 as uc
+    from time import sleep
+    import time
+    username = 'tnunes'
+    password ='m1l@b0t&lh0'
+
+    driver = uc.Chrome()
+
+    driver.delete_all_cookies()
+    driver.get("https://www.aprendafazendo.net/mydidata/login/")
+
+
+    sleep(2)
+
+
+    driver.find_element("id",'id_username').send_keys(username)
+    driver.find_element("id",'id_password').send_keys(password)
+
+    driver.find_element("xpath",'//input[@type="submit"]').click()
+    sleep(2)
+    driver.get("https://www.aprendafazendo.net/mydidata/topic_progress/%s/%s"%(class_id, topic_uuid))
+
+    els = driver.find_elements("xpath", '//i[contains(@class, "cloud")]/..')
+    els += driver.find_elements("xpath", '//i[contains(@class, "triangle")]/..')
+    links = [l.get_attribute("href") for l in els]
+    for l in links:
+        driver.get("https://www.aprendafazendo.net/mydidata/get_corrections/" + l.split("/")[-1])
+    
+    driver.close()
+

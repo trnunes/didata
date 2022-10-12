@@ -51,6 +51,7 @@ google-cloud-language = "*"
 pyyaml = "*"
 psycopg2 = "==2.8.6"
 django-background-tasks = "*"
+undetected-chromedriver = "*"
 
 
 [dev-packages]
