@@ -23,7 +23,7 @@ import re
 import json
 from django.db.models import Q
 import csv
-from .tasks import go_academico, correct_answers, correct_whole_topic
+from .tasks import go_academico, correct_answers, correct_whole_topic, to_csv
 import datetime
 from django.utils import timezone
 from datetime import timedelta
@@ -177,6 +177,19 @@ def academico(request, class_id, topic_uuid):
         errors = go_academico(students_grades, assessment, milestone, diary, login, password)
         
         return render(request, 'mydidata/academico_results.html', {'classroom': classroom, 'title': topic.topic_title, 'errors': errors})
+
+def download_grades_by_topic(request, class_id, topic_uuid):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+
+    filename = "notas.csv"
+    response = HttpResponse(content_type="text/csv")
+    response['Content-Disposition'] = "attachment; filename=\"%s\""%filename
+    writer = csv.writer(response)
+    writer.writerows(to_csv(classroom, topic))
+
+    return response
+
 
 def correct_the_whole_topic(request, class_id, topic_uuid):
     correct_whole_topic(class_id, topic_uuid)
