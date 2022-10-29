@@ -24,7 +24,7 @@ def to_csv(classroom, topic):
             csv.append([student.profile.student_id, grade])
     return csv
 
-def csv_to_academico(file, login, password):
+def csv_to_academico(file, milestone, login, password):
     import csv
     import undetected_chromedriver.v2 as uc
     uc.TARGET_VERSION = 106
@@ -39,11 +39,12 @@ def csv_to_academico(file, login, password):
         for index, row in enumerate(reader):
             
             if index == 0:
+                
                 diary = row[0]
                 task = row[1]
                 type = row[2]
                 date = row[3]
-                next
+                continue
             student_grades.append([row[0], row[1]])
         
     browser = uc.Chrome(version_main=106)
@@ -78,6 +79,7 @@ def csv_to_academico(file, login, password):
         manutencao_pauta = "3068"
         while not achei:
             try:
+                # import pdb; pdb.set_trace()
                 link_diario = browser.find_element("xpath", "//a[contains(@href,'"+ manutencao_pauta+"') and contains(@href,'"+ diary.strip() + "') and contains(@href, '"+ milestone.strip()+"')]")
                 achei = True
             except:
@@ -114,15 +116,16 @@ def csv_to_academico(file, login, password):
             
                 input_nota_aluno = browser.find_element("xpath", "//a[text()='%s']/../..//input[contains(@name, 'NOTA')]" % student)
                 input_nota_aluno.send_keys(Keys.BACKSPACE*10)
-                input_nota_aluno.send_keys("{:2.1f}".format(grade).replace(".", ","))
+                input_nota_aluno.send_keys("{:2.1f}".format(float(grade)).replace(".", ","))
             except:                    
                 erros.append(student_grade)
-            # import pdb;pdb.set_trace()
+            import pdb;pdb.set_trace()
 
         browser.find_element("xpath", "//input[@value='Salvar']").click()
     except:
         print("Algo deu errado no lançamento")
-    browser.close()
+    
+    
     return erros
 
 
@@ -133,5 +136,5 @@ if __name__=="__main__":
     file_name = sys.argv[1]
     login = sys.argv[2]
     password = sys.argv[3]
-    
-    csv_to_academico(file_name, login, password)
+    milestone = sys.argv[4]
+    csv_to_academico(file_name, milestone, login, password)
