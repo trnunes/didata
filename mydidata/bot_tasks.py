@@ -79,7 +79,6 @@ def csv_to_academico(file, milestone, login, password):
         manutencao_pauta = "3068"
         while not achei:
             try:
-                # import pdb; pdb.set_trace()
                 link_diario = browser.find_element("xpath", "//a[contains(@href,'"+ manutencao_pauta+"') and contains(@href,'"+ diary.strip() + "') and contains(@href, '"+ milestone.strip()+"')]")
                 achei = True
             except:
@@ -95,7 +94,7 @@ def csv_to_academico(file, milestone, login, password):
         except:
             input = browser.find_element("xpath", "//input[contains(@value, 'Inserir')]")
             input.click()
-            import pdb;pdb.set_trace()
+            
             sel = Select(browser.find_element("xpath", "//select[contains(@name, 'TIPO')]"))
             desc = browser.find_element("xpath", "//input[contains(@name, 'DESC')]")
             date = browser.find_element("xpath", "//input[contains(@name, 'DT')]")
@@ -121,7 +120,7 @@ def csv_to_academico(file, milestone, login, password):
                 input_nota_aluno.send_keys("{:2.1f}".format(float(grade)).replace(".", ","))
             except:                    
                 erros.append(student_grade)
-            import pdb;pdb.set_trace()
+            
 
         browser.find_element("xpath", "//input[@value='Salvar']").click()
     except:

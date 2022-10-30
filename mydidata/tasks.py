@@ -69,7 +69,7 @@ def correct_answers(answers_list):
 def to_csv(classroom, topic):
     students_grades = topic.calculate_grades(classroom)
     description = topic.topic_title
-    type = "trabalho"
+    type = "Trabalho"
     date = datetime.datetime.now().strftime("%d/%m/%Y")
     csv = [[classroom.academic_site_id, description, type, date]]
 
