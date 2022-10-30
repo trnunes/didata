@@ -15,7 +15,7 @@ import unidecode
 def to_csv(classroom, topic):
     students_grades = topic.calculate_grades(classroom)
     description = topic.topic_title
-    type = "trabalho"
+    type = "Trabalho"
     date = datetime.datetime.now().strftime("%d/%m/%Y")
     csv = [[classroom.academic_site_id, description, type, date]]
 
@@ -95,11 +95,13 @@ def csv_to_academico(file, milestone, login, password):
         except:
             input = browser.find_element("xpath", "//input[contains(@value, 'Inserir')]")
             input.click()
+            import pdb;pdb.set_trace()
             sel = Select(browser.find_element("xpath", "//select[contains(@name, 'TIPO')]"))
             desc = browser.find_element("xpath", "//input[contains(@name, 'DESC')]")
             date = browser.find_element("xpath", "//input[contains(@name, 'DT')]")
 
             sel.select_by_visible_text(av_type)
+            
             desc.send_keys(av_desc)
             date.send_keys(av_date)
 
@@ -113,7 +115,7 @@ def csv_to_academico(file, milestone, login, password):
             student = student_grade[0]
             grade = student_grade[1]
             try:
-            
+                
                 input_nota_aluno = browser.find_element("xpath", "//a[text()='%s']/../..//input[contains(@name, 'NOTA')]" % student)
                 input_nota_aluno.send_keys(Keys.BACKSPACE*10)
                 input_nota_aluno.send_keys("{:2.1f}".format(float(grade)).replace(".", ","))
