@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from ast import With
-from http.client import HTTPResponse
+
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from .models import Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline
@@ -11,6 +11,9 @@ import sys
 from django.views.generic.base import TemplateView
 from django.contrib.auth.models import User
 from background_task.models import Task
+from django.views import View
+
+from .nlp_analyzer import score_keywords, score, assess, read_lines
 from .forms import SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm,  AnswerFormUploadOnly, get_answer_form
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
@@ -31,6 +34,7 @@ import requests
 from django.http import JsonResponse
 import subprocess
 import os
+from django.views.decorators.csrf import csrf_exempt
 
 class HomePage(TemplateView):
     """
@@ -104,6 +108,13 @@ class TestList(ListView):
     
     def dispatch(self, *args, **kwargs):
         return super(TestList, self).dispatch(*args, **kwargs)
+
+class AdsView(View):
+    
+    def get(self, request, *args, **kwargs):
+        line  ="google.com, pub-3262579547697172, DIRECT, f08c47fec0942fa0"
+        return HttpResponse(line)
+        
 
 class TopicList(ListView):
     model = Topic
@@ -1115,7 +1126,29 @@ def correct_topic(request, class_id, topic_uuid):
     
     return HttpResponseRedirect(topic.get_absolute_url())
 
+@csrf_exempt
+def assess_answers(request):
+    print("REQUEST: ", request)
+    print(request.body)
+    received_json = json.loads(request.body)
+    
+    answer_matrix = [["Students", "Question"]]
+    for a in received_json["answers"]:
+        answer_matrix.append([a['student'], a['text']])
+    ref_answers = received_json["ref_answers"]
+    results = assess(answer_matrix, phrases_per_question=ref_answers, score_function=score_keywords)
+    json_results = []
+    for i in range(1,  len(results)):
+        
+        json_response = {
+            "student": results[i][0],
+            "answer": results[i][1],
+            "grade": results[i][2],
+            "corrections": results[i][3],
+        }
+        json_results.append(json_response)
 
+    return JsonResponse({"results": json_results})
 
 @login_required()
 def detect_copies(request, question_uuid):

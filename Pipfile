@@ -52,6 +52,9 @@ psycopg2 = "==2.8.6"
 django-background-tasks = "*"
 undetected-chromedriver = "*"
 selenium = "==4.1.5"
+nltk = "*"
+pandas = "*"
+django-rq = "*"
 
 
 [dev-packages]

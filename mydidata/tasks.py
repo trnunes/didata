@@ -16,6 +16,7 @@ from .models import Answer
 import requests
 from django.shortcuts import get_object_or_404
 import json
+from .nlp_analyzer import score_keywords, score, assess, read_lines
 
 @background(schedule=60)
 def count_words(text):
@@ -43,13 +44,25 @@ def correct_answers(answers_list):
         }
 
         # try:
+        answer_matrix = [["Students", "Question"]]
+        for a in json_req["answers"]:
+            answer_matrix.append([a['student'], a['text']])
+        ref_answers = json_req["ref_answers"]
+        results = assess(answer_matrix, phrases_per_question=ref_answers, score_function=score_keywords)
+        json_results = []
+        for i in range(1,  len(results)):
+            
+            json_response = {
+                "student": results[i][0],
+                "answer": results[i][1],
+                "grade": results[i][2],
+                "corrections": results[i][3],
+            }
+            json_results.append(json_response)
 
-        response = requests.post("http://pontuando.herokuapp.com/mydidata/assess_answers/", json=json_req)
-        print("ERROR: ", response.content)
-        response_json = response.json()
 
-        answer_obj.feedback = response_json["results"][0]["corrections"]
-        grade = response_json["results"][0]['grade']
+        answer_obj.feedback = json_response["corrections"]
+        grade = json_response['grade']
 
         if grade > 8:
             answer_obj.evaluate(Answer.CORRECT)
@@ -59,7 +72,7 @@ def correct_answers(answers_list):
             answer_obj.evaluate(Answer.ALMOST_INCORRECT)
         else:
             answer_obj.evaluate(Answer.INCORRECT)
-        print(response_json)
+        print(json_response)
         # except:
             # print("ERROR: ", json_req)
             # 

@@ -35,7 +35,7 @@ urlpatterns = [
     url(r'^correct_the_whole_topic/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$', views.correct_the_whole_topic, name="correct_the_whole_topic"),
     url(r'^test_to_academico/(?P<class_id>[0-9]+)/(?P<test_uuid>[\w-]+)/$', views.test_to_academico, name="test_to_academico"),
     url(r'^send_mail/(?P<class_id>[0-9]+)/$', views.send_mail_to_class, name="send_mail_to_class"),
-
+    url(r'^assess_answers/$',views.assess_answers, name='assess_answers'),
     url(r'^tests$', TestList.as_view(), name="tests"),
     url(r'^test_detail/(?P<uuid>[\w-]+)/$', views.test_detail, name='test_detail'),
     url(r'^start_test/(?P<uuid>[\w-]+)/$', views.start_test, name="start_test"),
