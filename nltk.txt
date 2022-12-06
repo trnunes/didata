@@ -1,0 +1,10 @@
+averaged_perceptron_tagger
+floresta
+mac_morpho
+machado
+punkt
+stopwords
+wordnet
+words
+omw
+rslp
