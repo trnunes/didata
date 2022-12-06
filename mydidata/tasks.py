@@ -87,8 +87,9 @@ def to_csv(classroom, topic):
     csv = [[classroom.academic_site_id, description, type, date]]
 
     for student, grade in students_grades:
-        if student.profile.student_id:
-            csv.append([student.profile.student_id, grade])
+        if student.profile:
+            if student.profile.student_id:
+                csv.append([student.profile.student_id, grade])
     return csv
 
 def csv_to_academico(file, login, password):
@@ -195,7 +196,7 @@ def csv_to_academico(file, login, password):
 
 def go_academico(students_grades, assessment, milestone, diary, login, password):
     import undetected_chromedriver.v2 as uc
-    browser = uc.Chrome(version_main=106)
+    browser = uc.Chrome()
     # browser = webdriver.Firefox(executable_path="./geckodriver")
     #login    
     try:
