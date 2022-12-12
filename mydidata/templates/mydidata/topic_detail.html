@@ -23,10 +23,15 @@
                 </ul>
       
             </div>    
-    
-            <div id="gi-container" class="ad-container2">
-                {% include 'mydidata/topic_item_view.html' %}
-            </div>
+            
+                <div id="gi-container" class="ad-container2">
+                    
+                    <a href="/mydidata/topic_edit/{{topic.uuid}}/"> Editar </a>
+                    
+                    {% include 'mydidata/topic_item_view.html' %}
+                    
+                </div>
+            
 
         </div>
         {% if user.is_authenticated and question %}

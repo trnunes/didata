@@ -3,7 +3,7 @@ from random import choices
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import UserChangeForm
-from .models import Topic, Question, Profile, Choice, Discipline, Classroom, Answer, TestUserRelation
+from .models import ContentVersion, Topic, Question, Profile, Choice, Discipline, Classroom, Answer, TestUserRelation
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -70,7 +70,7 @@ class UserUpdateForm(UserChangeForm):
 class TopicForm(forms.ModelForm):
     class Meta:
         model = Topic
-        fields = ('topic_title', 'topic_content', 'order')
+        fields = ('topic_title', 'label','topic_content', 'order', 'owner')
         widgets = {
             'topic_title': forms.TextInput(
                 attrs={
@@ -86,7 +86,40 @@ class TopicForm(forms.ModelForm):
                     'class':'gi-form-addr form-control'
                 }
             ),
+            
         }
+    def __init__(self, *args, **kwargs):
+        if kwargs.get("owner", None):
+            self.owner = kwargs.pop("owner")
+        super(TopicForm, self).__init__(*args, **kwargs)
+        self.fields['owner'] =  forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=User.objects.all(), label="Selecione o dono do tópico", empty_label=None, )
+
+    
+    def save(self, commit=True):
+        
+        instance = super(TopicForm, self).save(commit=commit)
+        
+        
+        if not instance.versions.exists():
+            first_version = ContentVersion(content=instance.topic_content, number=1, topic=instance)
+            first_version.save()
+            first_version.approved = True
+            instance.versions.add(first_version)
+        
+        
+        if instance.topic_content != self.cleaned_data["topic_content"]:
+            new_version = ContentVersion(content=self.cleaned_data["topic_content"], version=instance.get_latest_approved_version().number + 1, approved=False)
+            self.cleaned_data["topic_content"] = instance.topic_content
+            instance.versions.add(new_version)
+
+
+        instance.save()
+        
+        
+        return instance
+
+
+
         
 class QuestionForm(forms.ModelForm):
     class Meta:

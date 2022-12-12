@@ -2,8 +2,9 @@ from venv import create
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.auth import get_user_model
 from django.test import TestCase, RequestFactory
-from mydidata.models import Answer, Test, Topic, TestUserRelation, Question, Choice
-
+from mydidata.models import Answer, Test, Topic, TestUserRelation, Question, Choice, Discipline
+from mydidata.forms import TopicForm
+from http import HTTPStatus
 
 
 # class UsersManagersTests(TestCase):
@@ -177,7 +178,58 @@ class QuestionTests(TestCase):
         self.assertFalse(question_1.is_discursive())
     
         
+class TopicTest(TestCase):
+    def test_get_latest_version(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", topic_content = "hello world", order=1, owner = user)
+        version = topic.get_latest_approved_version()
+        self.assertEqual(version.content, "hello world")
 
+class TopicIntegration(TestCase):
+
+    # def test_new_topic(self):
+        # user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+# 
+# 
+        # discipline = Discipline.objects.create(name="test discipline")
+        # self.assertTrue(self.client.login(username='baa', password='foo'))
+        # 
+        # post_data = {"topic_content": 'hello world', "topic_title": 'test topic', "order": 1, "owner": user.pk,}
+        # response = self.client.post("/mydidata/topic/%s"%discipline.uuid, post_data, follow=True)
+        # 
+        # self.assertEqual(response.status_code, HTTPStatus.OK)
+# 
+        # print(Topic.objects.all())
+        
+        # self.assertEqual("hello world", topic.topic_title)
+        # self.assertEqual(1, len(topic.versions))
+        # self.assertEqual("hello world", topic.versions.all().first())
+        
+
+    def test_new_version_creation(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        form = TopicForm(data={"topic_content": 'hello world', "topic_title": 'test topic', "order": 1, "owner":user.pk,})
+        if not form.is_valid():
+            print("form errors", form.errors)
+
+        saved_topic = form.save()
+        
+        self.assertEqual(saved_topic.topic_content, "hello world")
+
+        self.assertEqual(1, len(saved_topic.versions.all()))
+        
+        self.assertEqual("hello world", saved_topic.versions.all().first().content)
+        self.assertEqual(1, saved_topic.versions.all().first().number)
+
+    def test_edit_topic_with_form(self):
+        #TODO
+        # assert the creation of a second version
+        pass
+
+    def test_merge_versions(self):
+        #TODO
+        pass
+    
 # class SimpleTest(TestCase):
     # def setUp(self):
         # Every test needs access to the request factory.

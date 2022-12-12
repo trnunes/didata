@@ -159,12 +159,38 @@ def content(request, label):
 @login_required
 def topic_edit(request, topic_uuid):
     topic = get_object_or_404(Topic, uuid=topic_uuid)
+    discipline = topic.discipline
     form = TopicForm(instance=topic)
+    form.instance.discipline = discipline
     if request.POST:
+        form = TopicForm(request.POST, instance=topic)
         if form.is_valid():
             form.save()
-
+            return HttpResponseRedirect(reverse("mydidata:topic_detail", args=(topic.uuid,)))
     return render(request, 'mydidata/topic_edit.html', context={'form': form})
+    
+@login_required
+def topic(request, discipline_uuid):
+    discipline = get_object_or_404(Discipline, uuid=discipline_uuid)
+    print("post", request.POST)
+    if request.POST:
+        form = TopicForm(request.POST)
+        
+        if form.is_valid():
+
+            instance = form.save()
+            instance.discipline = discipline
+            instance.save()
+            print(instance.topic_title)
+            return HttpResponseRedirect(reverse("mydidata:topic_detail", args=(form.instance.uuid,)))
+        else:
+            print("Errors", form.errors)
+        
+    else:
+        form = TopicForm()
+    return render(request, "mydidata/topic.html", context={"form": form})
+
+    
 
 @login_required
 def academico(request, class_id, topic_uuid):

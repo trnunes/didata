@@ -139,6 +139,16 @@ class Topic(models.Model, AdminURLMixin):
     def __str__(self):
         return u"%s" % self.topic_title
     
+    def get_latest_approved_version(self):
+        if not self.versions.exists():
+            first_version = self.versions.create(content=self.topic_content, number=1, approved=True)
+            return first_version
+        
+        return self.versions.filter(approved=True).order_by("-number").first()
+
+    def get_non_approved_versions(self):
+        return []
+    
     
     def next_url(self):
         topics = []
@@ -197,6 +207,16 @@ class Topic(models.Model, AdminURLMixin):
     def penalize_repeated(self):
         return []
 
+
+class ContentVersion(models.Model, AdminURLMixin):
+    content = RichTextUploadingField(verbose_name="Conteúdo")
+    number = models.PositiveSmallIntegerField(verbose_name="Versão")
+    approved = models.BooleanField(default=False)
+    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico", related_name="versions")
+
+
+    def __str__(self):
+        return self.topic.topic_title + "." +str(self.number)
 
 class Test(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
@@ -665,8 +685,8 @@ class Answer(models.Model):
         
         
     def correct(self):
-        if self.question.expected_output:
-            return self.correct_c_programming_answer()
+        # if self.question.expected_output:
+            # return self.correct_c_programming_answer()
         if not self.question.is_discursive():
             return self.multiple_choice_correct()
         self.save()
