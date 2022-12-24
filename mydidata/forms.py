@@ -92,31 +92,50 @@ class TopicForm(forms.ModelForm):
         if kwargs.get("owner", None):
             self.owner = kwargs.pop("owner")
         super(TopicForm, self).__init__(*args, **kwargs)
-        self.fields['owner'] =  forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=User.objects.all(), label="Selecione o dono do tópico", empty_label=None, )
+        # self.fields['owner'] =  forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=User.objects.all(), label="Selecione o dono do tópico", empty_label=None, )
+
+    def save(self, *args, **kwargs):
+        instance = super(TopicForm, self).save(*args, **kwargs)
+        if not instance.versions.exists():
+            first_version = instance.versions.create(content=instance.topic_content, approved=True, topic=instance, user = instance.owner)
+        return instance
 
     
-    def save(self, commit=True):
-        
-        instance = super(TopicForm, self).save(commit=commit)
-        
-        
-        if not instance.versions.exists():
-            first_version = ContentVersion(content=instance.topic_content, number=1, topic=instance)
-            first_version.save()
-            first_version.approved = True
-            instance.versions.add(first_version)
-        
-        
-        if instance.topic_content != self.cleaned_data["topic_content"]:
-            new_version = ContentVersion(content=self.cleaned_data["topic_content"], version=instance.get_latest_approved_version().number + 1, approved=False)
-            self.cleaned_data["topic_content"] = instance.topic_content
-            instance.versions.add(new_version)
+class ContentVersionForm(forms.ModelForm):
+    class Meta:
+        model = ContentVersion
+        fields = ('content',)
+        widgets = {
+            'content': forms.CharField(widget=CKEditorUploadingWidget, label='Conteúdo')
 
+        }
 
+    def __init__(self, *args, **kwargs):
+        if 'user' in kwargs:
+            self.user = kwargs.pop("user")
+        if 'topic' in kwargs:
+            self.topic = kwargs.pop('topic')
+        if 'instance' in kwargs:
+            self.topic = kwargs.get('instance').topic
+        
+        super(ContentVersionForm, self).__init__(*args, **kwargs)
+
+        if not 'instance' in kwargs:
+            self.fields['content'].initial = self.topic.topic_content
+    
+    def save(self, *args, **kwargs):
+        if not self.user:
+            raise("Not able to save a content version without a user")
+        if not self.topic:
+            raise("Not able to save a content version without a topic")
+        
+        instance =  super(ContentVersionForm, self).save(*args, **kwargs, commit=False)
+        instance.user = self.user
+        instance.topic = self.topic
         instance.save()
-        
-        
         return instance
+
+
 
 
 

@@ -22,6 +22,8 @@ from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
 import html
+import difflib
+
 
 class AdminURLMixin(object):
     def get_admin_url(self):
@@ -139,16 +141,30 @@ class Topic(models.Model, AdminURLMixin):
     def __str__(self):
         return u"%s" % self.topic_title
     
+    def text_escaped(self):
+        return u'%s' % html.unescape(strip_tags(self.topic_content))
+    
     def get_latest_approved_version(self):
         if not self.versions.exists():
-            first_version = self.versions.create(content=self.topic_content, number=1, approved=True)
+            first_version = self.versions.create(content=self.topic_content, approved=True, user=self.owner, topic=self)
             return first_version
         
-        return self.versions.filter(approved=True).order_by("-number").first()
+        return self.versions.filter(approved=True).order_by("-id").first()
+    
+    def sorted_versions(self):
+        return self.versions.order_by("-id")
+
 
     def get_non_approved_versions(self):
         return []
     
+    def update_to_version(self, id):
+        version = self.versions.filter(pk=id).first()
+        version.approved = True
+        version.save()
+        self.topic_content = version.content
+        self.save()
+
     
     def next_url(self):
         topics = []
@@ -210,13 +226,47 @@ class Topic(models.Model, AdminURLMixin):
 
 class ContentVersion(models.Model, AdminURLMixin):
     content = RichTextUploadingField(verbose_name="Conteúdo")
-    number = models.PositiveSmallIntegerField(verbose_name="Versão")
     approved = models.BooleanField(default=False)
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico", related_name="versions")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Usuário", )
 
+    def get_edit_url(self):
+        return reverse("mydidata:version_edit", args=(self.id,))
+    
+    def get_detail_url(self):
+        return reverse("mydidata:version_detail", args=(self.id,))
+    
+    def get_diff_url(self):
+        return reverse("mydidata:version_compare", args=(self.id,))
+
+    def replace_topic(self):
+        self.approved = True
+        self.topic.topic_content = self.content
+        self.topic.save()
+        self.save()
+        
+    def diff(self):
+        htmlDiffer = difflib.HtmlDiff()
+        text = self.content.splitlines()
+        topic_text = self.topic.topic_content.splitlines()
+
+        diffHtml = htmlDiffer.make_file(text, topic_text)
+        diffHtml = diffHtml.replace("Legends", "Legenda")
+        diffHtml = diffHtml.replace("Colors", "Cores")
+        diffHtml = diffHtml.replace("Added", "Adicionado")
+        diffHtml = diffHtml.replace("Changed", "Alterado")
+        diffHtml = diffHtml.replace("Deleted", "Deletado")
+
+
+        return diffHtml
+
+        
+    
+    def text_escaped(self):
+        return u'%s' % html.unescape(strip_tags(self.content))
 
     def __str__(self):
-        return self.topic.topic_title + "." +str(self.number)
+        return self.topic.topic_title + "." +str(self.id)
 
 class Test(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)

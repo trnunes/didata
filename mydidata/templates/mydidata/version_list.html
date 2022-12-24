@@ -1,0 +1,30 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Versões{% endblock title %}
+
+{% block content %}
+{%load student_extras%}
+    <div id="content-container" class="container p-none">
+        <div id="al-container" class="side-p">
+            <div id="al-control">
+                <h3 class="ad-mh">
+                    Versões do Tòpico {{topic.topic_title}}
+                    <!-- <span class="pull-right">
+                        <a href=""
+                           class="btn btn-link p-r-none">+ Criar Tópico</a>
+                    </span> -->
+                </h3>
+                {# Account Search Form #}
+            </div>
+            {# List of Accounts #}
+            
+            <div class="list-group" style="margin-bottom: 1rem;">
+                {% for version in topic.sorted_versions %}
+                        <a href="{{ version.get_detail_url }}" class="list-group-item list-group-item-action"><strong>{{ version.user.first_name }} {{version.user.last_name}}({{version.id}})</strong></a>
+                {% endfor %}
+
+    
+            </div>
+            {# Pagination Section #}
+        </div>
+    </div>
+{% endblock content %}

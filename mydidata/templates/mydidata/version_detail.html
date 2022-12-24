@@ -1,0 +1,42 @@
+{% extends 'mydidata/base.html' %}
+{% block page_description %}
+    <meta name="topic version content" content="{{version.topic.description}}">
+
+{% endblock page_description%}
+{% block title %}
+    {{version.topic.topic_title}}(versão: {{version.number}}) de {{version.user.first_name}} {{version.user.last_name}}
+{% endblock title%}
+
+{% block content%}
+    <div id="content-container" class="container p-none">
+        
+        <div class="row gi-body">
+            
+            <div class="col-md-9">
+                <div class="gi-header">
+                    <h3 class="ad-mh">{{version.topic.topic_title}}(versão: {{version.id}}) de {{version.user.first_name}} {{version.user.last_name}}</h3>
+                        {% if version.approved %}
+                            <span style="color: blue;">status: integrada </span>
+
+                        {%else%}
+                            <span style="color: brown;">status: aguardando avaliação </span>
+
+                        {% endif %}
+                        
+                    
+
+                </div>
+                <a href="{{ version.get_diff_url }}">Comparar Versão</a> | <a href="{{version.topic.get_absolute_url}}">VOLTAR PARA O TÓPICO</a>
+                
+                <p>{{ version.content | safe}}</p>
+
+            </div>
+        </div>
+
+    </div>
+
+    
+
+
+{% endblock content %}
+

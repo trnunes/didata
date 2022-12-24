@@ -23,6 +23,14 @@ urlpatterns = [
     url(r'^topic/(?P<discipline_uuid>[\w-]+)/$', views.topic, name='topic'),
     url(r'^topic_detail/(?P<uuid>[\w-]+)/$', views.topic_detail, name='topic_detail'),
     url(r'^topic_progress/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$', views.topic_progress, name='topic_progress'),
+
+    url(r'^version_detail/(?P<version_id>[0-9]+)/$', views.version_detail, name='version_detail'),
+    url(r'^version_compare/(?P<version_id>[0-9]+)/$', views.version_compare, name='version_compare'),
+    url(r'^version_update/(?P<version_id>[0-9]+)/$', views.version_update, name='version_update'),
+    url(r'^version_edit/(?P<version_id>[0-9]+)/$', views.version_edit, name='version_edit'),
+    url(r'^version/(?P<topic_id>[0-9]+)/$', views.version, name='version'),
+    url(r'^version_list/(?P<topic_id>[0-9]+)/$', views.version_list, name='version_list'),
+
     url(r'^discipline_detail/(?P<uuid>[\w-]+)/$', views.discipline_detail, name='discipline_detail'),
     url(r'^resource_room_topics/(?P<uuid>[\w-]+)/(?P<resource_room_only>[\w-]+)$', views.resource_room_topics, name='resource_room_topics'),    
     url(r'^topic/close/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$',views.topic_close, name='topic_close'),
@@ -32,6 +40,7 @@ urlpatterns = [
     url(r'^topic/grades/(?P<class_id>[0-9]+)/$',views.calculate_grades, name='calculate_grades'),
     url(r'^academico/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$', views.academico, name="academico"),
     url(r'^download_grades_by_topic/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$', views.download_grades_by_topic, name="download_grades_by_topic"),
+    
     
     url(r'^correct_the_whole_topic/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$', views.correct_the_whole_topic, name="correct_the_whole_topic"),
     url(r'^test_to_academico/(?P<class_id>[0-9]+)/(?P<test_uuid>[\w-]+)/$', views.test_to_academico, name="test_to_academico"),

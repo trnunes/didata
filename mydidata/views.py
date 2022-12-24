@@ -3,7 +3,7 @@ from ast import With
 
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from .models import Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline
+from .models import ContentVersion, Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline
 from django.template import loader
 from django.http import Http404
 from django.urls import reverse
@@ -14,7 +14,7 @@ from background_task.models import Task
 from django.views import View
 
 from .nlp_analyzer import score_keywords, score, assess, read_lines
-from .forms import SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm,  AnswerFormUploadOnly, get_answer_form
+from .forms import ContentVersionForm, SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm,  AnswerFormUploadOnly, get_answer_form
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -160,15 +160,67 @@ def content(request, label):
 def topic_edit(request, topic_uuid):
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     discipline = topic.discipline
-    form = TopicForm(instance=topic)
-    form.instance.discipline = discipline
+    form = ContentVersionForm(instance=topic, user=request.user)
+    
     if request.POST:
-        form = TopicForm(request.POST, instance=topic)
+        form = ContentVersionForm(request.POST, instance=topic)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse("mydidata:topic_detail", args=(topic.uuid,)))
     return render(request, 'mydidata/topic_edit.html', context={'form': form})
+
+@login_required
+def version_edit(request, version_id):
+    version = get_object_or_404(ContentVersion, pk=version_id)
     
+    if request.POST:
+        version_form = ContentVersionForm(request.POST, instance=version, user=request.user)
+        if version_form.is_valid():
+            version_form.save()
+            return HttpResponseRedirect(reverse('mydidata:version_detail', args=(version.id,)))
+    
+    version_form = ContentVersionForm(instance=version, user=request.user)
+    
+    return render(request, 'mydidata/version_edit.html', context={'form': version_form})
+
+@login_required
+def version_detail(request, version_id):
+    version = get_object_or_404(ContentVersion, pk=version_id)
+    return render(request, 'mydidata/version_detail.html', context={'version': version})
+
+
+@login_required
+def version(request, topic_id):
+    topic = get_object_or_404(Topic, pk=topic_id)
+
+    if request.POST:
+        form = ContentVersionForm(request.POST, topic=topic, user=request.user)
+        if form.is_valid():
+            saved_version = form.save()
+            return HttpResponseRedirect(reverse('mydidata:version_detail', args=(saved_version.id,)))
+    else:
+        form = ContentVersionForm(topic=topic, user=request.user)
+        filtered_versions = ContentVersion.objects.filter(topic=topic, user=request.user, approved=False)
+        if filtered_versions.exists():
+            return HttpResponseRedirect(reverse('mydidata:version_edit', args=(filtered_versions.first().id,)))
+            
+
+        
+    return render(request, "mydidata/version.html", context={'form': form})
+        
+def version_list(request, topic_id):
+    topic = get_object_or_404(Topic, pk=topic_id)
+    return render(request, 'mydidata/version_list.html', context={"topic": topic})
+
+def version_compare(request, version_id):
+    version = get_object_or_404(ContentVersion, pk=version_id)
+    return render(request, "mydidata/version_compare.html", context={"version": version})
+
+def version_update(request, version_id):
+    version = get_object_or_404(ContentVersion, pk=version_id)
+    version.replace_topic()
+    return HttpResponseRedirect(reverse("mydidata:topic_detail", args=(version.topic.uuid,)))
+
 @login_required
 def topic(request, discipline_uuid):
     discipline = get_object_or_404(Discipline, uuid=discipline_uuid)

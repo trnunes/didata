@@ -5,7 +5,7 @@ from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.utils.html import format_html
 from .models import Question, Discipline
-from .models import Choice, Topic, Test, Answer, Classroom, ResourceRoom, TestUserRelation, Deadline
+from .models import ContentVersion, Choice, Topic, Test, Answer, Classroom, ResourceRoom, TestUserRelation, Deadline
 from django.utils.safestring import mark_safe
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext_lazy as _
@@ -192,6 +192,7 @@ admin.site.register(Topic, TopicAdmin)
 admin.site.register(Test, TestAdmin)
 admin.site.register(TestUserRelation)
 admin.site.register(Deadline)
+admin.site.register(ContentVersion)
 
 
 

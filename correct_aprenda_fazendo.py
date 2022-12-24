@@ -18,11 +18,12 @@ driver.find_element("id",'id_password').send_keys(password)
 
 driver.find_element("xpath",'//input[@type="submit"]').click()
 sleep(2)
-driver.get('https://www.aprendafazendo.net/mydidata/topic_progress/70/k9dXjAc3eogKyK8btnoz73')
+driver.get('https://www.aprendafazendo.net/mydidata/topic_progress/71/Uu9CZGyMnJambPjenmanRH/')
 
 els = driver.find_elements("xpath", '//i[contains(@class, "cloud")]/..')
 els += driver.find_elements("xpath", '//i[contains(@class, "triangle")]/..')
 links = [l.get_attribute("href") for l in els]
 for l in links:
     driver.get("https://www.aprendafazendo.net/mydidata/get_corrections/" + l.split("/")[-1])
+    # import pdb;pdb.set_trace()
 
