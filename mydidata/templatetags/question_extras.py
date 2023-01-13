@@ -10,8 +10,12 @@ def get_questions(student_grades_dict, student):
 
 @register.simple_tag
 def get_answers(question, student, test=None):
-    answers = Answer.objects.filter(student=student, question=question)
-
+    
+    if question.is_team_work:
+        answers = Answer.objects.filter(team__in=student.teams.all(), question=question)
+    else:
+        answers = Answer.objects.filter(student=student, question=question)
+    
     if test:
         answers = answers.filter(test=test)
     print("ANSWERS IN EXTRAS: ", answers)

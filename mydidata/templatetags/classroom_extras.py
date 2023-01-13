@@ -8,7 +8,7 @@ def get_deadline(topic, classroom):
 
 @register.simple_tag
 def get_clasroom_list(students):
-	return set([klass for student in students for klass in student.classroom_set.all()])
+	return set([klass for student in students for klass in student.classrooms.all()])
 
 @register.simple_tag
 def get_close_url(classroom, topic):

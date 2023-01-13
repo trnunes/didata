@@ -19,15 +19,17 @@
                     <div class="col-md-9">
                         <h3 class="gi-sh">Resposta</h3>
                             
-                            {% for choice in answer.question.choice_set.all %}
-                                
-                                {%if choice == answer.choice%}
-                                    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" checked = "checked"/>
-                                {%else%}
-                                    <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}"/>
-                                {%endif%}
-
-                                <label class = "{%get_choice_label_class answer choice%}" for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br />
+                            {% for choice in answer.question.choices.all %}
+                                <div class="form-group">
+                                    {%if choice == answer.choice%}
+                                        <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.choice_text | safe }}" checked = "checked">
+                                        
+                                    {%else%}
+                                        <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+                                    {%endif%}
+                                    
+                                    <label class = "{%get_choice_label_class answer choice%}" for="choice{{ forloop.counter }}">{{ choice.choice_text | safe}}</label><br />
+                                </div>
                             {% endfor %}
 
                     </div>

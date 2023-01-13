@@ -1,10 +1,12 @@
 from venv import create
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.auth import get_user_model
-from django.test import TestCase, RequestFactory
-from mydidata.models import ContentVersion, Answer, Test, Topic, TestUserRelation, Question, Choice, Discipline
-from mydidata.forms import TopicForm, ContentVersionForm
+from django.test import TestCase, RequestFactory, Client
+from mydidata.models import Classroom, ContentVersion, Answer, Test, Topic, TestUserRelation, Question, Choice, Discipline, Team
+from mydidata.forms import TeamForm, TopicForm, ContentVersionForm, AnswerForm
 from http import HTTPStatus
+from django.core.management import call_command
+
 
 
 # class UsersManagersTests(TestCase):
@@ -41,6 +43,462 @@ from http import HTTPStatus
         # with self.assertRaises(ValueError):
             # User.objects.create_superuser(
                 # email='super@user.com', password="foo", is_superuser = False)
+class TeamTests(TestCase):
+    def test_create_team(self):
+        student1 = User.objects.create(username="std1", password="baa", first_name='Student', last_name='One')
+        student1.set_password("baa")
+        student1.save()
+        student2 = User.objects.create(username="std2", password="baa", first_name='Student', last_name='Two')
+        student2.set_password("baa")
+        student2.save()
+        student3 = User.objects.create(username="std3", password="baa", first_name='Student', last_name='Three')
+        student3.set_password("baa")
+        student3.save()
+        form_data = {
+            'name': 'Test Team',
+            'owner': student1.pk,
+            'members': [student1.pk, student2.pk, student3.pk]
+        }
+        self.client.login(username='std1', password='baa')  
+        form = TeamForm(data=form_data, user=student1)
+        self.assertTrue(form.is_valid())
+        team = form.save()
+        self.assertEqual(team.name, 'Test Team')
+        self.assertEqual(set(team.members.all()), set([student1, student2, student3]))
+
+    def test_create_team_view(self):
+        client = Client()
+        student1 = User.objects.create(username="std1", password="baa", first_name='Student', last_name='One')
+        student1.set_password("baa")
+        student1.save()
+        student2 = User.objects.create(username="std2", password="baa", first_name='Student', last_name='Two')
+        student2.set_password("baa")
+        student2.save()
+        student3 = User.objects.create(username="std3", password="baa", first_name='Student', last_name='Three')
+        student3.set_password("baa")
+        student3.save()
+        form_data = {
+            'name': 'Test Team',
+            'owner': student1.pk,
+            'members': [student1.pk, student2.pk, student3.pk]
+        }
+        client.login(username='std1', password='baa')
+        response = client.post('/mydidata/teams/create/', data=form_data)
+        print(response)
+        self.assertEqual(response.status_code, 302)  # Check that the view returns a redirect
+        self.assertEqual(Team.objects.count(), 1)  # Check that a new Team instance was created
+        team = Team.objects.first()
+        self.assertEqual(team.name, 'Test Team')
+        self.assertEqual(set(team.members.all()), set([student1, student2, student3]))
+
+    def test_edit_team_view(self):
+        client = Client()
+        student1 = User.objects.create(username="std1", password="baa", first_name='Student', last_name='One')
+        student1.set_password("baa")
+        student1.save()
+        student2 = User.objects.create(username="std2", password="baa", first_name='Student', last_name='Two')
+        student2.set_password("baa")
+        student2.save()
+        student3 = User.objects.create(username="std3", password="baa", first_name='Student', last_name='Three')
+        student3.set_password("baa")
+        student3.save()
+
+        team = Team.objects.create(name="test team", owner=student1)
+        team.members.set([student1, student2])
+        form_data = {
+            'name': 'Test Team Edited',
+            'owner': student1.pk,
+            'members': [student1.pk, student2.pk, student3.pk]
+        }
+        client.login(username='std1', password='baa')
+        response = client.post('/mydidata/teams/edit/%d/'%team.id, data=form_data)
+        print(response)
+        self.assertEqual(response.status_code, 302)  # Check that the view returns a redirect
+        self.assertEqual(Team.objects.count(), 1)  # Check that a new Team instance was created
+        team = Team.objects.first()
+        self.assertEqual(team.name, 'Test Team Edited') 
+        self.assertEqual(set(team.members.all()), set([student1, student2, student3]))
+    
+    def test_teams_list(self):
+        client = Client()
+        student1 = User.objects.create(username="std1", password="baa", first_name='Student1', last_name='One')
+        student1.set_password("baa")
+        student1.save()
+        student2 = User.objects.create(username="std2", password="baa", first_name='Student2', last_name='Two')
+        student2.set_password("baa")
+        student2.save()
+        student3 = User.objects.create(username="std3", password="baa", first_name='Student3', last_name='Three')
+        student3.set_password("baa")
+        student3.save()
+        student4 = User.objects.create(username="std4", password="baa", first_name='Student4', last_name='Three')
+        student4.set_password("baa")
+        student4.save()
+        
+        team = Team.objects.create(name="test team", owner=student1)
+        team.members.set([student1, student2])
+        
+        team.save()
+
+        team = Team.objects.create(name="test team 2", owner=student2)
+        team.members.set([student3, student4])
+        team.save()
+        
+        team = Team.objects.create(name="test team 3", owner=student2)
+        team.members.set([student3, student4])
+        team.save()
+
+        client.login(username='std1', password='baa')
+
+        response = client.get('/mydidata/teams/list/')
+        self.assertContains(response, "test team")
+        self.assertNotContains(response, "test team 2")
+        self.assertNotContains(response, "test team 3")
+
+    def test_teams_list_superuser(self):
+        client = Client()
+        student1 = User.objects.create_superuser(email="user@super.com", username="std1", password="baa", first_name='Student1', last_name='One')
+        student1.set_password("baa")
+        student1.save()
+        student2 = User.objects.create(username="std2", password="baa", first_name='Student2', last_name='Two')
+        student2.set_password("baa")
+        student2.save()
+        student3 = User.objects.create(username="std3", password="baa", first_name='Student3', last_name='Three')
+        student3.set_password("baa")
+        student3.save()
+        student4 = User.objects.create(username="std4", password="baa", first_name='Student4', last_name='Three')
+        student4.set_password("baa")
+        student4.save()
+        
+        team = Team.objects.create(name="test team", owner=student1)
+        team.members.set([student1, student2])
+        
+        team.save()
+
+        team = Team.objects.create(name="test team 2", owner=student2)
+        team.members.set([student3, student4])
+        team.save()
+        
+        team = Team.objects.create(name="test team 3", owner=student2)
+        team.members.set([student3, student4])
+        team.save()
+
+        client.login(username='std1', password='baa')
+
+        response = client.get('/mydidata/teams/list/')
+        self.assertContains(response, "test team")
+        self.assertContains(response, "test team 2")
+        self.assertContains(response, "test team 3")
+
+class AnswerTests(TestCase):
+
+    def setUp(self):
+        call_command('collectstatic', verbosity=0, interactive=False)
+    
+    def test_answer_form_discursive(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        created_test.save()
+
+        answerForm = AnswerForm(data={"answer_text": "resposta da questão 1"}, question=q1, user=user, test=created_test)
+        self.assertTrue(answerForm.is_valid())
+        answerForm.save()
+
+        answerInDB = Answer.objects.filter(student=user,question=q1,test=created_test).first()
+
+        self.assertEqual("resposta da questão 1", answerInDB.answer_text)
+        self.assertEqual(answerInDB.student, user)
+        self.assertEqual(answerInDB.question, q1)
+        self.assertEqual(answerInDB.test, created_test)
+    
+        
+    def test_answer_form_save_twice(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        answerForm = AnswerForm(data={"answer_text": "resposta da questão 1"}, question=q1, user=user, test=created_test)
+        
+        self.assertTrue(answerForm.is_valid())
+        answerForm.save()
+        answersInDB = Answer.objects.filter(student=user,question=q1,test=created_test)
+        self.assertEqual(1, len(answersInDB))
+        
+        answerForm = AnswerForm(data={"answer_text": "resposta da questão 1"}, question=q1, user=user, test=created_test)
+        self.assertTrue(answerForm.is_valid())
+        answerForm.save()
+        answersInDB = Answer.objects.filter(student=user,question=q1,test=created_test)
+        self.assertEqual(1, len(answersInDB))
+    
+    def test_answer_form_multiplechoice(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        c1 = q1.choices.create(choice_text = "choice 1")
+        c2 = q1.choices.create(choice_text = "choice 2")
+        c3 = q1.choices.create(choice_text = "choice 3")
+        c4 = q1.choices.create(choice_text = "choice 4")
+        created_test.save()
+
+        answerForm = AnswerForm(data={"answer_text": "resposta da questão 1", "choice": c1.id}, question=q1, user=user, test=created_test)
+        self.assertTrue(answerForm.is_valid())
+        answerForm.save()
+
+        answerInDB = Answer.objects.filter(student=user,question=q1,test=created_test).first()
+        self.assertEqual(answerInDB.choice, c1)
+        self.assertEqual(answerInDB.student, user)
+        self.assertEqual(answerInDB.question, q1)
+        self.assertEqual(answerInDB.test, created_test)
+
+    def test_answer_form(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        q1 = Question.objects.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        answerForm = AnswerForm(data={"answer_text": "resposta da questão 1"}, question=q1, user=user)
+        self.assertTrue(answerForm.is_valid())
+        saved_answer = answerForm.save()
+        
+        answerInDB = Answer.objects.get(student=user,question=q1)
+        self.assertEqual(saved_answer, answerInDB)
+
+    def test_answer_form_save_twice(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        q1 = Question.objects.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        answerForm = AnswerForm(data={"answer_text": "resposta da questão 1"}, question=q1, user=user)
+        self.assertTrue(answerForm.is_valid())
+        answerForm.save()
+        answerInDB = Answer.objects.filter(student=user,question=q1)
+        self.assertEqual(1, len(answerInDB))
+        
+        answerForm = AnswerForm(data={"answer_text": "resposta da questão 1"}, question=q1, user=user)
+        self.assertTrue(answerForm.is_valid())
+        answerForm.save()
+        answerInDB = Answer.objects.filter(student=user,question=q1)
+        self.assertEqual(1, len(answerInDB))
+    
+    def test_discursive_question_view(self):
+        client = Client()
+        user = User.objects.create_superuser(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+
+        response = client.login(username='baa', password="foo")
+        
+        
+        response = client.get("/mydidata/discursive_question/"+ topic.uuid + "/")
+        print(response)
+        self.assertEqual(200, response.status_code)
+
+    def test_discursive_question_view_post(self):
+        client = Client()
+        user = User.objects.create_superuser(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+
+        response = client.login(username='baa', password="foo")
+
+        data = {
+            'question_text': 'What is the meaning of life?',
+            'difficulty_level': 1,
+            'question_type': 2,
+            'weight': 1,
+            'ref_keywords': 'meaning of life',
+            'punish_copies': True,
+        }
+
+        # send the POST request to the view and store the response
+        response = client.post("/mydidata/discursive_question/"+ topic.uuid + "/", data=data)
+
+        print(response)
+
+        questions = Question.objects.filter(question_text='What is the meaning of life?')
+        saved_question = questions.first()
+        self.assertEqual(questions.count(), 1)
+        self.assertEqual(1, saved_question.difficulty_level)
+        self.assertEqual(2, saved_question.question_type)
+        self.assertEqual('meaning of life', saved_question.ref_keywords)
+        self.assertTrue(saved_question.punish_copies)
+        self.assertEqual(302, response.status_code)
+
+    def test_discursive_question_view_post_required_data(self):
+        client = Client()
+        user = User.objects.create_superuser(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+
+        response = client.login(username='baa', password="foo")
+
+        data = {
+            'question_text': '',
+            'difficulty_level': 1,
+            'question_type': 2,
+            'weight': 1,
+            'ref_keywords': 'meaning of life',
+            'punish_copies': True,
+            'invalid_field': "invalid data"
+        }
+
+        # send the POST request to the view and store the response
+        response = client.post("/mydidata/discursive_question/"+ topic.uuid + "/", data=data)
+
+        print(response)
+        print(response.content)
+        self.assertEqual(200, response.status_code)
+        questions = Question.objects.all()
+        self.assertEqual(questions.count(), 0)
+
+        self.assertContains(response, "Este campo é obrigatório.")
+
+
+class AnswerIntegrationTests(TestCase):
+    
+    def test_send_answer_for_team_questions_without_team(self):
+        user1 = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+        
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        
+        q1 = Question.objects.create(question_text= "question 1", difficulty_level = 1, question_type=3, is_team_work = True)
+        q1.topic = topic
+        q1.save()
+        
+        self.client.login(username="baa", password="foo")
+        data = {"answer_text": "resposta da questão 1"}
+        response = self.client.post('/mydidata/discursive_answer/%s/'%(q1.uuid,), data=data)
+        answers = Answer.objects.all()
+        
+        self.assertEqual(answers.count(), 0)
+        msg = """Você também pode pedir para participar de alguma equipe dos seus colegas ;-)"""
+        self.assertContains(response, msg )
+    
+    def test_send_answer_for_team_question(self):
+        user1 = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+
+        user2 = User.objects.create_user(email='normal2@user.com', username='baa2', password='foo')
+        user2.set_password("foo")
+        user2.save()
+        
+        team1 = Team.objects.create(name="Winners", owner=user1)
+        team1.members.add(user1)
+        team1.members.add(user2)
+        team1.save()
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+
+        q1 = Question.objects.create(question_text= "question 1", difficulty_level = 1, question_type=3, is_team_work = True)
+        q1.topic = topic
+        q1.save()
+
+        self.client.login(username="baa", password="foo")
+        data = {"answer_text": "resposta da questão 1", "team": team1.id}
+        response = self.client.post('/mydidata/discursive_answer/%s/'%(q1.uuid,), data=data)
+        answers = Answer.objects.all()
+
+        self.assertEqual(answers.count(), 1)
+        self.assertEqual(list(team1.answers.all()), list(answers))
+        self.assertEqual(302, response.status_code )
+
+    def test_send_answer_for_team_question_twice(self):
+        user1 = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+
+        user2 = User.objects.create_user(email='normal2@user.com', username='baa2', password='foo')
+        user2.set_password("foo")
+        user2.save()
+        
+        team1 = Team.objects.create(name="Winners", owner=user1)
+        team1.members.add(user1)
+        team1.members.add(user2)
+        team1.save()
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+
+        q1 = Question.objects.create(question_text= "question 1", difficulty_level = 1, question_type=3, is_team_work = True)
+        q1.topic = topic
+        q1.save()
+
+        self.client.login(username="baa", password="foo")
+        data = {"answer_text": "resposta da questão 1", "team": team1.id}
+        response = self.client.post('/mydidata/discursive_answer/%s/'%(q1.uuid,), data=data)
+        response = self.client.post('/mydidata/discursive_answer/%s/'%(q1.uuid,), data=data)
+        answers = Answer.objects.all()
+
+        self.assertEqual(answers.count(), 1)
+        self.assertEqual(list(team1.answers.all()), list(answers))
+        self.assertEqual(302, response.status_code )
+
+
+
+
+
+
+class TestUserRelationTests(TestCase):
+    
+    def test_generate_question_index(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        created_test.questions.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        created_test.questions.create(question_text= "question 1", uuid="3", difficulty_level = 1, question_type=3)
+        created_test.questions.create(question_text= "question 2", uuid="4", difficulty_level = 1, question_type=3)
+        created_test.save()
+        
+        tu = TestUserRelation.objects.create(student=user, test=created_test)
+        first_list_index = tu.index_list_as_array()
+        
+        self.assertEqual(4, len(first_list_index))
+
+        second_list_index = tu.generate_question_index()
+        
+        self.assertFalse(first_list_index == second_list_index)
+        tu.save()
+    
+    def test_current_questions(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        q2 = created_test.questions.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        q3 = created_test.questions.create(question_text= "question 3", uuid="3", difficulty_level = 1, question_type=3)
+        q4 = created_test.questions.create(question_text= "question 4", uuid="4", difficulty_level = 1, question_type=3)
+        created_test.save()
+        
+        tu = TestUserRelation.objects.create(student=user, test=created_test)
+        tu.index_list = "[3,2,1,4]"
+        self.assertListEqual(tu.current_questions(), [q3,q2,q1,q4])
+        self.assertListEqual(tu.current_questions(), [q3,q2,q1,q4])
+        self.assertListEqual(tu.current_questions(), [q3,q2,q1,q4])
+        tu.save()
+    
+    def test_next_answer_question(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        q2 = created_test.questions.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        q3 = created_test.questions.create(question_text= "question 3", uuid="3", difficulty_level = 1, question_type=3)
+        q4 = created_test.questions.create(question_text= "question 4", uuid="4", difficulty_level = 1, question_type=3)
+        created_test.save()
+        
+
+        tu = TestUserRelation.objects.create(student=user, test=created_test)
+        tu.index_list = "[3,2,1,4]"
+        tu.save()
+
+        
+        self.assertEqual(q2, tu.get_next_question(q3))
+        
+        self.assertEqual(q1, tu.get_next_question(q2))
+        
+        self.assertEqual(q4, tu.get_next_question(q1))
+        
+        self.assertIsNone(tu.get_next_question(q4))
+        
+
+
 
 class TestsManagementTests(TestCase):
     def test_get_or_create_test_user_relation(self):
@@ -117,8 +575,9 @@ class TestsManagementTests(TestCase):
         
         answers = Answer.objects.filter(student=user, question__id__in=[question_1.id, question_2.id], test=created_test)
         self.assertAlmostEquals(list(answers), [answer1, answer2])
-        
-        self.assertEqual(created_test.next_try(user), 2)
+        created_test.next_try(user)
+        tu = TestUserRelation.objects.get(student=user, test=created_test)
+        self.assertEqual(tu.tries, 2)
         answers = Answer.objects.filter(student=user, question__id__in=[question_1.id, question_2.id], test=created_test)        
         self.assertFalse(answers)
 
@@ -137,8 +596,10 @@ class TestsManagementTests(TestCase):
         tu = TestUserRelation.objects.create(student=user, test=created_test)
         tu.index_list = "[0,1]"
         tu.save()
+        created_test.next_try(user)
 
-        self.assertEqual(created_test.next_try(user), 2)
+        tu = TestUserRelation.objects.get(student=user, test=created_test)
+        self.assertEqual(tu.tries, 2)
         with self.assertRaises(Exception):
                created_test.next_try(user)
     
@@ -162,6 +623,59 @@ class TestsManagementTests(TestCase):
         topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
         created_test = Test.objects.create(title="My Test", topic=topic)
         self.assertFalse(created_test.is_closed_for(user))
+
+
+class TestIntegrationTests(TestCase):
+    def test_start_test(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        user.set_password("foo")
+        user.save()
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        question_1 = Question.objects.create(question_text= "question 1", uuid="2", difficulty_level = 1, question_type=3)
+        question_2 = Question.objects.create(question_text= "question 2", uuid="1", difficulty_level = 1, question_type=3)
+        question_1.tests.add(created_test)
+        question_2.tests.add(created_test)
+        self.client.login(username='baa', password='foo')
+        response = self.client.get('/mydidata/start_test/%s/'%created_test.uuid)
+        self.assertEqual(302, response.status_code)
+        self.assertEqual(TestUserRelation.objects.count(), 1)
+    
+    def test_send_response_twice_error(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        user.set_password("foo")
+        user.save()
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        question_1 = Question.objects.create(question_text= "question 1", difficulty_level = 1, question_type=3)
+        question_2 = Question.objects.create(question_text= "question 2", difficulty_level = 1, question_type=3)
+        question_1.tests.add(created_test)
+        question_2.tests.add(created_test)
+        self.client.login(username='baa', password='foo')
+
+        data = {"answer_text": "resposta da questão 1"}
+        response = self.client.post('/mydidata/test_answer/%s/%s/'%(question_1.uuid, created_test.id,), data=data)
+
+        self.assertEqual(302, response.status_code)
+        self.assertEqual(Answer.objects.filter(question=question_1, student=user).count(), 1)
+        answer = Answer.objects.filter(question=question_1, student=user).first()
+        self.assertEqual(answer.answer_text, "resposta da questão 1")
+        
+        data = {"answer_text": "resposta da questão 1 editada"}
+        response = self.client.post('/mydidata/test_answer/%s/%s/'%(question_1.uuid, created_test.id,), data=data)
+        
+        answer = Answer.objects.filter(question=question_1, student=user).first()
+        self.assertEqual(answer.answer_text, "resposta da questão 1")
+
+        self.assertContains(response, "Siga para a próxima questão.")
+
+
+
+        
+    
+
+
+
 
 class QuestionTests(TestCase):
     def test_question_is_discursive(self):
@@ -194,12 +708,25 @@ class TopicTest(TestCase):
 
         saved_version = ContentVersion.objects.get(pk=second_version.id)
         self.assertEqual(second_version, saved_version)
+    
+    def test_is_closed_for_student(self):
+        owner = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        student = User.objects.create_user(email='student@user.com', username='std', password='foo')
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(student)
+        topic = Topic.objects.create(topic_title="Test Topic", topic_content = "hello world", order=1, owner = owner)
+        self.assertFalse(topic.is_closed_for(student))
+        classroom.closed_topics.add(topic)
+        self.assertTrue(topic.is_closed_for(student))
+
+        
+
 
 class TopicIntegration(TestCase):
 
     def test_new_version_creation(self):
         user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
-        form = TopicForm(data={"topic_content": 'hello world', "topic_title": 'test topic', "order": 1, "owner":user.pk,})
+        form = TopicForm(data={"topic_content": 'hello world', "topic_title": 'test topic', "order": 1, "owner":user.pk,}, owner=user)
         if not form.is_valid():
             print("form errors", form.errors)
 
@@ -226,7 +753,7 @@ class ContentVersionTest(TestCase):
         topic = Topic.objects.create(topic_title="Test Topic", topic_content = "hello world", order=1, owner = user)
         first_version = ContentVersion.objects.create(topic=topic, user=user, content="hello world")
         
-        form = ContentVersionForm(instance=first_version, user=user, data={'content': "first edition"})
+        form = ContentVersionForm(instance=first_version, user =user, data={'content': "first edition"})
         
         self.assertTrue(form.is_valid())
         
@@ -235,12 +762,9 @@ class ContentVersionTest(TestCase):
         saved_topic = Topic.objects.get(pk=topic.id)
         self.assertEqual("hello world", saved_topic.topic_content)
     
-        approved_version = saved_topic.versions.filter(approved=True).first()
-        self.assertEqual(approved_version, saved_topic.get_latest_approved_version())
-        self.assertEqual("hello world", approved_version.content)
+        approved_version = ContentVersion.objects.filter(topic=saved_topic).first()
+        self.assertEqual("first edition", approved_version.content)
     
-        new_version = saved_topic.versions.filter(approved=False).first()
-        self.assertEqual("first edition", new_version.content)
     
     def test_diff(self):
         topic_text = """
@@ -413,7 +937,6 @@ class ContentVersionTest(TestCase):
         version = ContentVersion.objects.create(topic=topic, content=version_text, user=user)
 
 
-        print("DIFF", version.diff())
         
 
 

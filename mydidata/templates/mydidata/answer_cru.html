@@ -10,7 +10,7 @@
 			</ul>
   
 		</div>    
-
+		
     	{% if form.errors %}
 		    {% for field in form %}
 		        {% for error in field.errors %}
@@ -25,7 +25,7 @@
 		        </div>
 		    {% endfor %}
 		{% endif %}
-		
+		<a href="{{question.get_update_url}}">Editar Questão</a>
         
 		{% with answer=form.instance%}
 		<h2 class="ad-mh">Resposta de: {{answer.student.first_name}}&nbsp;{{answer.student.last_name}}</h2>

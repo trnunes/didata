@@ -14,6 +14,8 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 from django.contrib.sitemaps.views import sitemap
 from .sitemap import MySiteSitemap
 from mydidata.views import AdsView
+from django import views as django_views
+
 
 # Examples:
 # url(r'^$', 'gettingstarted.views.home', name='home'),
@@ -35,4 +37,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^ckeditor/', include('ckeditor_uploader.urls')),
     url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    url(r'^jsi18n/$', django_views.i18n.JavaScriptCatalog.as_view(), name='jsi18n'),
+
 ]

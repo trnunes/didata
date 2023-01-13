@@ -1,0 +1,119 @@
+<html>
+    <head>
+        <title>
+            Marque a Imagem para Corrigir o Texto
+        </title>
+
+        <style>
+            #canvas {
+                border: 1px solid black;
+            }
+        </style>
+
+
+    </head>
+
+    <body>
+        
+        <canvas id="canvas" width="1200" height="1900"></canvas>
+        <br/>
+        <button id="markButton"> Marcar </button>
+        <input type="color" name="" id="markColor">
+        <input type="range" name="" min="1" max="20" value="1" id="markSize">
+
+
+        <script>
+            var canvas = document.getElementById('canvas');
+            canvas.width = 0.8 * window.innerWidth;
+            canvas.height = 0.8* window.innerHeight;
+            var context = canvas.getContext('2d');
+
+            var image = new Image();
+            image.src="/home/thiago/assinatura.jpg";
+            image.onload = function() {
+                context.drawImage(image, 0, 0, canvas.width, canvas.height)
+            };
+
+            document.getElementById('markButton').addEventListener('click',
+
+                function(){
+                    var color = document.getElementById("markColor").value;
+                    var size = document.getElementById("markSize").value;
+                    context.strokeStyle = color;
+                    context.lineWidth = size;
+                    context.beginPath();
+                    canvas.addEventListener('mousedown', onMouseDown);
+                    
+            });
+
+            function onMouseDown(event){
+                var x = event.offsetX;
+                var y = event.offsetY;
+                context.strokeStyle = document.getElementById("markColor").value;
+                context.rectStart = {x: x, y: y, color: context.strokeColor};
+
+                canvas.addEventListener('mousemove', onMouseMove);
+                canvas.addEventListener('mouseup', onMouseUp);
+            }
+
+            function onMouseMove(event){
+                var x = event.offsetX;
+                var y = event.offsetY;
+                
+                
+
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+                var width = x - context.rectStart.x;
+                var height = y - context.rectStart.y;
+
+               
+                context.strokeRect(context.rectStart.x, context.rectStart.y, width, height);
+            }
+
+            function onMouseUp(event) {
+                var x = event.offsetX;
+                var y = event.offsetY;
+
+                canvas.removeEventListener('mousemove', onMouseMove);
+                canvas.removeEventListener('mouseup', onMouseUp);
+                context.rectangles = context.rectangles || [];
+                context.rectangles.push({
+                    x: context.rectStart.x,
+                    y: context.rectStart.y,
+                    width: x - context.rectStart.x,
+                    height: y - context.rectStart.y,
+                    color: document.getElementById("markColor").value
+
+                });
+
+                redraw();
+                
+            }
+
+            function redraw(){
+                context.clearRect(0,0,canvas.width, canvas.height);
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                
+                context.lineWidth = 1;
+
+                context.rectangles.forEach(function(rect){
+                    console.log(rect.color);
+                    context.strokeStyle = rect.color;
+                    context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+                })
+
+
+            }
+
+
+
+
+        </script>
+    </body>
+    
+    
+    
+
+</html>

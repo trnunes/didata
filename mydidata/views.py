@@ -3,7 +3,7 @@ from ast import With
 
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from .models import ContentVersion, Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline
+from .models import ContentVersion, Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline, Team
 from django.template import loader
 from django.http import Http404
 from django.urls import reverse
@@ -14,7 +14,7 @@ from background_task.models import Task
 from django.views import View
 
 from .nlp_analyzer import score_keywords, score, assess, read_lines
-from .forms import ContentVersionForm, SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, QuestionForm,  AnswerFormUploadOnly, get_answer_form
+from .forms import ContentVersionForm, SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, MultipleChoiceQuestionForm, DiscursiveQuestionForm, AnswerFormUploadOnly, AnswerForm, MultipleChoiceQuestionFormSet, ChoiceFormSet, CProgrammingQuestionForm, TeamForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -35,6 +35,11 @@ from django.http import JsonResponse
 import subprocess
 import os
 from django.views.decorators.csrf import csrf_exempt
+
+def superuser_required(view_func):
+    decorated_view_func = user_passes_test(lambda u: u.is_superuser, login_url='/mydidata/login/')(view_func)
+    return decorated_view_func
+
 
 class HomePage(TemplateView):
     """
@@ -226,7 +231,7 @@ def topic(request, discipline_uuid):
     discipline = get_object_or_404(Discipline, uuid=discipline_uuid)
     print("post", request.POST)
     if request.POST:
-        form = TopicForm(request.POST)
+        form = TopicForm(request.POST, owner=request.user)
         
         if form.is_valid():
 
@@ -239,7 +244,7 @@ def topic(request, discipline_uuid):
             print("Errors", form.errors)
         
     else:
-        form = TopicForm()
+        form = TopicForm(owner=request.user)
     return render(request, "mydidata/topic.html", context={"form": form})
 
     
@@ -420,7 +425,7 @@ def topic_assess(request, topic_uuid, class_id):
 
 def test_close(request, uuid, class_id):
     klass = get_object_or_404(Classroom, pk=class_id)
-    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    topic = get_object_or_404(Topic, uuid=uuid)
     klass.closed_topics.add(topic)
     klass.save()
 
@@ -428,11 +433,18 @@ def test_close(request, uuid, class_id):
 
 def test_open(request, uuid, class_id):
     klass = get_object_or_404(Classroom, pk=class_id)
-    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    topic = get_object_or_404(Topic, uuid=uuid)
     klass.closed_topics.remove(topic)
     klass.save()
 
     return redirect('mydidata:class_progress', class_id=class_id, )
+
+def close_test_for_student(request, test_id, student_id):
+    test = get_object_or_404(Test, pk=test_id)
+    student = get_object_or_404(User, pk=student_id)
+    tuserrelation = TestUserRelation.objects.filter(test=test,user=student).first()
+    tuserrelation.close()
+    return redirect('mydidata:student_progress', test_id=test_id, student_id=student_id )
 
 def test_assess(request, uuid, class_id):
     classroom = get_object_or_404(Classroom, pk=class_id)
@@ -581,25 +593,63 @@ def test_to_academico(request, class_id, test_uuid):
 def test_answer(request, question_uuid, test_id):
     question = get_object_or_404(Question, uuid=question_uuid)
     test = get_object_or_404(Test, pk=test_id)
+    tuserrelation = test.get_or_create_test_user_relation(request.user)
     
     if request.POST:
-        answer = Answer.find(student=request.user, question=question, test_id=test_id)
-        if test.is_closed_for(request.user):
+        form = AnswerForm(request.POST, request.FILES, question=question, test=test, user=request.user)
+        
+        answer = Answer.objects.filter(student=request.user, question=question).first()
+        if answer:
+            context={
+                "error_msg": """
+                    Você deve finalizar essa tentativa antes de enviar uma nova resposta. 
+                    Siga para a próxima questão.
+                """,
+                "next_link": tuserrelation.get_next_answer_url(question),
+                "form": form
+            }
+            if not context['next_link']:
+
+                context['next_link'] = reverse('mydidata:student_progress', args=(test.id,request.user.id,))
+            return render(request, 'mydidata/answer_error.html', context)
+
+
+
+        if tuserrelation.is_closed:
             return HttpResponseRedirect(reverse('mydidata:test_detail', args=(test.uuid,)))
+        
+        
+        if form.is_valid():
+            form.save()
+
+            if tuserrelation.get_next_answer_url(question):
+                print("NEXT URL: ", tuserrelation.get_next_question(question))
+
+                return HttpResponseRedirect(tuserrelation.get_next_answer_url(question))
+            print("NEXT URL: ", reverse('mydidata:test_detail', args=(test.uuid,)))
+
+            return redirect('mydidata:student_progress', student_id=request.user.id, test_id=test.id)
             
             #redirect to_test detail
-    
+    else:
+        form = AnswerForm(question=question, test=test, user=request.user)
+        context = {
+            "question": question,
+            "test": test,
+            "form": form
+        }
+
+        return render(request, "mydidata/answer_cru.html", context)
     
     return HttpResponseRedirect(reverse('mydidata:test_detail', args=(test.uuid,)))
         
 
 
-
 @login_required
-def answer(request, question_uuid, test_id=None):
+def answer(request, question_uuid):
 
     question = get_object_or_404(Question, uuid=question_uuid)
-
+    
     if request.user.is_authenticated:
         classrooms = Classroom.objects.filter(students__id = request.user.id)
         for klass in classrooms:
@@ -607,40 +657,17 @@ def answer(request, question_uuid, test_id=None):
             if question.topic in closed_topics:
                 return redirect(question.topic.get_absolute_url())
 
-    if request.POST:        
+    if request.POST:
         if not request.user.is_authenticated:
             return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
                 #TODO insert test logic here
-        answer = Answer.find(student=request.user, question=question, test_id=test_id)
         
         form = get_answer_form(request.POST, request.FILES, instance=answer, question=question)
         
         answer = form.instance
-        answer.question = question
-        answer.student = request.user
         answer.status = Answer.SENT
         
-        if test_id:
-            test = get_object_or_404(Test, pk=test_id)
-            tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
-            if tuserrelation.is_closed:
-                context = {
-                    'question': question,            
-                    'form': form,
-                    'error_message': "Esta avaliação esta finalizada. Já não é possível enviar respostas."
-                }
-                return render(request, 'mydidata/answer_cru.html', context)
-
-
-            answer.test = test
-            redirect_url = question.get_next_answer_url(request.user, test)
-            if not redirect_url:
-                klass = Classroom.objects.filter(students__id = request.user.id).first()
-                tuserrelation.is_closed = True
-                tuserrelation.save()
-                redirect_url = reverse('mydidata:test_progress', args=(test.uuid, klass.id,))
-        else:
-            redirect_url = question.topic.get_absolute_url()
+        redirect_url = question.topic.get_absolute_url()
         
         if request.FILES.get('assignment_file', False):
             file_name = request.FILES['assignment_file'].name
@@ -666,7 +693,7 @@ def answer(request, question_uuid, test_id=None):
 
 
     if request.user.is_authenticated:
-        answer = Answer.find(student=request.user, question=question, test_id=test_id)
+        answer = Answer.find(student=request.user, question=question, test=test)
         form = get_answer_form(instance=answer, question=question, user=request.user)
 
     context = {
@@ -680,12 +707,22 @@ def answer(request, question_uuid, test_id=None):
 def discursive_answer_detail(request, answer_id):
     answer = Answer.objects.get(pk=answer_id)
 
-    return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, "form": SuperuserAnswerFormSimplified(instance=answer)})
+    topic_questions = answer.question.topic.get_ordered_questions()
+    answers_by_question = {}
+    
+    answers_by_question.update([(q, None) for q in topic_questions])
+
+    answers = Answer.objects.filter(question__id__in=[q.id for q in topic_questions], student=request.user)
+    [answers_by_question.__setitem__(a.question, a) for a in answers]
+
+    return render(request, 'mydidata/discursive_answer_detail.html', {'answers_by_question': answers_by_question, 'answer': answer, "form": SuperuserAnswerFormSimplified(instance=answer)})
 
 @login_required()
 def multiple_choice_answer_detail(request, answer_id):
     answer = Answer.objects.get(pk=answer_id)
     return render(request, 'mydidata/multiple_choice_answer_detail.html', {'answer':answer,})
+
+
 
 @login_required()
 def feedback(request, answer_id):
@@ -728,203 +765,76 @@ def feedback(request, answer_id):
     return render(request, 'mydidata/answer_cru.html', context)
 
 @login_required()
-def multiple_choice_answer(request, question_uuid, test_id = None):
+def multiple_choice_answer(request, question_uuid):
     #TODO remove duplicated code with #discursive_answer
     question = get_object_or_404(Question, uuid=question_uuid)
-    test = None
-    if test_id:    
-        test = get_object_or_404(Test, pk=test_id)
-        answer = question.answer_set.filter(student=request.user, test=test_id).first()
-    else:
-        answer = question.answer_set.filter(student=request.user).first()
-
-    if not answer:
-        answer = Answer(student = request.user, question=question)
-        if test:
-            answer.test = test
-    else:
-        answer = answer.multiplechoiceanswer
 
     if request.POST:
-        
-        if test:
-            classroom = Classroom.objects.filter(students__id=request.user.id).first()
-            tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
-            closed_for_student = (tuserrelation and tuserrelation.is_closed)
-            if test in classroom.closed_tests.all() or closed_for_student:
-                context = {
-                    'question': question,
-                    'answer': answer,
-                    'test': test,
-                    'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
-                }
-                return render(request, 'mydidata/answer_cru.html', context)
-
-        try:
-            selected_choice = question.choice_set.get(pk=request.POST['choice'])
-            answer.choice = selected_choice
+        form = AnswerForm(request.POST, request.FILES, question=question, user=request.user)
+        if form.is_valid():
+            answer = form.save()
             answer.status = Answer.SENT
-        except (KeyError, Choice.DoesNotExist):
-            context = {
-                'test': test,
-                'question': question,
-                'error_message': "You didn't select a choice.",
-            }
-            return render(request, 'mydidata/answer_cru.html', context)
-        else:
             answer.save()
-            if request.session.get('teams', False):
-                if request.session['teams'].get(str(request.user.id), False):
-
-                    for member_id in request.session['teams'][str(request.user.id)]:
-                        member = User.objects.get(pk=member_id)
-                        member_answer = question.answer_set.filter(student=member).first()
-                        
-                        if not member_answer:
-                            member_answer = Answer()
-                        else:
-                            member_answer = member_answer.multiplechoiceanswer
-                            
-                        if test:
-                            member_answer.test = test
-
-                        member_answer.student = member
-                        member_answer.question = question
-                        
-                        member_answer.choice = answer.choice
-
-                        member_answer.save()
-                        question.save()
-                        member_answer = question.answer_set.filter(student=member).first()
-
-            if test:
-                redirect_url = question.get_next_answer_url(request.user, test)
-                if not redirect_url:
-                    tuserrelation.is_closed = True
-                    tuserrelation.save()
-                    redirect_url = reverse('mydidata:test_progress', args=(test.uuid,))
-            else:
-                redirect_url = reverse('mydidata:topic_detail', args=(question.topic.uuid,))
-
-            return HttpResponseRedirect(redirect_url)
-    else:
-        context = {
-            'question': question,
-            'answer': answer,
-        }
-        if test: context['test']=test
-        return render(request, 'mydidata/answer_cru.html', context)
-
-
-def discursive_answer(request, question_uuid, test_id = None):
-    return answer(request, question_uuid, test_id)
-    question = get_object_or_404(Question, uuid=question_uuid)
-    test = None
-    answer = None
-    if test_id: test = get_object_or_404(Test, pk=test_id)
-    if not request.user.is_authenticated:
-        if request.POST:
-            return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+            return redirect(answer.get_detail_url())
         else:
             context = {
                 'question': question,
-                'test': test,
-                'error_message': 'Você precisa fazer o login para responder!'
+                'form': form
             }
+            return render(request, "mydidata/answer_cru.html", context)
+            
 
-        return render(request, 'mydidata/answer_cru.html', context)
+    else:
+        form = AnswerForm(question=question, user=request.user)
+        context = {
+            "form": form,
+            "question": question
+        }
+        return render(request, "mydidata/answer_cru.html", context)
+        
+
+
+@login_required()
+def discursive_answer(request, question_uuid):
+    question = get_object_or_404(Question, uuid=question_uuid)
+    topic = question.topic
+    user = request.user
     
-    if test_id:        
-        answer = question.answer_set.filter(student=request.user, test=test_id).first()
-    else:
-        answer = question.answer_set.filter(student=request.user).first()
-   
-    if not answer:
-        answer = Answer(student = request.user, question=question)        
-        if test:
-            answer.test = test
-    else:
-        answer.status = Answer.SENT
+    if topic.is_closed_for(user):
+        return redirect(topic.get_absolute_url())
+    
+    
     
     if request.POST:
-        if not request.user.is_authenticated: return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-
-        if test:
-            classroom = Classroom.objects.filter(students__id=request.user.id).first()
-            tuserrelation = TestUserRelation.objects.filter(test=test,student=request.user).first()
-            closed_for_student = (tuserrelation and tuserrelation.is_closed)
-            if test in classroom.closed_tests.all() or closed_for_student:
-                context = {
-                    'question': question,
-                    'test': test,
-                    'error_message': 'Não é possível cadastrar questões para avaliações fechadas!'
-                }
-                return render(request, 'mydidata/answer_cru.html', context)
-
+        form = AnswerForm(request.POST, request.FILES, question=question, user=user)
         
-        if request.FILES.get('assignment_file', False):
-            file_name = request.FILES['assignment_file'].name
-            request.FILES['assignment_file'].name = answer.get_answer_file_id() + "." +  file_name.split(".")[-1]
-        
-        answer_form = AnswerForm(request.POST, request.FILES, instance=answer)
-        if answer_form.is_valid():
+        if form.is_valid():
+            answer = form.save()
+            answer.status = Answer.SENT
+            answer.save()
+            save_and_get_feedback_input_pressed = "save_and_feedback" in request.POST
             
-            answer_form.save()            
+            if save_and_get_feedback_input_pressed:
+                return redirect(reverse("mydidata:get_corrections", args=(answer.id,)))
 
-            if request.session.get('teams', False):
-                if request.session['teams'].get(str(request.user.id), False):
-
-                    for member_id in request.session['teams'][str(request.user.id)]:
-                        member = User.objects.get(pk=member_id)
-                        member_answer = question.answer_set.filter(student=member).first()
-                        
-                        if not member_answer:
-                            member_answer = Answer()
-                        else:
-                            member_answer = member_answer.discursiveanswer
-                        if test:
-                            member_answer.test = test
-
-                        member_answer.student = member
-                        member_answer.question = question
-                        
-                        
-                        member_answer.answer_text = answer.answer_text
-                        member_answer.assignment_file = answer.assignment_file
-                        
-                        member_answer.save()
-                        question.save()
-
-                        member_answer = question.answer_set.filter(student=member).first()
-            if test_id:
-                redirect_url = reverse('mydidata:test_detail', args=(test.uuid,))
-            else:
-                render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, })
-
-            return HttpResponseRedirect(redirect_url)
-        else:            
+            return redirect(answer.get_detail_url())
+        else:
             context = {
                 'question': question,
-                'answer': answer,
-                'form': answer_form,
+                'form': form
             }
-            if test: context['test'] = test;
 
-
-        return render(request, 'mydidata/answer_cru.html', context)
+            return render(request, "mydidata/answer_cru.html", context)
             
-    else:
-        form = AnswerForm(instance=answer)
-        context = {
-            'question': question,
-            'answer': answer,
-            'form': form,
-        }
-        if test: context['test'] = test;
-
-
-        return render(request, 'mydidata/answer_cru.html', context)
-
+    
+    form = AnswerForm(question=question, user=user)
+    context = {
+        'question': question,
+        'form': form
+    }
+    
+    return render(request, "mydidata/answer_cru.html", context)
+    
 
 @login_required()
 def test_progress(request, uuid, class_id):
@@ -941,14 +851,28 @@ def test_progress(request, uuid, class_id):
     return render(request, 'mydidata/test_progress.html', {'classroom':classroom, 'students': students, 'test':test, 'student_grades': grades_by_student,})
 
 @login_required()
+def student_progress(request, test_id, student_id):
+    test = get_object_or_404(Test, pk=test_id)
+    student = get_object_or_404(User, pk=student_id)
+    test_user = TestUserRelation.objects.get(test=test, student=student)
+    return render(request, 'mydidata/test_progress.html', {'test_user': test_user, 'students': [student], 'test': test,})
+
+@login_required()
+def calculate_student_grades(request, test_id, student_id):
+    test = get_object_or_404(Test, pk=test_id)
+    student = get_object_or_404(User, pk=student_id)
+    grades = test.calculate_grades_for_student(student)
+    test_user = TestUserRelation.objects.get(test=test, student=student)
+    return render(request, 'mydidata/test_progress.html', {'students': [student], 'test_user': test_user, 'test': test, 'student_grades': grades,})
+
+
+@login_required()
 def next_try(request, test_user_id):
     test_user_rel = get_object_or_404(TestUserRelation, pk=test_user_id)
     test = test_user_rel.test
-    test_user_rel.is_closed = False
-    test_user_rel.save()
-    current_try = test.next_try(test_user_rel.student)
-    url = test.get_ordered_questions().first().get_answer_url(test)
-    return HttpResponseRedirect(url)
+    test.next_try(test_user_rel.student)
+    print("TRIES", test_user_rel.tries)
+    return HttpResponseRedirect(reverse("mydidata:start_test", args=(test.uuid,)))
     
 @login_required()
 def test_results_wavg(request, class_id, uuid):
@@ -1024,8 +948,6 @@ def topic_detail(request, uuid):
         test_user_relation = TestUserRelation.objects.filter(test=test, student=request.user).first()
         if (not test_user_relation):
             test_user_relation = TestUserRelation.objects.create(student=request.user, test=test)
-            test_user_relation.generate_question_index()
-            test_user_relation.save()
     
     context = {
         'topic': topic,
@@ -1047,6 +969,7 @@ def start_test(request, uuid):
     test = get_object_or_404(Test, uuid=uuid)
     test_user = test.get_or_create_test_user_relation(request.user)
     first_question = test_user.current_questions()[0]
+    print("URL: ", first_question.get_answer_url_for_test(test))
     return HttpResponseRedirect(first_question.get_answer_url_for_test(test))
 
     
@@ -1069,9 +992,6 @@ def test_detail(request, uuid):
 
     }
     
-    if reordered_questions and not tu.is_closed:
-        first_question = reordered_questions[0]
-        return HttpResponseRedirect(first_question.get_answer_url(test))
     return render(request, 'mydidata/test_detail.html', context)
 
 @login_required()
@@ -1106,7 +1026,174 @@ def question_detail(request, uuid):
                 'mydidata/question_detail.html', 
                 {'question': question}
     )
+
+@login_required()
+@superuser_required
+def multiple_choice_question(request, topic_uuid):
+
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+
+    if request.POST:
+        questionform_set = MultipleChoiceQuestionFormSet(request.POST, prefix="question")
+        choice_formset = ChoiceFormSet(request.POST, prefix='choice')
+
+        if questionform_set.is_valid() and choice_formset.is_valid():
+            for questionform in questionform_set:
+                question = questionform.save()
+                topic.question_set.add(question)
+                topic.save()
+                at_least_one_is_correct = False
+                for choice_form in choice_formset:
+                    choice = choice_form.save(commit=False)
+                    at_least_one_is_correct |= choice.is_correct
+                    choice.question = question
+                    choice.save()
+            
+                if at_least_one_is_correct:
+                    return redirect(topic)
+                
+                questionform.errors['__all__'] = questionform.error_class(['É necessário que pelo menos uma opção seja a correta. Marque a opção "É a alternativa correta?" de pelo menos uma opção'])
+      
+        context = {
+            "question_formset": questionform_set,
+            "choice_formset": choice_formset,
+        }
+        return render(request, "mydidata/multiple_choice_question_cru.html", context)
+    else:
+
+        question_formset = MultipleChoiceQuestionFormSet(prefix='question')
+        choice_formset = ChoiceFormSet(prefix='choice')
+
+        context = {
+            "question_formset": question_formset,
+            "choice_formset": choice_formset,
+        }
+        return render(request, "mydidata/multiple_choice_question_cru.html", context)
+
     
+@login_required()
+@superuser_required
+def discursive_question(request, topic_uuid):
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    if request.POST:
+        form = DiscursiveQuestionForm(request.POST)
+        if form.is_valid():
+            question = form.save()
+            question.topic = topic
+            question.save()
+            return redirect(topic)
+        
+        return render(request, "mydidata/discursive_question_cru.html", {"form": form})
+
+        
+    else:
+        form = DiscursiveQuestionForm()
+        return render(request, "mydidata/discursive_question_cru.html", {"form": form})
+
+@login_required()
+@superuser_required
+def c_programming_question(request, topic_uuid):
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+
+    if request.POST:
+        form = CProgrammingQuestionForm(request.POST)
+        if form.is_valid():
+            question = form.save()
+            question.topic = topic
+            question.save()
+            return redirect(topic)
+        return render(request, "mydidata/c_programming_question_cru.html", {"form": form})
+    else:
+        form = CProgrammingQuestionForm()
+        return render(request, "mydidata/c_programming_question_cru.html", {"form": form})
+    
+@superuser_required
+def discursive_question_edit(request, uuid):
+    question = get_object_or_404(Question, uuid=uuid)
+    if request.POST:
+        form = DiscursiveQuestionForm(request.POST, instance=question)
+        if form.is_valid():
+            form.save()
+            return redirect(question.topic)
+        
+        return render(request, "mydidata/discursive_question_cru.html", {"form": form})
+
+        
+    else:
+        form = DiscursiveQuestionForm(instance=question)
+        return render(request, "mydidata/discursive_question_cru.html", {"form": form})
+
+@superuser_required
+def c_programming_question_edit(request, uuid):
+    question = get_object_or_404(Question, uuid=uuid)
+    if request.POST:
+        form = CProgrammingQuestionForm(request.POST, instance=question)
+        if form.is_valid():
+            form.save()
+            return redirect(question.topic)
+        
+        return render(request, "mydidata/c_programming_question_cru.html", {"form": form})
+
+        
+    else:
+        form = CProgrammingQuestionForm(instance=question)
+        return render(request, "mydidata/c_programming_question_cru.html", {"form": form})
+
+@superuser_required
+def multiple_choice_question_edit(request, uuid):
+    question = get_object_or_404(Question, uuid=uuid)
+    if request.POST:
+        questionform_set = MultipleChoiceQuestionFormSet(request.POST, prefix="question", instance=question)
+        choice_formset = ChoiceFormSet(request.POST, prefix='choice')
+
+        if questionform_set.is_valid() and choice_formset.is_valid():
+            for questionform in questionform_set:
+                question = questionform.save()
+                topic.question_set.add(question)
+                topic.save()
+                at_least_one_is_correct = False
+                for choice_form in choice_formset:
+                    choice = choice_form.save(commit=False)
+                    at_least_one_is_correct |= choice.is_correct
+                    choice.question = question
+                    choice.save()
+            
+                if at_least_one_is_correct:
+                    return redirect(topic)
+                
+                questionform.errors['__all__'] = questionform.error_class(['É necessário que pelo menos uma opção seja a correta. Marque a opção "É a alternativa correta?" de pelo menos uma opção'])
+      
+        context = {
+            "question_formset": questionform_set,
+            "choice_formset": choice_formset,
+        }
+        return render(request, "mydidata/multiple_choice_question_cru.html", context)
+    else:
+
+        question_formset = MultipleChoiceQuestionFormSet(prefix='question', queryset=Question.objects.filter(uuid=question.uuid))
+        choice_formset = ChoiceFormSet(prefix='choice', queryset=Choice.objects.filter(question=question))
+
+        context = {
+            "question_formset": question_formset,
+            "choice_formset": choice_formset,
+        }
+        return render(request, "mydidata/multiple_choice_question_cru.html", context)
+
+@login_required()
+def question_types(request, topic_uuid):
+    topic = get_object_or_404(Topic, uuid=topic_uuid)
+    types = [
+        ("multiple_choice", "Múltipla Escolha"),
+        ("discursive", "Discursiva"),
+        ("c_programming", "Programação em C")
+    ]
+
+    return render(request, "mydidata/question_types.html", {"types": types, "topic": topic})
+
+
+
+
+
 def discipline_detail(request, uuid=None):
     return HttpResponseRedirect('/mydidata/topics?discipline=' + uuid)
 
@@ -1139,6 +1226,55 @@ def download_answers(request, topic_uuid, class_id):
     writer.writerows(rows)
 
     return response
+
+@login_required()
+def create_team(request):
+    print("ENTREI NA VIEW")
+    if request.POST:
+        form = TeamForm(request.POST, user=request.user)
+        if form.is_valid():
+            team = form.save()
+            team.owner = request.user
+            team.members.set(form.cleaned_data['members'])
+            team.save()
+            redirect_url = reverse('mydidata:team_detail', args=(team.pk,))
+            if request.POST.get("redirect_to", None):
+                redirect_url = request.POST.get("redirect_to")
+            return redirect(redirect_url)
+    else:
+        context = {'form': form}
+        if request.GET.get("redirect_to", None):
+            context["redirect_to"] = request.GET.get("redirect_to")
+
+        form = TeamForm(initial={'owner': request.user, "members": [request.user]}, user=request.user)
+    return render(request, 'mydidata/team_cru.html', context=context)
+
+@login_required()
+def team_edit(request, id):
+    team = get_object_or_404(Team, pk=id)
+    if request.POST:
+        form = TeamForm(request.POST, instance=team, user=request.user)
+        team = form.save()
+        team.members.set(form.cleaned_data['members'])
+        team.save()
+        return redirect(reverse('mydidata:team_detail', args=(team.id, )))
+    else:
+        form = TeamForm(user=request.user)
+    return render(request, 'mydidata/team_cru.html', {'form': form})
+
+@login_required()
+def team_list(request):
+    if request.user.is_superuser:
+        teams = Team.objects.all()
+        return render(request, 'mydidata/team_list.html', {'teams': teams})
+    teams = Team.objects.filter(owner=request.user)
+    return render(request, 'mydidata/team_list.html', {'teams': teams})
+
+
+@login_required()
+def team_detail(request, id):
+    team = get_object_or_404(Team, pk=id)
+    return render(request, 'mydidata/team_detail.html', {'team': team})
 
 @login_required()
 def define_team(request):

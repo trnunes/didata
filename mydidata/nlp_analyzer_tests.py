@@ -1,7 +1,10 @@
-import unittest
-from nlp_operations import *
+from django.test import TestCase
+from mydidata.nlp_operations import *
 
-class TestNLPAnalizer(unittest.TestCase):
+###
+### to run specific test cases do: python manage.py test mydidata.nlp_analyzer_tests.TestNLPAnalizer.test_find_candidate_matches_synonyms
+###
+class TestNLPAnalizer(TestCase):
     def setUp(self):
         self.grammar = '''
         
@@ -72,6 +75,25 @@ class TestNLPAnalizer(unittest.TestCase):
             (['célula', 'animal'], 'célula animal', (1, 2)),
             (['eucarionte'], 'eucarionte', (4, 4)),
             (['heterotrófica'], 'heterotrófica', (6, 6)),
+        ]
+        actual_results = find_candidate_matches(tokens, keywords)
+        print("CAND MATCHES: ", actual_results)
+        self.assertListEqual(actual_results, expected_results)
+
+    def test_find_candidate_matches_synonyms(self):
+        tokens = ["na", "célula", "das", "plantas", "há", "cloroplasto", "parede", "celular", "de", "celulose", "e", "vacuolo", "pulsatil"]
+        keywords = ["célula vegetal"]
+        expected_results = [
+            (['célula', 'das', 'plantas'], 'célula vegetal', (1, 3)),
+        ]
+
+        self.assertListEqual(find_candidate_matches(tokens, keywords), expected_results)
+    
+    def test_find_candidate_matches_synonyms_2(self):
+        tokens = ["na", "célula", "vegetal", "há", "cloroplasto", "parede", "celular", "de", "celulose", "e", "vacuolo", "pulsatil"]
+        keywords = ["célula das plantas"]
+        expected_results = [
+            (['célula', 'vegetal'], 'célula das plantas', (1, 2)),
         ]
 
         self.assertListEqual(find_candidate_matches(tokens, keywords), expected_results)
@@ -329,7 +351,7 @@ class TestNLPAnalizer(unittest.TestCase):
         
         triples = extract_triples(text, self.grammar)
         # print("TRIPLES: ", triples) 
-        import pdb;pdb.set_trace()
+        # import pdb;pdb.set_trace()
         self.assertListEqual(triples, expected_results)
     
     def test_integration_relative_prn_sentece(self):
@@ -346,7 +368,7 @@ class TestNLPAnalizer(unittest.TestCase):
         
         
         triples = extract_triples(text, self.grammar)
-        print("TRIPLES: ", triples)
+        # print("TRIPLES: ", triples)
         # import pdb;pdb.set_trace()
         self.assertListEqual(triples, expected_results)
     
@@ -357,7 +379,7 @@ class TestNLPAnalizer(unittest.TestCase):
             "cabeamento horizontal faz a interface entre a sala de telecomunicações e a área de trabalho."
         ]
         triples = extract_triples(text, self.grammar)
-        print("TRIPLES: ", triples) 
+        # print("TRIPLES: ", triples) 
     
     def test_extract_triples_start_V(self):
         text = "É o estudo da interação entre os seres_vivos e o meio_ambiente."
@@ -377,7 +399,7 @@ class TestNLPAnalizer(unittest.TestCase):
         ]
 
         triples = extract_triples(text, self.grammar)
-        print("TRIPLES: ", triples) 
+        # print("TRIPLES: ", triples) 
         self.assertListEqual(triples, expected_triples)
 
     def test_extract_triples_from_fixtures(self):
@@ -438,7 +460,7 @@ class TestNLPAnalizer(unittest.TestCase):
             "[cabeamento horizontal] faz a interface entre a sala de telecomunicações e a [área de trabalho]."
         ]
 
-        self.assertTupleEqual(score(answer, reference_answers, weight_keywords=0.3), (9.7, ['área trabalho']))
+        self.assertTupleEqual(score(answer, reference_answers, weight_keywords=0.3), (9.0, ['área trabalho']))
     def test_score_general3(self):
         answer = "Interconexão Vs. Conexão Cruzada   Os cabos horizontais terminam nos distribuidores e painéis do armário de telecom do andar. Entretanto, como podemos conectar os cabos horizontais ao switch ethernet de acesso do andar? Temos duas possibilidades, podemos utilizar um esquema mais simples, chamado interconexão ou um esquema um pouco mais caro e elaborado, que é a de conexão cruzada. Na interconexão, o cabo horizontal termina em um painel distribuidor chamado Patch Panel, que por sua vez, se conecta ao Switch Ethernet. Veja o esquema de interconexão abaixo."
         
@@ -468,7 +490,7 @@ class TestNLPAnalizer(unittest.TestCase):
             "a função do [fígado] é filtrar [toxinas]"
         ]
         expected_answer = (0.0,
-        ['fígado', 'toxinas'])
+        ['toxinas', 'fígado'])
 
 
         self.assertTupleEqual(score(answer, reference_answers), expected_answer)

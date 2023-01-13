@@ -1,0 +1,25 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Questões{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <div id="al-container" class="side-p">
+            <div id="al-control">
+                <h3 class="ad-mh">Equipe: {{team.name}}</h3>
+                <a href="/mydidata/edit/{{team.id}}"> Editar Equipe </a>
+                {# Account Search Form #}
+            </div>
+            {# List of Accounts #}
+            <ul class="list-group">
+                {% for s in team.members.all %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="">{{s.first_name}} {{s.last_name}}</a>
+                </li>
+                    
+                    
+                {% endfor %}
+            </ul>
+            {# Pagination Section #}
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,23 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Questão {{question.index}}{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        
+        <h4 class="ad-mh">Questão {{question.index}}</h4>
+        {{ form.media }}
+        <form id="team-form" method="post">
+            {% csrf_token %}
+            <table>
+            {{ form.as_table }}
+            </table>
+            <script type="text/javascript" src="{% url 'jsi18n' %}"></script>
+            <input type="hidden" name="redirect_to" value = {{redirect_to}}>
+
+            <input class="btn btn-primary m-r-none" type="submit" value="Salvar">
+          </form>
+          
+        
+    </div>
+{% endblock content %}
+

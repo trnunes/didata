@@ -1,0 +1,68 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Questão {{question.index}}{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <h4 class="ad-mh">Questão {{question.index}}</h4>
+        
+        {% for form in question_formset %}
+            {# ... #}
+            {%if form.non_field_errors%}
+                <div class="alert alert-danger">
+                    <strong>{{ form.non_field_errors }}</strong>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+
+        <form method="post" action="" id="question-form">
+            {%csrf_token%}
+            {{ question_formset.management_form}}
+            {% for form in question_formset%}
+                {{ form.media }}
+                {{ form.as_p }}
+            {% endfor %}
+
+            {{ choice_formset.management_form }}
+            <div id="inline-choices">
+                {% for form in choice_formset %}
+                    <div id="inline-choice_{{forloop.counter0}}">
+                        {{ form.media }}
+                        {{ form.as_p }}
+                    </div>
+
+                {% endfor %}
+            </div>
+            <input type="button" id="add-choice-button" value="+ Escolha"> 
+            <input type="submit" value="Criar">
+
+        </form>
+    </div>
+{% endblock content %}
+
+
+{% block footer_javascript_page %}
+<script>
+    document.getElementById("add-choice-button").addEventListener('click',function(){
+        
+        let totalFormsField = document.getElementById("id_choice-TOTAL_FORMS");
+        let value = parseInt(totalFormsField.value);
+        let newFormValue = value + 1;
+
+
+        let choiceFormSet = document.getElementById('inline-choice_0');
+        let newChoiceFormSet = choiceFormSet.cloneNode(true);
+        newChoiceFormSet.querySelectorAll('input').forEach(function(input){
+            input.name = input.name.replace("-"+value+"-", "-"+newFormValue+"-");
+            input.id = input.id.replace("-"+value+"-", "-"+newFormValue+"-");
+            input.value = "";
+        });
+
+        document.getElementById('inline-choices').appendChild(newChoiceFormSet);
+
+        totalFormsField.value = newFormValue;
+
+
+    });
+</script>
+{% endblock footer_javascript_page %}

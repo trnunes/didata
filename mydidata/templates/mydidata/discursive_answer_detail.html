@@ -10,12 +10,21 @@
                       
                     </ul>
           
-                </div>    
-                <div class="gi-header">
-                    <h3 class="ad-mh">
-                        <span>{{answer.student.username}}:&nbsp{{answer.student.first_name}}&nbsp{{answer.student.last_name}}</span>
-                    </h3>
                 </div>
+                <!-- TODO acertar progresso -->
+                <h3>Progresso</h3>
+                <div class="col-md-9">
+                    {% for question, answer_sent in answers_by_question.items %}
+                        {% if question == answer.question%}
+                            <a class="btn btn-success btn-lg" role="button" href="{{answer_set.get_detail_url}}">Questão {{forloop.counter}}</a>
+                        {% elif answer_sent %}
+                            <a class="btn btn-success btn-sm"href="{{answer_set.get_detail_url}}">Questão {{forloop.counter}}</a>
+                        {% else %}
+                            <a class="btn btn-secondary btn-sm"href="{{question.get_answer_url}}">Questão {{forloop.counter}}</a>
+                        {% endif %}
+                        
+                    {% endfor%}
+                </div>    
                 <div class="row gi-body">
                     <div class="col-md-9">
                         <h3 class="gi-sh">Questão</h3>
@@ -29,29 +38,40 @@
                             
                         </p>
                         <p>{{ answer.file_link | safe }}</p>
-                    </div>
-                    <div class="col-md-9">
-                        <h3 class="gi-sh">Correções</h3>
-                        <p><font color='red'>{{ answer.feedback | safe}}</font></p>
-                    </div>
-                    <div class="col-md-9">
-                        <h3 class="gi-sh">Avaliação</h3>
-                        <p><font color='red'>{{ answer.get_evaluation_message}}</font></p>
-                    </div>
-                    
-                    {%if answer.id and answer.answer_text and answer.question.ref_keywords%}
-                        <div class="col-md-9">
-                            
-                            <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Analisar Resposta</a>
-                            <a class="btn btn-primary btn-lg" role="button" href="{{ answer.question.get_answer_url }}">Editar Resposta</a>
-                            
-                            <!-- {%if answer.question.next_question_url%} -->
-                    
-                            <!-- {%endif%} -->
 
+                        
+                    </div>
+                    <div class="col-md-9">
+                        <span><strong> Enviada por: </strong></span>
+                        {% if answer.question.is_team_work %}
+                            <span><a href="{{answer.team.get_absolute_url}}">Equipe {{answer.team.name}}</span>
+                        {% else %}
+                            <span>&nbsp{{answer.student.first_name}}&nbsp{{answer.student.last_name}} ({{answer.student.username}})</span>
+                        {% endif %}
+                    </div>
+                    {% if answer.feedback %}
+                        <div class="col-md-9">
+                            <h3 class="gi-sh">Correções</h3>
+                            <p><font color='red'>{{ answer.feedback | safe}}</font></p>
                         </div>
                     {%endif%}
                     
+                    {% if answer.get_evaluation_message %}
+                        <div class="col-md-9">
+                            <h3 class="gi-sh">Avaliação</h3>
+                            <p><font color='red'>{{ answer.get_evaluation_message}}</font></p>
+                        </div>
+                    {% endif %}
+                    <div class="col-md-9">
+
+                    {% if answer.question.next_question %}
+
+                                
+                        <a class="btn btn-primary btn-lg" role="button" href="{{answer.question.next_question.get_answer_url}}">Próxima Questão</a>
+                        
+
+                    {% endif %}
+                    </div>                    
                     
                     {% if user.is_superuser %}
                         <div class="col-md-9"> <a href="{% url 'mydidata:feedback' answer.id %}"

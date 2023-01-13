@@ -16,6 +16,31 @@ import pandas as pd
 
 tagger = None
 
+def get_syn(word):
+    # return [word]
+    synsets = wordnet.synsets(word.lower(), lang='por')
+    synonyms = [word]
+    for synset in synsets:
+        synonyms += [l.name() for l in synset.lemmas(lang='por')]
+    return synonyms
+
+def analyze_entities(text, hints):
+    pt_stopwords = stopwords.words('portuguese') + list(punctuation)
+    tokens = word_tokenize(hints)
+    non_stop_tokens = [t for t in tokens if t not in pt_stopwords]
+    synonyms = []
+    for t in non_stop_tokens:
+        synsets = wordnet.synsets(t.lower(), lang='por')
+        if synsets:
+            synset = synsets[0]
+            synonyms += [l.name() for l in synset.lemmas(lang='por')]
+    all_words = non_stop_tokens + synonyms
+    text_tokens = word_tokenize(text)
+    words_present = [w for w in all_words if w in text_tokens]
+    words_not_present = all_words - words_present
+    results = {'words_present': words_present, 'remaining_words': words_not_present}
+    return results
+
 def load_or_train_postagger():
     global tagger
     if tagger:
@@ -57,13 +82,6 @@ def get_domain_phrase(id, domain_phrases):
     except:
         return id  
     
-    
-    
- 
-    
-    
-    
-
 def get_domain_phrase_id(domain_phrase, domain_phrases):
     return "PHR%d"%domain_phrases.index(domain_phrase.strip())
 
@@ -118,58 +136,126 @@ def has_corref_art_keyword(t_index, domain_phrase, tokens):
         if dtoken_found:
             return True
     return False
-        
 
+def token_is_reification(t_index, domain_phrase, tokens):
+    domain_phrase_parts = tokenize(domain_phrase)
+    token_to_compare = tokens[t_index]
+    last_domain_phrase_part = domain_phrase_parts[-1]
+    prepositions = ["das", "dos", "da", "do", "de"] 
+    if token_to_compare in prepositions:
+        next_token = tokens[t_index + 1]
+        if match_syn(last_domain_phrase_part, next_token):
+            return True
+    return False
+
+def phrase_is_reification(t_index, domain_phrase, tokens):
+    domain_phrase_parts = tokenize(domain_phrase)
+    token_to_compare = tokens[t_index]
+    last_domain_phrase_part = domain_phrase_parts[-1]
+    prepositions = ["das", "dos", "da", "do", "de"] 
     
+    if [d for d in domain_phrase_parts if d in prepositions]:
+        if match_syn(last_domain_phrase_part, token_to_compare):
+            return True
 
+    return False
+
+def intersect_tokens(array1, array2, matching_function):
+  return [(elem, i) for i, elem in enumerate(array1) if any(matching_function(elem, elem2) for elem2 in array2)]
+
+
+# custom equal function
+def match(token1, token2):
+    token1 = normalize(token1)
+    token2 = normalize(token2)
+    if token1 == token2:
+        return True
+    if jaro_winkler_similarity(token1, token2) >= 0.85:
+        return True
+    return False
+
+
+def find_candidate_matches_v2(tokens, domain_phrases, search_corref=False):
+    domain_phrases_cp = domain_phrases.copy()
+    candidates = []
+    for domain_phrase in domain_phrases_cp:
+        domain_phrase_parts = tokenize(domain_phrase)
+        window_size = len(domain_phrase_parts)
+        index = 0
+        while index < len(tokens) - window_size:
+            window_tokens = tokens[index:index+window_size]
+            matched_tokens_and_indexes = intersect_tokens(window_tokens, domain_phrase_parts, match)
+            slide = index
+            matched_tokens_unique = set([normalize(t) for t, i in matched_tokens_and_indexes])
+            
+            if len(matched_tokens_unique) >= window_size:
+                
+                matched_tokens = [token for token, i in matched_tokens_and_indexes]
+                indexes = [i + index for token, i in matched_tokens_and_indexes]
+                min_and_max_indexes = (min(indexes), max(indexes))
+                if len(indexes) == 1:
+                    min_and_max_indexes = (indexes[0], indexes[0])
+                candidates.append(tuple([matched_tokens, domain_phrase, tuple(min_and_max_indexes)]))
+                slide = min_and_max_indexes[1]
+            index = slide + 1
+    return candidates
+    
+def token_match(token1, token2):
+    norm_token1 = normalize(token1)
+    norm_token2 = normalize(token2)
+    return (norm_token1 == norm_token2) or (jaro_winkler_similarity(norm_token1, norm_token2) > 0.9)
+
+def match_syn(token1, token2):
+    syns1 = get_syn(token1)
+    syns2 = get_syn(token2)
+            
+    for syn1 in syns1:
+        for syn2 in syns2:
+            if(token_match(syn1, syn2)):
+                return True
+  
+    return False
+            
 def find_candidate_matches(tokens, domain_phrases, search_corref=False):
     domain_phrases_cp = domain_phrases.copy()
     candidates = []
-    stemmer = get_stemmer()
     t_index = 0
-    debug_func=False
     while(t_index < len(tokens)):
         token = tokens[t_index]
-        # if token == "eucarionte": debug_func = True
-
-        norm_token = normalize(token)
-
+        
         for domain_phrase in domain_phrases_cp:
             domain_phrase_parts = domain_phrase.strip().split(" ")
             d_index = 0
-            # next_token = token
-            # next_norm_token = norm_token
             rec_phrase = []
-            
             while (d_index < len(domain_phrase_parts)) and ((t_index + len(domain_phrase_parts)) <=  len(tokens)):
                 next_token = tokens[t_index + d_index]
                 next_norm_token = normalize(next_token)
                 rec_phrase.append(next_token)
                 domain_token = domain_phrase_parts[d_index]
                 
-                
                 if not domain_token:
                     continue
                 
-                # 
-                norm_domain_token = unidecode.unidecode(stemmer.stem(domain_token))
-                
-                # 
+                if token_match(domain_token, next_norm_token):
+                    d_index += 1
+                    continue
 
-                equal_or_similar = (next_norm_token == norm_domain_token) or (jaro_winkler_similarity(next_norm_token, norm_domain_token) > 0.9)
-                # import pdb;pdb.set_trace()
-                if not equal_or_similar:
-                    
-                    break
                 
-                d_index += 1
+                
+                # if match_syn(domain_token, next_norm_token):
+                    # d_index += 1
+                    # continue
+                
+                break
+                
                 
             is_a_match = (d_index == len(domain_phrase_parts))
+
             if is_a_match:
                 
-                firts_last_indexes = (t_index, t_index + len(domain_phrase_parts) - 1)
+                firts_last_indexes = (t_index, t_index + d_index - 1)
                 candidates.append((rec_phrase, domain_phrase, firts_last_indexes))
-                t_index += len(domain_phrase_parts) - 1
+                t_index += d_index - 1
                 continue
             # import pdb;pdb.set_trace()
             if t_index < (len(tokens) - 1) and search_corref:
@@ -180,8 +266,20 @@ def find_candidate_matches(tokens, domain_phrases, search_corref=False):
                    rec_phrase = [token, tokens[t_index + 1]]
                    candidates.append((rec_phrase, domain_phrase, firts_last_indexes))
                    t_index += 1
-                
-            
+                   continue
+            if t_index < (len(tokens) - 1):
+                if(token_is_reification(t_index, domain_phrase, tokens)):
+                    rec_phrase = [tokens[t_index -1], token, tokens[t_index + 1]]
+                    firts_last_indexes = (t_index - 1, t_index + 1)
+                    candidates.append((rec_phrase, domain_phrase, firts_last_indexes))
+                    t_index += 1
+                    continue
+                if(phrase_is_reification(t_index, domain_phrase, tokens)):
+                    rec_phrase = [tokens[t_index - 1], tokens[t_index]]
+                    firts_last_indexes = (t_index - 1, t_index)
+                    candidates.append((rec_phrase, domain_phrase, firts_last_indexes))
+                    t_index += 1
+                    continue
             
             
         t_index += 1
@@ -756,8 +854,9 @@ def score(answer, ref_answers, question_text = "", domain_phrases=[], weight_key
     
     if not max_keywords_score:
         diff_max_keywords_score = difference
-
-    total_diff = spo_diff + diff_max_keywords_score
+    
+    # import pdb;pdb.set_trace()
+    total_diff = spo_diff + list(diff_max_keywords_score)
     # import pdb;pdb.set_trace()
     # 
     return (total_score, total_diff)

@@ -1,0 +1,56 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Resposta{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+		<div aria-label="Page navigation example" >
+			<ul class="pagination" style="justify-content: space-between;">
+			  <li class="page-item"><a class="page-link" href="{{question.topic.get_absolute_url}}">Voltar para o Tópico</a></li>
+			  
+			</ul>
+  
+		</div>    
+		
+        <div class="alert alert-danger">
+            <strong>{{ error_msg}}</strong>
+        </div>
+		<a href="{{next_link}}">Ir para a Próxima Questão</a>
+        
+		{% with answer=form.instance%}
+		<h2 class="ad-mh">Resposta de: {{answer.student.first_name}}&nbsp;{{answer.student.last_name}}</h2>
+			<div id="answer_form">
+                <form enctype="multipart/form-data" action="{{ answer_form_url }}" id="form_feedback" method="post">
+                    <input type="hidden" name="redirect_to" value="{{answer_form_url}}"/>
+                    {%if user.is_superuser%}
+                    <h3 class="gi-sh">Resposta Enviada</h3>
+                    <p>{{ answer.answer_text | safe}}</p>
+                    {%endif%}
+                    {% csrf_token %}
+                        
+                    {{ form.media }}
+                    
+                    <label for="choice">{{ form.choice.label }}</label>
+                    {% for choice in form.choice.field.choices %}
+                        <div class="form-group">
+                            
+                            {% if choice.1 == answer.choice.choice_text%}
+                                <input type="radio" name="choice" checked value="{{ choice.0 }}">
+                            
+                                <label style="color: red"> {{ choice.1 | safe}}</label>
+                            {% else %}
+                                <input type="radio" name="choice" value="{{ choice.0 }}">
+                                <label>{{ choice.1 | safe}}</label>
+                            {% endif %}
+                        </div>
+                    
+                    {% endfor %}
+                    
+                    
+                    
+                    
+                    </form>
+			</div>
+
+		{%endwith%}
+    </div>
+{% endblock content %}

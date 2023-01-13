@@ -49,9 +49,9 @@ def get_test_user(student_grades_dict, student):
 @register.simple_tag
 def get_class(test, user):
 	if not user.is_superuser:
-		classes = [c for c in test.classroom_set.all() if c in user.classroom_set.all()]
+		classes = [c for c in test.classrooms.all() if c in user.classrooms.all()]
 	else:
-		classes = test.classroom_set.all()
+		classes = test.classrooms.all()
 
 
 	return classes

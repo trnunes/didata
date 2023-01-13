@@ -1,0 +1,16 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Questão {{question.index}}{% endblock title %}
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <h4 class="ad-mh">Questão {{question.index}}</h4>
+        
+
+        <form method="post" action="" id="question-form">
+            {%csrf_token%}
+            {{ form.media }}
+            {{ form.as_p }}
+            <input type="submit" value="Salvar">
+        </form>
+    </div>
+{% endblock content %}

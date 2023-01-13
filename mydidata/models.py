@@ -187,6 +187,14 @@ class Topic(models.Model, AdminURLMixin):
 
         return reverse('mydidata:topic_detail', args=(topics[self_index - 1].uuid,))
 
+    def is_closed_for(self, student):
+        classrooms = Classroom.objects.filter(students__id = student.id)
+        for klass in classrooms:
+            closed_topics = klass.closed_topics.all()
+            return self in closed_topics
+        return False
+
+
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:topic_detail', [self.uuid]
@@ -308,8 +316,6 @@ class Test(models.Model, AdminURLMixin):
         test_user = TestUserRelation.objects.filter(student=user, test=self).first()
         if not test_user:
             test_user = TestUserRelation.objects.create(student=user, test=self)
-            test_user.generate_question_index()
-            test_user.save()
         return test_user
     
     def has_next_try(self, user):
@@ -322,19 +328,18 @@ class Test(models.Model, AdminURLMixin):
         test_user_rel = self.get_or_create_test_user_relation(student)
         self.get_answers(student).delete()
         test_user_rel.tries += 1
+        print("Tries in model: ", test_user_rel.tries)
+        test_user_rel.generate_question_index()
+
         test_user_rel.save()
-        return test_user_rel.tries
+
+        return test_user_rel.current_questions()
     
     def next_question(self, user, question):
         if self.is_closed_for(user):
             return None
         tu = self.get_or_create_test_user_relation(user)
-        current_questions = tu.current_questions()
-        question_index = current_questions.index(question)
-
-        if question_index < len(current_questions) - 1:
-            return current_questions[question_index + 1]
-        return None 
+        return tu.get_next_question(question)
         
     def questions_range(self):
         return range(self.limit_per_try)
@@ -362,10 +367,10 @@ class Test(models.Model, AdminURLMixin):
     def get_ordered_questions(self):
         return self.questions.order_by('index').all()
     
-    def calculate_grades(self, classroom, students = []):
+    def calculate_grades(self, classroom=None, students = []):
         grader = GradingStrategy()
         grades_by_student = {}
-        if not students:
+        if not students and classroom:
             students = classroom.students.all().order_by('first_name')
         
         for student in students:
@@ -375,19 +380,22 @@ class Test(models.Model, AdminURLMixin):
                 student_grade = grader.calculate(test_user.current_questions(), [student], self)[0]
                 grades_by_student[student]['grade'] = student_grade[1]
                 grades_by_student[student]['test_user'] = test_user
-                if student_grade[1] < 6:
-                    if self.has_next_try(test_user.student):
-                        grades_by_student[student]['next_try_link'] = reverse('mydidata:next_try', args=(test_user.id,))
+                if self.has_next_try(test_user.student):
+                    grades_by_student[student]['next_try_link'] = reverse('mydidata:next_try', args=(test_user.id,))
             else:
                 grades_by_student[student]['grade'] = "?"
         return grades_by_student
+    
+    def calculate_grades_for_student(self, student):
+        
+        return self.calculate_grades(students=[student])
 
 
 class Classroom(models.Model):
     uuid = ShortUUIDField(unique=True)
     academic_site_id = models.IntegerField(verbose_name = "Identificador no Acadêmico", default=0)
     name = models.CharField(max_length=255, verbose_name="Nome")
-    students = models.ManyToManyField(User, null=True, verbose_name="Estudantes")
+    students = models.ManyToManyField(User, null=True, blank=True, verbose_name="Estudantes", related_name="classrooms")
     disciplines = models.ManyToManyField(Discipline, null=True, verbose_name="Disciplinas")
     closed_topics = models.ManyToManyField(Topic, null=True, blank=True, verbose_name="Tópicos Fechados")
     closed_tests = models.ManyToManyField(Test, null=True, blank=True, related_name="closed_tests", verbose_name="Avaliações Fechadas")
@@ -454,8 +462,8 @@ class ResourceRoom(models.Model):
 class Question(models.Model):
     uuid = ShortUUIDField(unique=True)
     index = models.PositiveSmallIntegerField(default=1, verbose_name='Ordem')
-    question_text = RichTextUploadingField(verbose_name='Texto')
-    ref_keywords = models.TextField(verbose_name="Palavras-Chave", blank=True)
+    question_text = RichTextUploadingField(verbose_name='Enunciado da Questão')
+    ref_keywords = models.TextField(verbose_name="Palavras-Chave para Feedback Automático", blank=True)
     file_types_accepted = models.CharField(max_length=255, verbose_name="Tipos de arquivos aceitos", null=True, blank="True")
     text_required = models.BooleanField(default=False, verbose_name='Resposta de texto obrigatória?')
     weight = models.PositiveSmallIntegerField(default=1, verbose_name='Peso')
@@ -464,19 +472,20 @@ class Question(models.Model):
     punishment_percent = models.PositiveSmallIntegerField(default=30, verbose_name="Percentual da Punição")
     test_inputs = models.CharField(null=True, blank=True, max_length=255, verbose_name = "entrada separa por vírgulas")
     expected_output = models.CharField(null=True, blank=True, max_length=255, verbose_name = "saída esperada do programa (ou parte)")
+    is_team_work = models.BooleanField(default=False, verbose_name="Somente equipes podem responder?")
 
     DIFFICULTY_LIST = (
         (1, 'Difícil'),
         (2, 'Médio'),
         (3, 'Fácil'),
     )
-    difficulty_level = models.PositiveSmallIntegerField(choices=DIFFICULTY_LIST, verbose_name="Dificuldade")
+    difficulty_level = models.PositiveSmallIntegerField(choices=DIFFICULTY_LIST, verbose_name="Dificuldade", default=2)
     TYPE_LIST = (
         (1, "Exercício"),
         (2, "Trabalho"),
         (3, "Prova")
     )
-    question_type = models.PositiveSmallIntegerField(choices=TYPE_LIST, verbose_name="Tipo")
+    question_type = models.PositiveSmallIntegerField(choices=TYPE_LIST, verbose_name="Tipo", default=1)
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, null=True, blank=True)
 
     #TODO change to many-to-many
@@ -485,6 +494,7 @@ class Question(models.Model):
     class Meta:
         verbose_name_plural = 'Questões'
 
+    
     def __str__(self):
 
         return u'%s ...' % html.unescape(strip_tags(self.question_text))[0:200]
@@ -493,8 +503,14 @@ class Question(models.Model):
         return u'%s' % html.unescape(strip_tags(self.question_text))
 
     def is_discursive(self):
-        return len(self.choice_set.all()) == 0
+        return len(self.choices.all()) == 0 and not self.is_c_programming()
 
+    def is_c_programming(self):
+        return self.expected_output
+    
+    def is_multiple_choice(self):
+        return len(self.choices.all()) > 0
+    
     def get_answer_for(self, student_list):
         answers = list(Answer.objects.filter(question = self, student__id__in=[s.id for s in student_list]))
         
@@ -511,14 +527,14 @@ class Question(models.Model):
         if question:
             return question.get_answer_url()
         return ""
-        
-
+    
     def next_question(self):
         ordered_questions = list(self.topic.get_ordered_questions())
         next_index = ordered_questions.index(self) + 1
-        if next_index >= len(ordered_questions):
-            return None
-        return ordered_questions[next_index]
+        if next_index < len(ordered_questions):
+            return ordered_questions[next_index]
+        return None
+        
         
     def get_next_answer_for_student(self, student):
         question = self.next_question()
@@ -531,13 +547,6 @@ class Question(models.Model):
             return None
         return answers.first()
             
-        
-
-        
-
-
-
-
     def get_next_answer_url(self, student, test):
         if not student or not test:
             raise Exception("Student and Test refs cannot be null!")
@@ -559,14 +568,21 @@ class Question(models.Model):
         return next_question.get_answer_url(test)
 
 
+
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:question_detail', [self.uuid]
     
 
+
     @models.permalink
     def get_update_url(self):
-        return 'mydidata:question_update', [self.uuid]
+        if self.is_discursive():
+            return 'mydidata:discursive_question_edit', [self.uuid]
+        if self.test_inputs:
+            return 'mydidata:c_programming_question_edit', [self.uuid]
+        return 'mydidata:multiple_choice_question_edit', [self.uuid]
+        
 
     @models.permalink
     def get_delete_url(self):
@@ -577,15 +593,12 @@ class Question(models.Model):
         return 'mydidata:test_answer', (self.uuid, test.id)
 
     @models.permalink
-    def get_answer_url(self, test=None):
-        params = [self.uuid]
-        if test:
-            params.append(test.id)
+    def get_answer_url(self):
         
-        if self.is_discursive():
-            return 'mydidata:discursive_answer', params
+        if self.is_discursive() or self.is_c_programming():
+            return 'mydidata:discursive_answer', [self.uuid]
         else:
-            return 'mydidata:multiple_choice_answer', params
+            return 'mydidata:multiple_choice_answer', [self.uuid]
 
     
     @models.permalink
@@ -593,13 +606,13 @@ class Question(models.Model):
         return 'mydidata:test_for', [self.uuid]
 
     def shuffled_choice_set(self):
-        choice_list = list(self.choice_set.all())
+        choice_list = list(self.choices.all())
         random.shuffle(choice_list)
         return choice_list
 
       
 class Choice(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Questão")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Questão", related_name="choices")
     # choice_text = RichTextUploadingField(verbose_name='Texto da Alternativa')
     choice_text = models.TextField()
     is_correct = models.BooleanField(default=False, verbose_name="É a alternativa correta?")
@@ -607,7 +620,20 @@ class Choice(models.Model):
         verbose_name_plural = 'Alternativas'
         
     def __str__(self):
-        return u'%s' % self.choice_text
+        return self.choice_text
+
+class Team(models.Model):
+    name = models.CharField(max_length=255)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Líder", related_name="owner_of")
+    members = models.ManyToManyField(User, related_name='teams')
+
+    @models.permalink
+    def get_absolute_url(self):
+        return "mydidata:team_detail", [self.id]
+    
+    def __str__(self):
+        return self.name
+
 
 class Answer(models.Model):
     SENT = 1
@@ -636,20 +662,22 @@ class Answer(models.Model):
     status = models.IntegerField(choices=(STATUS_CHOICES + EVAL_CHOICES), default=SENT, verbose_name="Avaliação")
     grade = models.FloatField(default=0.0, verbose_name="Nota")
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Questão")
-    student = models.ForeignKey(User, on_delete=models.DO_NOTHING, verbose_name="Estudante")
+    student = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Estudante")
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, verbose_name="Equipe", related_name='answers', null=True, blank=True)
     test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Avaliação")
     choice = models.ForeignKey(Choice, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Alternativa")
     comments = models.TextField(blank=True)
+    
     
 
     class Meta:
         verbose_name_plural = 'Respostas'
     
     @classmethod
-    def find(cls, student, question, test_id=None):
+    def find(cls, student, question, test=None):
         args = {'student': student, 'question': question}
-        if test_id:
-            args['test'] = Test.objects.get(pk=test_id)
+        if test:
+            args['test'] = test
         return cls.objects.filter(**args).first()
 
     def __str__(self):
@@ -679,7 +707,7 @@ class Answer(models.Model):
         return ""
 
     def multiple_choice_correct(self):
-        correct_choice = self.question.choice_set.filter(is_correct=True).first()
+        correct_choice = self.question.choices.filter(is_correct=True).first()
         if correct_choice == self.choice:
             self.status = self.CORRECT
             self.grade = 1
@@ -787,10 +815,9 @@ class Answer(models.Model):
 
     @models.permalink
     def get_detail_url(self):
-        if not self.question.is_discursive():
+        if self.question.is_multiple_choice():
             return "mydidata:multiple_choice_answer_detail", [self.id]
-        else:
-            return "mydidata:discursive_answer_detail", [self.id]
+        return "mydidata:discursive_answer_detail", [self.id]
 
 class OverwriteStorage(FileSystemStorage):
     '''
@@ -815,23 +842,37 @@ class TestUserRelation(models.Model):
     def __str__(self):
         return str(self.student.first_name + " " + self.student.last_name + ": " + self.test.title)
     
+    def save(self, *args, **kwargs):
+        if not self.index_list:
+            self.generate_question_index()
+        return super(TestUserRelation, self).save(*args, **kwargs)
+
     def index_list_as_array(self):
-        print("INDEX_LIST:", self.index_list)
         return eval(self.index_list)
 
     def generate_question_index(self):
         import random
-        questions = list(self.test.questions.order_by('uuid').all())[0:self.test.limit_per_try]
-        index_list = [questions.index(q)+1 for q in questions]
-        random.shuffle(index_list)
-        self.set_index_list(index_list)
-        return index_list
+        
+        questions = list(self.test.questions.order_by('uuid').all())
+        next_index_list = self.index_list
+
+        while next_index_list == self.index_list:
+            
+            index_list = [questions.index(q)+1 for q in questions]
+            str(random.shuffle(index_list))
+            next_index_list = str(index_list)
+            
+        self.index_list = next_index_list
+        return self.index_list
     
     def current_questions(self):
         index_array = self.index_list_as_array()
+        
         return [list(self.test.questions.order_by('uuid'))[i-1] for i in index_array ]
 
-
+    def has_next_try(self):
+        return self.test.has_next_try(self.student)
+    
     def has_next_try_diff_questions(self):
         questions = list(self.test.questions.order_by('uuid').all())
         index_array = self.index_list_as_array()
@@ -865,6 +906,33 @@ class TestUserRelation(models.Model):
 
     def set_index_list(self, index_list):
         self.index_list = str(index_list)
+    
+    def get_next_question(self, question):
+        questions = self.current_questions()
+        print("BASE QUESTION ", question)
+        self_index = questions.index(question)
+        print("SELF INDEX: ", self_index)
+
+        if self_index < len(questions) - 1:
+            print("Next Question: ", questions[self_index + 1])
+            return questions[self_index + 1]
+        print("NO NEXT QUESTIONS!")
+        return None
+    
+    def get_next_answer_url(self, question):
+        nextQuestion = self.get_next_question(question)
+
+        if nextQuestion:
+            return reverse("mydidata:test_answer", args=(nextQuestion.uuid, self.test.id,))
+        
+        return ""
+    
+    def close(self):
+        self.is_closed = True
+        self.save()
+        
+        
+        
 
 class Deadline(models.Model, AdminURLMixin):
     topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico")

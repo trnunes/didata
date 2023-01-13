@@ -43,7 +43,7 @@
                     </tr>
                     {% for student in students%}
                         <tr>
-                            <td>{{student.first_name}}</td>
+                            <td>{{student.first_name}} {{student.last_name}} ({{student.username}})</td>
                             
                             {%for question in topic.get_ordered_questions %}
                                 {% get_answers question student as answers%}

@@ -11,7 +11,7 @@
 		{%endif%}
         
             <h2>{{test.title}}</h2>
-            
+            <a type="button" class="btn btn-primary" href="{{test.topic.get_absolute_url}}"> Voltar ao tópico</a>
             <table id="cd-table" class="table table-hover">
 
                 <tbody>
@@ -23,7 +23,6 @@
                         {% endfor %}
                     </tr>
                     {% for student in students%}
-                        {%get_test_user student_grades student as test_user%}
                         <tr>
                             <td>{{student}}</td>
                             
@@ -132,27 +131,42 @@
                 </div>        
         
     
-            {%else%}
+            {% else %}
                 
-                {% for student, student_status in student_grades.items %}
-                    <h1>Aproveitamento: {{student_status.grade}}</h1>
-                    <h2> <a href="{{test.topic.get_absolute_url}}"> Clique para retornar</a></h2>
+                {% if student_grades%}
+                    {% for student, student_status in student_grades.items %}
+                        <h1>Aproveitamento: {{student_status.grade}}</h1>
+                        <h3>Tentativas: {{test_user.tries}} de {{ test.max_tries }}</h3>
+
+                        {%if student_status.grade >= 6%}
+                            <div class="alert alert-success">
+                                Sua nota foi acima da média. Parabéns!
+                            </div>
+                        {%else%}
+                            <div class="alert alert-danger" role="alert">
+                                Infelizmente você não foi muito bem :-( 
+                            </div>
+
+                        {%endif%}
+                        
+                    {%endfor%}
+                {%endif%}
+                <h4>O quê deseja fazer agora?</h4>
+                <a type="button" class="btn btn-primary" href="/mydidata/calculate_student_grades/{{test.id}}/{{students.0.id}}">Corrigir avaliação</a>
+                {%if test_user.has_next_try%}
                     
-                    {%if student_status.grade >= 6%}
-                        <div class="alert alert-success">
-                            {{assessment.success}}
-                        </div>
-                    {%else%}
-                        <div class="alert alert-danger" role="alert">
-                            {%if student_status.next_try_link%}
-                                Você pode tentar mais uma vez clicando <a href="{{student_status.next_try_link}}" class="alert-link">aqui!</a\>!
-                            {%endif%}
-                        </div>
-
-                    {%endif%}
-                {%endfor%}
-
+                    
+                    
+                    <a type="button" class="btn btn-success" href="/mydidata/next_try/{{test_user.id}}" class="alert-link">Quero tentar novamente!</a>
+                    <a type="button" class="btn btn-danger" href="/mydidata/close_test_for_student/{{test.id}}/{{students.0.id}}">Encerre a Avaliação (não será possível retornar)</a>
+                {%endif%}
+            
+            
+                
+                        
             {%endif%}
+
+            
 
     </div>
 

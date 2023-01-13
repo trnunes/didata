@@ -7,4 +7,5 @@ stopwords
 wordnet
 words
 omw
+omw-1.4 
 rslp
