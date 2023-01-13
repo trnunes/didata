@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 import os
 import django_heroku
 from whitenoise import WhiteNoise
+import nltk
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -158,6 +159,7 @@ RQ_QUEUES = {
     }
 }
 
+nltk.data.path.append('./nltk_data/')
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
