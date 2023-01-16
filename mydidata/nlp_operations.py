@@ -45,6 +45,7 @@ def extract_bigram_entities(texts):
     for text in texts :
         count = 0
         tokens = remove_stop_tokens(tokenize(text))
+        
         while count < len(tokens) - window_size:
             window_tokens = tokens[count:count+window_size]
             phrase = " ".join([normalize(t) for t in window_tokens])
