@@ -24,6 +24,42 @@ def get_syn(word):
         synonyms += [l.name() for l in synset.lemmas(lang='por')]
     return synonyms
 
+def extract_entities(texts):
+    tokens_hash = {}
+    for text in texts:
+       for t in remove_stop_tokens(tokenize(text)):
+
+            nt = normalize(t)
+            if not tokens_hash.get(nt, None):
+                tokens_hash[nt] = [t, 0]
+            tokens_hash[nt][1] += 1
+    
+    result_tuples = [(key, tokens_hash[key][0], tokens_hash[key][1]) for key in tokens_hash ]
+    result_tuples.sort(key=lambda x: x[2], reverse=True)
+    
+    return result_tuples
+
+def extract_bigram_entities(texts):
+    window_size = 2
+    phrase_hash = {}
+    for text in texts :
+        count = 0
+        tokens = remove_stop_tokens(tokenize(text))
+        while count < len(tokens) - window_size:
+            window_tokens = tokens[count:count+window_size]
+            phrase = " ".join([normalize(t) for t in window_tokens])
+
+            if not phrase_hash.get(phrase, None):
+                phrase_hash[phrase] = [" ".join(window_tokens), 0]
+            
+            phrase_hash[phrase][1] += 1
+            count += 1
+    
+    result_tuples = [(key, phrase_hash[key][0], phrase_hash[key][1]) for key in phrase_hash ]
+    result_tuples.sort(key=lambda x: x[2], reverse=True)
+    
+    return result_tuples
+
 def analyze_entities(text, hints):
     pt_stopwords = stopwords.words('portuguese') + list(punctuation)
     tokens = word_tokenize(hints)
@@ -112,6 +148,7 @@ def stem(tokens):
     tokens_cp = tokens.copy()
     stemmer = get_stemmer()
     return [stemmer.stem(token.lower()) for token in tokens_cp]
+
 
 def normalize(token):
     if not token or pd.isnull(token):
@@ -413,7 +450,7 @@ def get_non_stop_tokens(tokens):
 
 def remove_stop_tokens(tokens):
     pt_stopwords = stopwords.words('portuguese') + list(punctuation)
-    return [t for t in tokens if t not in pt_stopwords]
+    return [t for t in tokens if unidecode.unidecode(t.lower()) not in pt_stopwords]
 
 def has_intersection(phrase1, phrase2):
     phrase1_ary = [phrase1, normalize(phrase1)]

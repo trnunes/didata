@@ -43,6 +43,66 @@ class TestNLPAnalizer(TestCase):
             [],
         ]
 
+    def test_extract_entities(self):
+        expected_entities = [
+            ('celul animal', 'celular animal', 3), ('animal nucle', 'animal núcleo', 2), 
+            ('celul veget', 'célula vegetal', 2), ('veget pared', 'vegetal parede', 2), 
+            ('pared celul', 'parede celular', 2), ('animal animal', 'animal animal', 2), 
+            ('nucle veget', 'núcleo vegetal', 1), ('nucle outr', 'núcleo outra', 1), 
+            ('nucle animal', 'nucleo animal', 1), ('animal n', 'animal n', 1), 
+            ('ser viv', 'seres vivos', 1), ('viv outr', 'vivos outra', 1), 
+            ('outr plant', 'outra plantas', 1), ('plant veget', 'plantas vegetais', 1), 
+            ('celul outr', 'celular outra', 1), ('animal var', 'animais várias', 1), 
+            ('var func', 'várias funções', 1), ('func veget', 'funções vegetais', 1), 
+            ('veget poi', 'vegetais pois', 1), ('poi animal', 'pois animais', 1), 
+            ('animal fal', 'animais falam', 1), ('fal and', 'falam andam', 1), 
+            ('and sistem', 'andam sistema', 1), ('sistem diges', 'sistema digestivo', 1), 
+            ('diges complex', 'digestivo complexo', 1), ('complex vari', 'complexo vários', 1),
+             ('vari org', 'vários órgãos', 1), ('org plant', 'órgãos plantas', 1), 
+             ('plant soment', 'plantas somente', 1), 
+             ('soment fotossintes', 'somente fotossíntese', 1), 
+             ('fotossintes cri', 'fotossíntese criação', 1), ('cri nutri', 'criação nutrientes', 1), 
+             ('nutri absorc', 'nutrientes absorção', 1), ('absorc agu', 'absorção água', 1), 
+             ('agu etc.p', 'água etc.Por', 1), ('etc.p celul', 'etc.Por células', 1), 
+             ('celul sao', 'células são', 1), ('sao difer', 'são diferentes', 1), 
+             ('difer poi', 'diferentes pois', 1), ('poi plant', 'pois plantas', 1), 
+             ('plant sao', 'plantas são', 1), ('sao bem', 'são bem', 1), 
+             ('bem difer', 'bem diferentes', 1), ('veget possu', 'vegetal possui', 1), 
+             ('possu celul', 'possui células', 1), ('animal veget', 'animais vegetal', 1), 
+             ('veget plant', 'vegetal plantas', 1)]
+
+
+        
+        entities = extract_entities(self.test_sentences)
+
+        self.assertEquals(entities, expected_entities)
+
+    def test_extract_bigrams(self):
+        expected_entities = [
+            ('animal', 'animal', 11), ('veget', 'vegetal', 8), ('celul', 'célula', 8), 
+            ('nucle', 'núcleo', 5), ('plant', 'plantas', 5), ('outr', 'outra', 4), 
+            ('a', 'A', 3), ('pared', 'parede', 3), ('poi', 'pois', 3), 
+            ('difer', 'diferentes', 3), ('n', 'n', 2), ('uma', 'Uma', 2), 
+            ('ser', 'seres', 2), ('viv', 'vivos', 2), ('que', 'Que', 2), 
+            ('var', 'várias', 2), ('func', 'funções', 2), ('fal', 'falam', 2), 
+            ('and', 'andam', 2), ('sistem', 'sistema', 2), ('diges', 'digestivo', 2), 
+            ('complex', 'complexo', 2), ('vari', 'vários', 2), ('org', 'órgãos', 2), 
+            ('soment', 'somente', 2), ('fotossintes', 'fotossíntese', 2), 
+            ('cri', 'criação', 2), ('nutri', 'nutrientes', 2), ('absorc', 'absorção', 2), 
+            ('agu', 'água', 2), ('etc.p', 'etc.Por', 2), ('bem', 'bem', 2), 
+            ('possu', 'possui', 2)
+        ]
+
+
+        entities = extract_bigram_entities(self.test_sentences)
+        print(entities)
+        self.assertEquals(entities, expected_entities)
+
+
+
+
+
+
 
     def test_tokenize(self):
         text = "A célula animal é eucarionte e heterotrófica."
