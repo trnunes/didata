@@ -55,6 +55,7 @@ selenium = "==4.1.5"
 nltk = "*"
 pandas = "*"
 django-rq = "*"
+google-cloud-vision = "*"
 
 
 [dev-packages]
