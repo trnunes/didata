@@ -26,7 +26,7 @@ import re
 import json
 from django.db.models import Q
 import csv
-from .tasks import go_academico, correct_answers, correct_whole_topic, to_csv
+from .tasks import go_academico, correct_answers, correct_whole_topic, to_csv, detect_text_uri
 import datetime
 from django.utils import timezone
 from datetime import timedelta
@@ -716,6 +716,14 @@ def discursive_answer_detail(request, answer_id):
     [answers_by_question.__setitem__(a.question, a) for a in answers]
 
     return render(request, 'mydidata/discursive_answer_detail.html', {'answers_by_question': answers_by_question, 'answer': answer, "form": SuperuserAnswerFormSimplified(instance=answer)})
+
+@login_required()
+def detect_answer_text(request, answer_id):
+    answer = Answer.objects.get(pk=answer_id)
+    text = detect_text_uri(answer.assignment_file.url)
+    answer.answer_text = text
+    answer.save()
+    return redirect(answer.get_detail_url())
 
 @login_required()
 def multiple_choice_answer_detail(request, answer_id):

@@ -83,6 +83,7 @@ urlpatterns = [
     url(r'^test_answer/(?P<question_uuid>[\w-]+)/(?P<test_id>[0-9]+)/$',views.test_answer, name='test_answer'),
     
     url(r'^discursive_answer_detail/(?P<answer_id>[0-9]+)$',views.discursive_answer_detail, name='discursive_answer_detail'),
+    url(r'^detect_answer_text/(?P<answer_id>[0-9]+)$',views.detect_answer_text, name='detect_answer_text'),
     url(r'^feedback/(?P<answer_id>[0-9]+)$',views.feedback, name='feedback'),
     url(r'^test/new/(?P<topic_id>[\w-]+)/$',views.test_new, name='test_new'),
     url(r'^progress/(?P<discipline_name>[\w|\W]+)/$',views.progress, name='progress'),
