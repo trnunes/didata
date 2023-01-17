@@ -27,13 +27,12 @@
 		{% endif %}
 
 		<a href="{{question.get_update_url}}">Editar Questão</a>
-
+		{% if form.instance and form.instance.assignment_file %}
+			<a href="{%url 'mydidata:detect_answer_text' form.instance.id%}"> | Detectar Texto</a>	
+		{% endif %}
         
 		{% with answer=form.instance%}
 		<h2 class="ad-mh">Resposta de: {{answer.student.first_name}}&nbsp;{{answer.student.last_name}}</h2>
-			<!-- {% if user.is_superuser%} -->
-				<a href="{%url 'mydidata:detect_answer_text' answer.id%}">Detectar Texto</a>
-			<!-- {% endif %} -->
 			<div id="answer_form">
 				{% include 'mydidata/discursive_answer_item_form.html' %}
 			</div>

@@ -142,13 +142,15 @@ class DisciplineList(ListView):
     context_object_name = 'disciplines'
 
     def get_queryset(self):
-        # if self.request.user.is_authenticated:
-            # discipline_list = []
-            # classrooms = Classroom.objects.filter(students__id=self.request.user.id)
-            # discipline_list = set([d for klass in classrooms for d in klass.disciplines.order_by('name').all()])
-            # 
-        # else:
-        discipline_list = Discipline.objects.filter(enabled=True).order_by('name')
+        
+        
+        if self.request.GET.get("restrict", None) and self.request.user.is_authenticated:
+            discipline_list = []
+            classrooms = Classroom.objects.filter(students__id=self.request.user.id)
+            discipline_list = set([d for klass in classrooms for d in klass.disciplines.order_by('name').all()])
+            
+        else:
+            discipline_list = Discipline.objects.filter(enabled=True).order_by('name')
         return discipline_list
         
 
