@@ -980,7 +980,7 @@ def topic_detail(request, uuid):
 
     questions = list(Question.objects.filter(topic=topic).order_by('index'))
     test_user_relation = None
-    test = topic.test_set.all().first()
+    test = topic.tests.all().first()
     if( test and request.user.is_authenticated):
         test_questions = test.questions.all()
         test_user_relation = TestUserRelation.objects.filter(test=test, student=request.user).first()
