@@ -16,7 +16,7 @@ from .models import Answer
 import requests
 from django.shortcuts import get_object_or_404
 import json
-from .nlp_analyzer import score_keywords, score, assess, read_lines
+from .nlp_analyzer import score_keywords, score, assess, read_lines, normalize
 
 def detect_text_uri(uri):
     """Detects text in the file located in Google Cloud Storage or on the Web.
@@ -26,7 +26,7 @@ def detect_text_uri(uri):
     image = vision.Image()
     image.source.image_uri = uri
 
-    response = client.text_detection(image=image)
+    response = client.text_detection(image=image,image_context={"language_hints": ["pt"]})
     texts = response.text_annotations
     print('Texts:')
     full_text = ""
@@ -50,13 +50,41 @@ def detect_text_uri(uri):
 def count_words(text):
     return len(text.split(" "))
 
+def detect_copies(answers):
+    # import pdb;pdb.set_trace()
+    punishing_questions = set([a.question for a in answers if a.question.punish_copies])
+    
+    
+    all_answers_set = Answer.objects.filter(question__in=punishing_questions).exclude(id__in=[a.id for a in answers]).all()
+    result_dict = {}
+    for a1 in answers:
+        for a2 in all_answers_set:
+            if (
+                a1.text_escaped() == a2.text_escaped()
+                
+            ):
+                if not result_dict.get(a1, None):
+                    result_dict[a1] = [a1]
+                result_dict[a1].append(a2)
+    return list(result_dict.values())
+
+    
+
+
+
 @background(schedule=0)
 def correct_answers(answers_list):
 
-    for answer_id in answers_list:
-        answer_obj = get_object_or_404(Answer, pk=answer_id)
+
+    for answer_obj in answers_list:
+
         if answer_obj.question.expected_output:
-            return answer_obj.correct_c_programming_answer()
+            answer_obj.correct_c_programming_answer()
+            continue
+        
+        if answer_obj.question.choices.all():
+            answer_obj.correct()
+            continue
             
         keywords = answer_obj.question.ref_keywords.split(";")
         if not answer_obj.question.ref_keywords:

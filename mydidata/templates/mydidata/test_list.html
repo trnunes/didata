@@ -16,34 +16,40 @@
                 {# Account Search Form #}
             </div>
             {# List of Tests #}
-            <ul id="al-group" class="strip-list">
-                {% for test in tests %}
+
+
+            {% for test in tests %}
+                
+                
                     
-                    {%get_class test user as klasses%}
-                        {%for klass in klasses %}
-                            {% get_close_url klass test as close_url %}
-                            {% get_open_url klass test as open_url %}
-                            {% get_assess_url klass test as assess_url %}
-                            {% get_assess_sum_url klass test as assess_sum_url %}
-                            {% get_assess_wavg_url klass test as assess_wavg_url %}
-                            {%get_progress_url klass test as progress_url%}
-                            <li class="al-item">
-                                
-                            {% if user.is_superuser%}
-                                <a href="{{ progress_url }}"><h4 class="al-name">{{ test.title }} para {{klass.name}}</h4></a>
-                                | <a href="{{ assess_url }}">Corrigir</a>
-                                | <a href="{{ assess_sum_url }}">Notas (Soma)</a>
-                                | <a href="{{ assess_wavg_url }}">Notas (Média Ponderada)</a>
-                            {%else%}
-                                <a href="{{ test.get_absolute_url }}"><h4 class="al-name">{{ test.title }} para {{klass.name}}</h4></a>
+                {% get_close_url classroom test as close_url %}
+                {% get_open_url classroom test as open_url %}
+                {% get_assess_url classroom test as assess_url %}
+                {% get_progress_url classroom test as progress_url %}
+
+                <div class="mt-3 py-3 px-3 bg-white shadow border border-gray-100">
+                    {% if user.is_superuser%}
+                        <a href="{{ progress_url }}" >{{ test.title }}</a>
+                        <div class="mt-2">
+                            
+                            {% is_closed test classroom as closed%}
+                            
+                            {% if closed %}
+                                <a type="button" class="btn btn-primary" href="{{ open_url }}">Abrir</a>
+                            {% else %}
+                                <a type="button" class="btn btn-primary" href="{{ close_url }}">Fechar</a>
                             {%endif%}
-
-                            </li>
-                        {%endfor%}
+                            <a type="button" class="btn btn-primary" href="{{ assess_url }}">Corrigir</a>
+                        </div>
+                    {% else %}
+                        <a href="{{ test.get_absolute_url }}"><h4 class="al-name">{{ test.title }}</h4></a>
+                    {% endif %}
+                </div>
 
                     
-                {% endfor %}
-            </ul>
+
+                
+            {% endfor %}
             {# Pagination Section #}
         </div>
     </div>

@@ -25,15 +25,6 @@ def get_assess_url(classroom, test):
 	return reverse('mydidata:test_assess', args= (classroom.id, test.uuid))
 
 @register.simple_tag
-def get_assess_sum_url(classroom, test):
-	return reverse('mydidata:test_results_sum', args= (classroom.id, test.uuid))
-
-@register.simple_tag
-def get_assess_wavg_url(classroom, test):
-	return reverse('mydidata:test_results_wavg', args= (classroom.id, test.uuid))
-
-
-@register.simple_tag
 def is_closed_for_student(user, test):
     
     return test.is_closed_for(user)
@@ -46,6 +37,10 @@ def get_finish_url_for_user(classroom, test):
 def get_test_user(student_grades_dict, student):
 	return student_grades_dict[student].get('test_user', None)
 
+@register.simple_tag
+def is_closed(test, classroom):
+	return test.is_closed(classroom)
+	
 @register.simple_tag
 def get_class(test, user):
 	if not user.is_superuser:

@@ -25,14 +25,15 @@
 		        </div>
 		    {% endfor %}
 		{% endif %}
-
-		<a href="{{question.get_update_url}}">Editar Questão</a>
+		{% if request.user.is_superuser %}
+			<a href="{{question.get_update_url}}">Editar Questão</a>
+		{% endif %}
 		{% if form.instance and form.instance.assignment_file %}
 			<a href="{%url 'mydidata:detect_answer_text' form.instance.id%}"> | Detectar Texto</a>	
 		{% endif %}
         
 		{% with answer=form.instance%}
-		<h2 class="ad-mh">Resposta de: {{answer.student.first_name}}&nbsp;{{answer.student.last_name}}</h2>
+		<h4 class="ad-mh">Resposta de: {{answer.student.first_name}}&nbsp;{{answer.student.last_name}}</h4>
 			<div id="answer_form">
 				{% include 'mydidata/discursive_answer_item_form.html' %}
 			</div>
@@ -78,6 +79,12 @@
 
 			}
 
+		});
+		CKEDITOR.on("instanceReady", function(event){
+			CKEDITOR.instances.id_answer_text.on('paste', function(evt) {
+			    evt.cancel();
+				alert("Não copie e cole conteúdos!");
+			});
 		});
 	</script>
 

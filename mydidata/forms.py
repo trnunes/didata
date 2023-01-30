@@ -5,11 +5,11 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import UserChangeForm
 from django.forms.models import ModelMultipleChoiceField
 
-from .models import ContentVersion, Team, Topic, Question, Profile, Choice, Discipline, Classroom, Answer, TestUserRelation
+from .models import Comment, ContentVersion, Team, Topic, Question, Profile, Choice, Discipline, Classroom, Answer, TestUserRelation
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from django.forms import modelform_factory, formset_factory, modelformset_factory
+from django.forms import modelform_factory, formset_factory, inlineformset_factory, modelformset_factory
 from django.contrib.auth.models import User
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
@@ -36,10 +36,15 @@ class SubscriberForm(UserCreationForm):
     password1 = forms.CharField(
         widget=forms.TextInput(attrs={'class':'form-control', 'type':'password'})
     )
+    enrollment = forms.CharField(
+        widget=forms.TextInput(attrs={'class':'form-control',} ), label="Matrícula", required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         del self.fields['password2']
+    
+
     # disciplines = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple)
     # def __init__(self,*args,**kwargs):
     #     print kwargs
@@ -152,7 +157,7 @@ class ContentVersionForm(forms.ModelForm):
 class CProgrammingQuestionForm(forms.ModelForm):
     class Meta:
         model = Question
-        fields = fields = ("question_text", 'difficulty_level', 'question_type', "is_team_work", "test_inputs", "expected_output", "weight", "punish_copies",)
+        fields = ("question_text", 'difficulty_level', 'question_type', "is_team_work", "test_inputs", "expected_output", "weight", "punish_copies",)
         widgets = {
             'question_text': forms.CharField(widget=CKEditorUploadingWidget, label='Enunciado'),
             'expected_output': forms.TextInput(
@@ -175,6 +180,24 @@ class CProgrammingQuestionForm(forms.ModelForm):
             ),
         }
 
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ("body",)
+        # widgets = {
+            # "body": forms.CharField(widget=CKEditorUploadingWidget, label='Texto')
+        # }
+    
+    
+ 
+CommentFormSet = inlineformset_factory(
+    Topic,
+    Comment,
+    CommentForm,
+    can_delete = False,
+    min_num=2,
+    extra=0
+)
 
 class DiscursiveQuestionForm(forms.ModelForm):
     class Meta:
@@ -302,6 +325,7 @@ class AnswerForm(forms.ModelForm):
         
         # self.fields['choice'] = forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=self.question.choice_set, label="Selecione a sua resposta", empty_label=None)
         if self.question and (self.question.is_discursive() or self.question.is_c_programming()):
+            
             self.fields.pop('choice', None)
         
         if self.question and self.question.file_upload_only:

@@ -24,12 +24,19 @@
                   {{ form.email.errors }}
                   <small id="emailHelp" class="form-text text-muted">Nós não compartilhamos endereços de email com mais ninguém.</small>
                 </div>
+                
                 <div class="form-group">
                   <label for="exampleInputPassword1">Senha</label>
                   {{ form.password1 }}
                   {{ form.password1.errors }}
                   {{ form.password2.errors }}
                 </div>
+
+                <div class="form-group">
+                    <label for="exampleInputPassword1">Matrícula do IFF (caso possua)</label>
+                    {{ form.enrollment }}
+                    {{ form.enrollment.errors }}
+                  </div>
 
                 <button type="submit" class="btn btn-primary">Cadastrar</button>
             </form>

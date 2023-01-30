@@ -1,0 +1,12 @@
+<div id="comments_area">
+    <div id="commentforms"></div>
+    {% if not topic.comments.all %}
+        Não há comentários ainda... Seja o primeiro!
+    {% else %}
+        {% for comment in topic.comments.all %}
+            {% include "mydidata/partials/comment_detail.html" %}
+           
+        {% endfor %}
+
+    {%endif%}
+</div>

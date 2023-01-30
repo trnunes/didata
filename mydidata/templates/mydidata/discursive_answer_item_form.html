@@ -1,13 +1,15 @@
 {% if error_message %}<h4><strong>{{ error_message }}</strong></h4>{% endif %}
 {%load question_extras%}
+<h3 class="ad-mh">Questão: </h3>
 <p>{{ question.question_text | safe}}</p>
 
 
 
 
 {% if answer %}
-    <h3 class="gi-sh">Avaliação</h3>
+    
     {%if answer.feedback%}
+    <h3 class="gi-sh">Avaliação</h3>
         
         <p><font color='red'>{{ answer.feedback | safe}}</font></p>
         {%if answer.grade >= 0.6%}
@@ -30,7 +32,7 @@
 
 
 
-<form enctype="multipart/form-data" action="{{ answer_form_url }}" id="form_feedback" method="post">
+<form enctype="multipart/form-data" action="{{ answer_form_url }}" id="form_feedback" method="post" >
 <input type="hidden" name="redirect_to" value="{{answer_form_url}}"/>
 {%if user.is_superuser%}
 <h3 class="gi-sh">Resposta Enviada</h3>
@@ -40,7 +42,9 @@
 {% csrf_token %}
     
 {{ form.media }}
+{% if question.is_discursive %}
 {{ form.as_p }}
+{%endif%}
 {% if question.is_team_work%}
 <div class="form-group">
     <a href="{% url 'mydidata:create_team' %}">Criar uma Equipe</a>

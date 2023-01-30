@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, RequestFactory, Client
 from mydidata.models import Classroom, ContentVersion, Answer, Test, Topic, TestUserRelation, Question, Choice, Discipline, Team
 from mydidata.forms import TeamForm, TopicForm, ContentVersionForm, AnswerForm
+from mydidata.tasks import detect_copies
 from http import HTTPStatus
 from django.core.management import call_command
 
@@ -347,7 +348,32 @@ class AnswerTests(TestCase):
 
         self.assertContains(response, "Este campo é obrigatório.")
 
+class TopicCommentTests(TestCase):
 
+    def test_create_comment(self):
+        user1 = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+        
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+
+        self.client.login(username="baa", password="foo")
+
+
+        response = self.client.get("/mydidata/comment/create/"+str(topic.id)+"/")
+
+        self.assertEqual(response.status_code, 200)
+
+
+    def test_update_comment(self):
+        pass
+
+    def test_delete_comment(self):
+        pass
+
+    
+
+    
 class AnswerIntegrationTests(TestCase):
     
     def test_send_answer_for_team_questions_without_team(self):
@@ -429,11 +455,6 @@ class AnswerIntegrationTests(TestCase):
         self.assertEqual(list(team1.answers.all()), list(answers))
         self.assertEqual(302, response.status_code )
 
-
-
-
-
-
 class TestUserRelationTests(TestCase):
     
     def test_generate_question_index(self):
@@ -473,7 +494,29 @@ class TestUserRelationTests(TestCase):
         self.assertListEqual(tu.current_questions(), [q3,q2,q1,q4])
         tu.save()
     
-    def test_next_answer_question(self):
+    def test_current_non_answerd_questions(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        q2 = created_test.questions.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        q3 = created_test.questions.create(question_text= "question 3", uuid="3", difficulty_level = 1, question_type=3)
+        q4 = created_test.questions.create(question_text= "question 4", uuid="4", difficulty_level = 1, question_type=3)
+        created_test.save()
+
+        tu = TestUserRelation.objects.create(student=user, test=created_test)
+        tu.index_list = "[3,2,1,4]"
+        self.assertListEqual(tu.current_non_answered_questions(), [q3,q2,q1,q4])
+        
+        Answer.objects.create(answer_text="answer question 1", question=q1, test=created_test, student=user)
+        
+        self.assertListEqual(tu.current_non_answered_questions(), [q3,q2,q4])
+        
+
+
+
+    
+    def test_next_non_answer_question(self):
         user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
         topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
         created_test = Test.objects.create(title="My Test", topic=topic)
@@ -487,17 +530,36 @@ class TestUserRelationTests(TestCase):
         tu = TestUserRelation.objects.create(student=user, test=created_test)
         tu.index_list = "[3,2,1,4]"
         tu.save()
-
+        Answer.objects.create(answer_text="answer question 1", question=q2, test=created_test, student=user)
+        Answer.objects.create(answer_text="answer question 1", question=q1, test=created_test, student=user)
         
-        self.assertEqual(q2, tu.get_next_question(q3))
-        
-        self.assertEqual(q1, tu.get_next_question(q2))
-        
-        self.assertEqual(q4, tu.get_next_question(q1))
+        self.assertEqual(q4, tu.get_next_question(q3))
         
         self.assertIsNone(tu.get_next_question(q4))
         
+    def test_next_question_without_answers(self):
+        user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        q2 = created_test.questions.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        q3 = created_test.questions.create(question_text= "question 3", uuid="3", difficulty_level = 1, question_type=3)
+        q4 = created_test.questions.create(question_text= "question 4", uuid="4", difficulty_level = 1, question_type=3)
+        created_test.save()
 
+
+        tu = TestUserRelation.objects.create(student=user, test=created_test)
+        tu.index_list = "[3,2,1,4]"
+        tu.save()
+
+
+        self.assertEqual(q2, tu.get_next_question(q3))
+
+        self.assertEqual(q1, tu.get_next_question(q2))
+
+        self.assertEqual(q4, tu.get_next_question(q1))
+
+        self.assertIsNone(tu.get_next_question(q4))
 
 
 class TestsManagementTests(TestCase):
@@ -668,13 +730,223 @@ class TestIntegrationTests(TestCase):
         self.assertEqual(answer.answer_text, "resposta da questão 1")
 
         self.assertContains(response, "Siga para a próxima questão.")
-
-
-
-        
     
+    def test_progress_view(self):
+        superuser = User.objects.create_superuser(email='normal@superuser1.com', username='superbaa', password='foo')
+        superuser.set_password("foo")
+        superuser.save()
 
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo', first_name="User1", last_name="Baa")
+        user1.set_password("foo")
+        user1.save()
 
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo', first_name="User2", last_name="Baa")
+        user2.set_password("foo")
+        user2.save()
+
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        q2 = created_test.questions.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        q3 = created_test.questions.create(question_text= "question 1", uuid="3", difficulty_level = 1, question_type=3)
+        q4 = created_test.questions.create(question_text= "question 2", uuid="4", difficulty_level = 1, question_type=3)
+
+        a1 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user1, test=created_test)
+        a2 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user1, test=created_test)
+        a3 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user1, test=created_test)
+        a4 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user1, test=created_test)
+
+        a5 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user2, test=created_test)
+        a6 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user2, test=created_test)
+        a7 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user2, test=created_test)
+        a8 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user2, test=created_test)
+
+        a1.status = Answer.CORRECT
+        a1.grade = 1.0
+        a1.save()
+        a2.status = Answer.CORRECT
+        a2.grade = 1.0
+        a2.save()
+        a3.status = Answer.CORRECT
+        a3.grade = 1.0
+        a3.save()
+        a4.status = Answer.CORRECT
+        a4.grade = 1.0
+        a4.save()
+        
+        a5.status = Answer.CORRECT
+        a5.grade = 1.0
+        a5.save()
+        a6.status = Answer.CORRECT
+        a6.grade = 0.8
+        a6.save()
+        a7.status = Answer.CORRECT
+        a7.grade = 0.65
+        a7.save()
+        a8.status = Answer.CORRECT
+        a8.grade = 0.3
+        a8.save()
+        
+        tu1 = TestUserRelation.objects.create(student=user1, test=created_test, index_list="[0,1,2,3]")
+        tu1.save()
+        
+        tu2 = TestUserRelation.objects.create(student=user2, test=created_test, index_list="[0,1,2,3]")
+        tu2.save()
+
+        self.client.login(username="superbaa", password="foo")
+        response = self.client.get(f"/mydidata/test_progress/{created_test.uuid}/{classroom.id}/")
+
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, "Aproveitamento")
+        self.assertContains(response, "User1")
+        self.assertContains(response, "<td>10")
+
+        self.assertContains(response, "User2")
+        self.assertContains(response, "<td>6,875")
+
+    def test_progress_view(self):
+        superuser = User.objects.create_superuser(email='normal@superuser1.com', username='superbaa', password='foo')
+        superuser.set_password("foo")
+        superuser.save()
+
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo', first_name="User1", last_name="Baa")
+        user1.set_password("foo")
+        user1.save()
+
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo', first_name="User2", last_name="Baa")
+        user2.set_password("foo")
+        user2.save()
+
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        created_test = Test.objects.create(title="My Test", topic=topic)
+
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        q2 = created_test.questions.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        q3 = created_test.questions.create(question_text= "question 1", uuid="3", difficulty_level = 1, question_type=3)
+        q4 = created_test.questions.create(question_text= "question 2", uuid="4", difficulty_level = 1, question_type=3)
+
+        a1 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user1, test=created_test)
+        a2 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user1, test=created_test)
+        a3 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user1, test=created_test)
+        a4 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user1, test=created_test)
+
+        a5 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user2, test=created_test)
+        a6 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user2, test=created_test)
+        a7 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user2, test=created_test)
+        a8 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user2, test=created_test)
+
+        a1.status = Answer.CORRECT
+        a1.grade = 1.0
+        a1.save()
+        a2.status = Answer.CORRECT
+        a2.grade = 1.0
+        a2.save()
+        a3.status = Answer.CORRECT
+        a3.grade = 1.0
+        a3.save()
+        a4.status = Answer.CORRECT
+        a4.grade = 1.0
+        a4.save()
+        
+        a5.status = Answer.CORRECT
+        a5.grade = 1.0
+        a5.save()
+        a6.status = Answer.CORRECT
+        a6.grade = 0.8
+        a6.save()
+        a7.status = Answer.CORRECT
+        a7.grade = 0.65
+        a7.save()
+        a8.status = Answer.CORRECT
+        a8.grade = 0.3
+        a8.save()
+        
+        tu1 = TestUserRelation.objects.create(student=user1, test=created_test, index_list="[0,1,2,3]")
+        tu1.save()
+        
+        tu2 = TestUserRelation.objects.create(student=user2, test=created_test, index_list="[0,1,2,3]")
+        tu2.save()
+
+        self.client.login(username="superbaa", password="foo")
+        response = self.client.get(f"/mydidata/calculate_student_grades/{created_test.id}/{user1.id}/")
+
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, "Aproveitamento")
+        self.assertContains(response, "User1")
+        self.assertContains(response, "<td>10")
+
+        self.assertNotContains(response, "User2")
+        self.assertNotContains(response, "<td>6,875")
+
+        response = self.client.get(f"/mydidata/calculate_student_grades/{created_test.id}/{user2.id}/")
+
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, "Aproveitamento")
+        self.assertNotContains(response, "User1")
+        self.assertNotContains(response, "<td>10")
+
+        self.assertContains(response, "User2")
+        self.assertContains(response, "<td>6,875")
+
+    def test_assess_view_test(self):
+        superuser = User.objects.create_superuser(email='normal@superuser1.com', username='superbaa', password='foo')
+        superuser.set_password("foo")
+        superuser.save()
+
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo', first_name="User1", last_name="BAA")
+        user1.set_password("foo")
+        user1.save()
+
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo', first_name="User2", last_name="Baa")
+        user2.set_password("foo")
+        user2.save()
+
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = superuser)
+        
+        created_test = Test.objects.create(title="My Test", topic=topic)
+
+        q1 = created_test.questions.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        c1q1 = q1.choices.create(choice_text = "choice 1", is_correct=True)
+        c2q1 = q1.choices.create(choice_text = "choice 2")
+        c3q1 = q1.choices.create(choice_text = "choice 3")
+        c4q1 = q1.choices.create(choice_text = "choice 4")
+        
+        q2 = created_test.questions.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        c1q2 = q2.choices.create(choice_text = "choice 1")
+        c2q2 = q2.choices.create(choice_text = "choice 2")
+        c3q2 = q2.choices.create(choice_text = "choice 3", is_correct=True)
+        c4q2 = q2.choices.create(choice_text = "choice 4")
+        
+
+        a1 = Answer.objects.create(choice=c1q2, question=q1, student=user1, test=created_test)
+        a2 = Answer.objects.create(choice=c2q2, question=q2, student=user1, test=created_test)
+        
+        a3 = Answer.objects.create(choice=c1q1, question=q1, student=user2, test=created_test)
+        a4 = Answer.objects.create(choice=c3q2, question=q2, student=user2, test=created_test)
+
+        self.client.login(username="superbaa", password="foo")
+        response = self.client.get(f"/mydidata/test/assess/{classroom.id}/{created_test.uuid}/")
+        self.assertRedirects(
+            response, f'/mydidata/test_progress/{created_test.uuid}/{classroom.id}/', 
+            status_code=302, target_status_code=200, 
+            fetch_redirect_response=True
+        )
+
+    
+    
 
 
 class QuestionTests(TestCase):
@@ -737,6 +1009,340 @@ class TopicIntegration(TestCase):
         self.assertEqual(1, len(saved_topic.versions.all()))
         
         self.assertEqual("hello world", saved_topic.versions.all().first().content)
+
+    def test_calcualte_grades_avg(self):
+
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+        
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo')
+        user2.set_password("foo")
+        user2.save()
+        
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        q1 = topic.question_set.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        q2 = topic.question_set.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        q3 = topic.question_set.create(question_text= "question 1", uuid="3", difficulty_level = 1, question_type=3)
+        q4 = topic.question_set.create(question_text= "question 2", uuid="4", difficulty_level = 1, question_type=3)
+        
+        non_topic_question = Question.objects.create(question_text= "question 2", uuid="5", difficulty_level = 1, question_type=3)
+        non_topic_answer = Answer.objects.create(answer_text="answer question 1", question=non_topic_question, student=user1)
+
+        a1 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user1)
+        a2 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user1)
+        a3 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user1)
+        a4 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user1)
+        
+        a5 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user2)
+        a6 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user2)
+        a7 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user2)
+        a8 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user2)
+
+        a1.status = Answer.CORRECT
+        a1.grade = 1.0
+        a1.save()
+        a2.status = Answer.CORRECT
+        a2.grade = 1.0
+        a2.save()
+        a3.status = Answer.CORRECT
+        a3.grade = 1.0
+        a3.save()
+        a4.status = Answer.CORRECT
+        a4.grade = 1.0
+        a4.save()
+
+        a5.status = Answer.CORRECT
+        a5.grade = 1.0
+        a5.save()
+        a6.status = Answer.CORRECT
+        a6.grade = 0.8
+        a6.save()
+        a7.status = Answer.CORRECT
+        a7.grade = 0.65
+        a7.save()
+        a8.status = Answer.CORRECT
+        a8.grade = 0.3
+        a8.save()
+
+        expected_grades = [[user1, 10.0], [user2, 6.875]]
+
+        self.assertEqual(topic.calculate_grades(classroom), expected_grades)
+
+    def test_calcualte_grades_avg_missing_answer(self):
+
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+        
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo')
+        user2.set_password("foo")
+        user2.save()
+        
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        q1 = topic.question_set.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        q2 = topic.question_set.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        q3 = topic.question_set.create(question_text= "question 1", uuid="3", difficulty_level = 1, question_type=3)
+        q4 = topic.question_set.create(question_text= "question 2", uuid="4", difficulty_level = 1, question_type=3)
+        
+        a1 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user1)
+        a2 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user1)
+        a3 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user1)
+        a4 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user1)
+        
+        a6 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user2)
+        a7 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user2)
+        a8 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user2)
+
+        a1.status = Answer.CORRECT
+        a1.grade = 1.0
+        a1.save()
+        a2.status = Answer.CORRECT
+        a2.grade = 1.0
+        a2.save()
+        a3.status = Answer.CORRECT
+        a3.grade = 1.0
+        a3.save()
+        a4.status = Answer.CORRECT
+        a4.grade = 1.0
+        a4.save()
+
+        a6.status = Answer.CORRECT
+        a6.grade = 0.8
+        a6.save()
+        a7.status = Answer.CORRECT
+        a7.grade = 0.65
+        a7.save()
+        a8.status = Answer.CORRECT
+        a8.grade = 0.3
+        a8.save()
+
+        expected_grades = [[user1, 10.0], [user2, 4.375]]
+
+        self.assertEqual(topic.calculate_grades(classroom), expected_grades)
+
+    def test_calcualte_grades_avg_user_no_answer(self):
+
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+        
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo')
+        user2.set_password("foo")
+        user2.save()
+
+        no_answer_user = User.objects.create_user(email='normal@no_answer_user.com', username='baa3', password='foo')
+        no_answer_user.set_password("foo")
+        no_answer_user.save()
+        
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+        classroom.students.add(no_answer_user)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        q1 = topic.question_set.create(question_text= "question 1", uuid="1", difficulty_level = 1, question_type=3)
+        q2 = topic.question_set.create(question_text= "question 2", uuid="2", difficulty_level = 1, question_type=3)
+        q3 = topic.question_set.create(question_text= "question 1", uuid="3", difficulty_level = 1, question_type=3)
+        q4 = topic.question_set.create(question_text= "question 2", uuid="4", difficulty_level = 1, question_type=3)
+        
+        a1 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user1)
+        a2 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user1)
+        a3 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user1)
+        a4 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user1)
+        
+        a5 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user2)
+        a6 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user2)
+        a7 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user2)
+        a8 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user2)
+
+        a1.status = Answer.CORRECT
+        a1.grade = 1.0
+        a1.save()
+        a2.status = Answer.CORRECT
+        a2.grade = 1.0
+        a2.save()
+        a3.status = Answer.CORRECT
+        a3.grade = 1.0
+        a3.save()
+        a4.status = Answer.CORRECT
+        a4.grade = 1.0
+        a4.save()
+
+        a5.status = Answer.CORRECT
+        a5.grade = 1.0
+        a5.save()
+        a6.status = Answer.CORRECT
+        a6.grade = 0.8
+        a6.save()
+        a7.status = Answer.CORRECT
+        a7.grade = 0.65
+        a7.save()
+        a8.status = Answer.CORRECT
+        a8.grade = 0.3
+        a8.save()
+
+        expected_grades = [[user1, 10.0], [user2, 6.875], [no_answer_user, 0.0]]
+
+        self.assertListEqual(topic.calculate_grades(classroom), expected_grades)
+
+    def test_calcualte_grades_with_weights(self):
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+        
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo')
+        user2.set_password("foo")
+        user2.save()
+        
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        q1 = topic.question_set.create(question_text= "question 1", uuid="1", weight = 0.6, difficulty_level = 1, question_type=3)
+        q2 = topic.question_set.create(question_text= "question 2", uuid="2", weight = 0.1, difficulty_level = 1, question_type=3)
+        q3 = topic.question_set.create(question_text= "question 1", uuid="3", weight = 0.1, difficulty_level = 1, question_type=3)
+        q4 = topic.question_set.create(question_text= "question 2", uuid="4", weight = 0.2, difficulty_level = 1, question_type=3)
+        
+        a1 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user1)
+        a2 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user1)
+        a3 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user1)
+        a4 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user1)
+        
+        a5 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user2)
+        a6 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user2)
+        a7 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user2)
+        a8 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user2)
+
+        a1.status = Answer.CORRECT
+        a1.grade = 1.0
+        a1.save()
+        a2.status = Answer.CORRECT
+        a2.grade = 1.0
+        a2.save()
+        a3.status = Answer.CORRECT
+        a3.grade = 1.0
+        a3.save()
+        a4.status = Answer.CORRECT
+        a4.grade = 1.0
+        a4.save()
+
+        a5.status = Answer.CORRECT
+        a5.grade = 1.0
+        a5.save()
+        a6.status = Answer.CORRECT
+        a6.grade = 0.8
+        a6.save()
+        a7.status = Answer.CORRECT
+        a7.grade = 0.65
+        a7.save()
+        a8.status = Answer.CORRECT
+        a8.grade = 0.3
+        a8.save()
+
+        expected_grades = [[user1, 10.0], [user2, 8.0]]
+
+        self.assertListEqual(topic.calculate_grades_wavg(classroom), expected_grades)
+
+    def test_calcualte_grades_with_team_answers_avg(self):
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo')
+        user2.set_password("foo")
+        user2.save()
+
+        team1 = Team.objects.create(name="Winners", owner=user1)
+        team1.members.add(user1)
+        team1.members.add(user2)
+
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        q1 = topic.question_set.create(question_text= "question 1", uuid="1", weight = 0.6, difficulty_level = 1, is_team_work=True, question_type=3)
+        q2 = topic.question_set.create(question_text= "question 2", uuid="2", weight = 0.1, difficulty_level = 1, is_team_work=True, question_type=3)
+        q3 = topic.question_set.create(question_text= "question 1", uuid="3", weight = 0.1, difficulty_level = 1, is_team_work=True, question_type=3)
+        q4 = topic.question_set.create(question_text= "question 2", uuid="4", weight = 0.2, difficulty_level = 1, is_team_work=True, question_type=3)
+
+        a1 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user1, team=team1)
+        a2 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user1, team=team1)
+        a3 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user1, team=team1)
+        a4 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user1, team=team1)
+
+        a1.status = Answer.CORRECT
+        a1.grade = 1.0
+        a1.save()
+        a2.status = Answer.CORRECT
+        a2.grade = 1.0
+        a2.save()
+        a3.status = Answer.CORRECT
+        a3.grade = 1.0
+        a3.save()
+        a4.status = Answer.CORRECT
+        a4.grade = 1.0
+        a4.save()
+
+        expected_grades = [[user1, 10.0], [user2, 10.0]]
+        
+
+        self.assertListEqual(topic.calculate_grades(classroom), expected_grades)
+
+    def test_calcualte_grades_with_team_answers_wavg(self):
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+        
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo')
+        user2.set_password("foo")
+        user2.save()
+        
+        team1 = Team.objects.create(name="Winners", owner=user1)
+        team1.members.add(user1)
+        team1.members.add(user2)
+        
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        q1 = topic.question_set.create(question_text= "question 1", uuid="1", is_team_work=True, weight = 0.6, difficulty_level = 1, question_type=3)
+        q2 = topic.question_set.create(question_text= "question 2", uuid="2", is_team_work=True, weight = 0.1, difficulty_level = 1, question_type=3)
+        q3 = topic.question_set.create(question_text= "question 1", uuid="3", is_team_work=True, weight = 0.1, difficulty_level = 1, question_type=3)
+        q4 = topic.question_set.create(question_text= "question 2", uuid="4", is_team_work=True, weight = 0.2, difficulty_level = 1, question_type=3)
+        
+        a1 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user1, team=team1)
+        a2 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user1, team=team1)
+        a3 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user1, team=team1)
+        a4 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user1, team=team1)
+
+        a1.status = Answer.CORRECT
+        a1.grade = 1.0
+        a1.save()
+        a2.status = Answer.CORRECT
+        a2.grade = 1.0
+        a2.save()
+        a3.status = Answer.CORRECT
+        a3.grade = 1.0
+        a3.save()
+        a4.status = Answer.CORRECT
+        a4.grade = 1.0
+        a4.save()
+
+        expected_grades = [[user1, 10.0], [user2, 10.0]]
+
+        self.assertEqual(topic.calculate_grades_wavg(classroom), expected_grades)
 
 class ContentVersionTest(TestCase):
     def test_new_version(self):
@@ -935,6 +1541,42 @@ class ContentVersionTest(TestCase):
         user = User.objects.create_user(email='normal@user.com', username='baa', password='foo')
         topic = Topic.objects.create(topic_content = topic_text, topic_title="test", order=1, owner=user)
         version = ContentVersion.objects.create(topic=topic, content=version_text, user=user)
+
+class TasksTest(TestCase):
+
+    def test_detect_copies(self):
+        user1 = User.objects.create_user(email='normal@user1.com', username='baa', password='foo')
+        user1.set_password("foo")
+        user1.save()
+
+        user2 = User.objects.create_user(email='normal@user2.com', username='baa2', password='foo')
+        user2.set_password("foo")
+        user2.save()
+
+        classroom = Classroom.objects.create(name="Test Class")
+        classroom.students.add(user1)
+        classroom.students.add(user2)
+
+        topic = Topic.objects.create(topic_title="Test Topic", order=1, owner = user1)
+        q1 = topic.question_set.create(question_text= "question 1", uuid="1", punish_copies=True, difficulty_level = 1, question_type=3)
+        q2 = topic.question_set.create(question_text= "question 2", uuid="2", punish_copies=True, difficulty_level = 1, question_type=3)
+        q3 = topic.question_set.create(question_text= "question 1", uuid="3", punish_copies=True, difficulty_level = 1, question_type=3)
+        q4 = topic.question_set.create(question_text= "question 2", uuid="4", punish_copies=True, difficulty_level = 1, question_type=3)
+
+        a1 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user1)
+        a2 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user1)
+        a3 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user1)
+        a4 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user1)
+
+        a5 = Answer.objects.create(answer_text="answer question 1", question=q1, student=user2)
+        a6 = Answer.objects.create(answer_text="answer question 2", question=q2, student=user2)
+        a7 = Answer.objects.create(answer_text="answer question 3", question=q3, student=user2)
+        a8 = Answer.objects.create(answer_text="answer question 4", question=q4, student=user2)
+
+        copies = detect_copies([a1,a2,a3,a4])
+        expected_response = [[a1, a5], [a2,a6], [a3, a7], [a4, a8]]
+        self.assertListEqual(copies, expected_response)
+
 
 
         

@@ -18,7 +18,6 @@ def get_answers(question, student, test=None):
     
     if test:
         answers = answers.filter(test=test)
-    print("ANSWERS IN EXTRAS: ", answers)
     return answers
     
 @register.simple_tag

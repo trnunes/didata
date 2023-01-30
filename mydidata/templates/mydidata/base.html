@@ -43,11 +43,17 @@
         {% endblock head_css %}
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3262579547697172"
      crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/htmx.org@1.8.5"></script>
         <!-- <script data-ad-client="pub-3262579547697172" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> -->
         <!-- <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/fontawesome.min.css" rel="stylesheet"> -->
     </head>
     
-    <body>
+    <body onpaste="return false">
+        <script>
+            document.body.addEventListener('htmx:configRequest', (event)=> {
+                event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}'
+            });
+        </script>
         
         <header>
             <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
@@ -78,15 +84,20 @@
                     {%endif%}
                     <li class="nav-item active">
                     <a class="nav-link" href="{% url 'mydidata:disciplines' %}"
-                                    >Todas as Séries</a>
+                                    >Conteúdos</a>
                     </li>
 
-                    <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:disciplines' %}"
-                    >Atividades</a></li>
-                    {%if user.is_superuser%}
-                        <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:tests' %}"                    
-                        >Avaliações</a></li>
-                    {%endif%}
+                    <!-- <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:disciplines' %}" -->
+                    <!-- >Atividades</a></li> -->
+
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'mydidata:assessments' %}"
+                                        >Avaliações</a>
+                    </li>
+                    
+                    
+                    
+                    
                 {% if user.is_authenticated %}
                     <li class="nav-item active"><a class="nav-link" href="{% url 'mydidata:list_teams' %}">Minhas Equipes</a></li>
                     <li class="nav-item active"><a class="nav-link" href="/mydidata/logout/">Sair</a></li>

@@ -1,0 +1,22 @@
+<div hx-target="#comments_area" hx-swap="outerHTML" class="">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.media}}
+        {{ form.as_p }}
+        {% if comment %}
+            <button type="submit" hx-post="{% url 'mydidata:comment_update' comment.id %}"
+                >
+                Alterar
+            </button>
+            <button hx-get="{% url 'mydidata:topic_detail' comment.topic.uuid %}" type="button"
+                >
+                Cancelar
+            </button>
+        {% else %}
+            <button type="submit" hx-post="{% url 'mydidata:comment_create' topic.id %}"
+                >
+                Enviar
+            </button>
+        {% endif %}
+    </form>
+</div>

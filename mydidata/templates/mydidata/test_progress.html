@@ -12,6 +12,11 @@
         
             <h2>{{test.title}}</h2>
             <a type="button" class="btn btn-primary" href="{{test.topic.get_absolute_url}}"> Voltar ao tópico</a>
+            
+            {%if user.is_superuser%}
+                <a type="button" class="btn btn-primary" href="http://localhost:5000/mydidata/test/assess/{{classroom.id}}/{{test.uuid}}/">Corrigir avaliação</a>
+            {% endif %}
+
             <table id="cd-table" class="table table-hover">
 
                 <tbody>
@@ -144,21 +149,30 @@
                             </div>
                         {%else%}
                             <div class="alert alert-danger" role="alert">
-                                Infelizmente você não foi muito bem :-( 
+                                {% is_closed_for_student request.user test as is_closed %}
+                                {%if test_user.has_next_try and not is_closed %}
+                                    Infelizmente você não foi muito bem mas ainda possui <strong>{{test_user.remaining_tries}} tentativa (s) </strong>: <a type="button" class="btn btn-success" href="/mydidata/next_try/{{test_user.id}}" class="alert-link">Tentar novamente!</a>
+                                {%else%}
+                                    Infelizmente você não foi muito bem :-(
+                                {%endif%}
                             </div>
 
                         {%endif%}
                         
                     {%endfor%}
+                {%else%}
+                    <a type="button" class="btn btn-primary" href="/mydidata/calculate_student_grades/{{test.id}}/{{students.0.id}}">Corrigir avaliação</a>
                 {%endif%}
-                <h4>O quê deseja fazer agora?</h4>
-                <a type="button" class="btn btn-primary" href="/mydidata/calculate_student_grades/{{test.id}}/{{students.0.id}}">Corrigir avaliação</a>
-                {%if test_user.has_next_try%}
+                {% if test.is_open%}
+                    <h4>O quê deseja fazer agora?</h4>
                     
-                    
-                    
-                    <a type="button" class="btn btn-success" href="/mydidata/next_try/{{test_user.id}}" class="alert-link">Quero tentar novamente!</a>
-                    <a type="button" class="btn btn-danger" href="/mydidata/close_test_for_student/{{test.id}}/{{students.0.id}}">Encerre a Avaliação (não será possível retornar)</a>
+                    {%if test_user.has_next_try%}
+                            
+                            
+                            
+                        
+                        <a type="button" class="btn btn-danger" href="/mydidata/close_test_for_student/{{test.id}}/{{students.0.id}}">Encerre a Avaliação (não será possível retornar)</a>
+                    {%endif%}
                 {%endif%}
             
             

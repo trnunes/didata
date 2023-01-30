@@ -23,7 +23,8 @@ from django.utils import timezone
 from datetime import timedelta
 import html
 import difflib
-
+from django.db.models import Avg, Q, Sum, F
+from django.db.models.query import QuerySet
 
 class AdminURLMixin(object):
     def get_admin_url(self):
@@ -45,13 +46,15 @@ class Greeting(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     student_id =  models.CharField(max_length=100, blank=True, verbose_name="Matrícula")
+    actions_log = models.TextField(verbose_name="Descrição", blank=True, null=True)
     def __str__(self):
-        return self.username
+        return self.user.username
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        Profile.objects.create(user=instance, actions_log="Criado em %s"%timezone.localtime().strftime("%d/%m/%Y às %H:%M:%S"))
+        
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
@@ -64,7 +67,6 @@ def save_user_profile(sender, instance, **kwargs):
 class Discipline(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     name = models.CharField(max_length=255, verbose_name="Nome",)
-    students = models.ManyToManyField(User, verbose_name="Estudantes", null=True, blank=True,)
     enabled = models.BooleanField(default=True, verbose_name="Habilitado?")
     class Meta:
         verbose_name_plural = 'Disciplinas'
@@ -77,42 +79,68 @@ class Discipline(models.Model, AdminURLMixin):
         return 'mydidata:discipline_detail', [self.uuid]
 
 class GradingStrategy(object):
-    def calculate(self, questions, students, test=None):
-        students_grades = []
-        answers_texts = []
-        for student in students:
-            for q in questions:
-                if test:
-                    answer = Answer.objects.filter(student=student, question=q, test=test).first()
-                else:
-                    answer = Answer.objects.filter(student=student, question=q).first()
-                
-                if answer and answer.answer_text:
-                    answers_texts.append(answer.text_escaped())
+    
+    #TODO reimplement punishimnent for copies. Not working in this version
+    
+    def calculate_avg(self, questions, students, test=None):
+        query_params = {}
+        
+        if isinstance(questions, QuerySet):
+            questions_count = questions.count()
+        else:
+            questions_count = len(questions)
 
-        for student in students:
-            sum_grades = 0
-            sum_weights = 0
-            
-            for q in questions:
-                if test:
-                    answer = Answer.objects.filter(student=student, question=q, test=test).first()
-                else:
-                    answer = Answer.objects.filter(student=student, question=q).first()
-                a_grade = 0
-                if answer:
-                    answer.correct()
-                    a_grade = answer.grade
-                    if answer.answer_text and q.punish_copies:
-                        if answers_texts.count(answer.text_escaped()) > 1:
-                            a_grade = a_grade*(1-(q.punishment_percent/100))
-                sum_grades += a_grade
-                sum_weights += q.weight
-            
-            if sum_weights: 
-                wavg = sum_grades/sum_weights        
-            students_grades.append([student,  wavg*10])
-        return students_grades
+        if test:
+            query_params["test"] = test
+        
+        team_questions = [q for q in questions if q.is_team_work]
+
+        individual_questions = [q for q in questions if not q.is_team_work]
+        grades_sum_per_student = dict((s.id, [s, 0.0]) for s in students)
+        if team_questions:
+            teams = [t for s in students for t in s.teams.all() ]
+            query_params["team__in"] = teams
+            query_params["question__in"] = team_questions
+            team_answers = Answer.objects.filter(**query_params).values("team__members__id").annotate(grade_sum=Sum('grade')*10)
+            for a in team_answers:
+                grades_sum_per_student[a['team__members__id']][1] = a['grade_sum']/questions_count
+        
+        if individual_questions:
+            query_params["question__in"] = individual_questions
+            query_params["student__in"] = students
+            individual_answers = Answer.objects.filter(**query_params).values("student").annotate(grade_sum=Sum('grade')*10)
+            for a in individual_answers:
+                grades_sum_per_student[a['student']][1] = a['grade_sum']/questions_count
+
+        return list(grades_sum_per_student.values())
+
+    def calculate_wavg(self, questions, students, test=None):
+        query_params = {}
+        questions_weight_sum = sum([q.weight for q in questions])
+        if test:
+            query_params["test"] = test
+
+        team_questions = [q for q in questions if q.is_team_work]
+        individual_questions = [q for q in questions if not q.is_team_work]
+        grades_sum_per_student = dict((s.id, [s, 0.0]) for s in students)
+        if team_questions:
+            teams = [t for s in students for t in s.teams.all() ]
+            query_params["team__in"] = teams
+            query_params["question__in"] = team_questions
+            team_answers = Answer.objects.filter(**query_params).values("team__members__id").annotate(grade_sum=Sum(F('grade') * F('question__weight')))
+            for a in team_answers:
+                grades_sum_per_student[a['team__members__id']][1] = float("%.1f" % ((a['grade_sum']/questions_weight_sum) * 10))
+
+        if individual_questions:
+            query_params["question__in"] = individual_questions
+            query_params["student__in"] = students
+            individual_answers = Answer.objects.filter(**query_params).values("student").annotate(grade_sum=Sum(F('grade') * F('question__weight')))
+            for a in individual_answers:
+                grades_sum_per_student[a['student']][1] = float("%.1f" % ((a['grade_sum']/questions_weight_sum) * 10))
+
+        return list(grades_sum_per_student.values())
+
+
 
 class Topic(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
@@ -226,7 +254,11 @@ class Topic(models.Model, AdminURLMixin):
     
     def calculate_grades(self, classroom):
         grader = GradingStrategy()
-        return grader.calculate(self.question_set.all(), classroom.students.all())
+        return grader.calculate_avg(self.question_set.all(), classroom.students.all())
+    
+    def calculate_grades_wavg(self, classroom):
+        grader = GradingStrategy()
+        return grader.calculate_wavg(self.question_set.all(), classroom.students.all())
     
     def penalize_repeated(self):
         return []
@@ -279,7 +311,7 @@ class ContentVersion(models.Model, AdminURLMixin):
 class Test(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     title = models.CharField(max_length=200, default="test", verbose_name="Título")
-    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico")
+    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico", related_name="tests")
     limit_per_try = models.IntegerField(default=5)
     max_tries = models.IntegerField(default=2, verbose_name="Tentativas")
     key = models.CharField(max_length=200, default="testkey", verbose_name="Frase de Envio")
@@ -289,8 +321,16 @@ class Test(models.Model, AdminURLMixin):
     def __str__(self):
         return u"%s" % self.title
 
+    
+    def has_participant(self, student_id):
+        has_test_user_relation = [t for t in self.test_user_relations.all() if t.student.id == student_id]
+        if has_test_user_relation:
+            return True
+        return False
+
+
     def is_closed(self, classroom):
-        return self in classroom.closed_tests.all()
+        return classroom in self.closed_for_classrooms.all()
 
     def is_closed_for(self, user):
 
@@ -302,6 +342,9 @@ class Test(models.Model, AdminURLMixin):
         
         return (test_user and test_user.is_closed)
     
+    def has_weigthed_questions(self):
+        return [q for q in self.questions.all() if q.weight != 1.0]
+
     def get_answers(self, student):
         return Answer.objects.filter(student=student, question__id__in=self.get_ordered_questions(), test=self)
 
@@ -310,7 +353,17 @@ class Test(models.Model, AdminURLMixin):
         test_user.is_closed = True
         test_user.save()
 
-        
+    def close(self, classroom):
+        self.closed_for_classrooms.add(classroom)
+        [t.close() for t in self.test_user_relations.all()]
+        self.save()
+    
+    def open(self, classroom):
+        self.closed_for_classrooms.remove(classroom)
+        [t.open() for t in self.test_user_relations.all()]
+        self.save()
+
+
 
     def get_or_create_test_user_relation(self, user):
         test_user = TestUserRelation.objects.filter(student=user, test=self).first()
@@ -321,6 +374,7 @@ class Test(models.Model, AdminURLMixin):
     def has_next_try(self, user):
         return self.get_or_create_test_user_relation(user).tries < self.max_tries
     
+    
     def next_try(self, student):
         if not self.has_next_try(student):
             raise Exception("Amount of tries exceeded the limit: %s"%self.max_tries)
@@ -328,7 +382,6 @@ class Test(models.Model, AdminURLMixin):
         test_user_rel = self.get_or_create_test_user_relation(student)
         self.get_answers(student).delete()
         test_user_rel.tries += 1
-        print("Tries in model: ", test_user_rel.tries)
         test_user_rel.generate_question_index()
 
         test_user_rel.save()
@@ -370,25 +423,37 @@ class Test(models.Model, AdminURLMixin):
     def calculate_grades(self, classroom=None, students = []):
         grader = GradingStrategy()
         grades_by_student = {}
-        if not students and classroom:
-            students = classroom.students.all().order_by('first_name')
         
-        for student in students:
-            test_user = TestUserRelation.objects.filter(test=self, student=student).first()
-            grades_by_student[student] = {}
-            if test_user:
-                student_grade = grader.calculate(test_user.current_questions(), [student], self)[0]
-                grades_by_student[student]['grade'] = student_grade[1]
-                grades_by_student[student]['test_user'] = test_user
-                if self.has_next_try(test_user.student):
-                    grades_by_student[student]['next_try_link'] = reverse('mydidata:next_try', args=(test_user.id,))
-            else:
+        if not students and classroom:
+            students = classroom.students.all().prefetch_related("test_relations").order_by('first_name')
+        grader_function = grader.calculate_avg
+        if self.has_weigthed_questions():
+            grader_function = grader.calculate_wavg
+        grades = grader_function(self.questions.all(), students, self)
+        
+        for g in grades:
+            student, grade = g
+            if not grades_by_student.get(student, None):
+                grades_by_student[student] = { }
+            
+            test_user_rels = [test_user for test_user in student.test_relations.all() if test_user.test == self]
+            
+            if not test_user_rels:
                 grades_by_student[student]['grade'] = "?"
+                continue
+            
+            test_user_rel = test_user_rels[0]
+            grades_by_student[student]['grade'] = grade
+            grades_by_student[student]['test_user'] = test_user_rel
+            if self.has_next_try(student):
+                grades_by_student[student]['next_try_link'] = reverse('mydidata:next_try', args=(test_user_rel.id,))
+        
         return grades_by_student
     
     def calculate_grades_for_student(self, student):
         
         return self.calculate_grades(students=[student])
+    
 
 
 class Classroom(models.Model):
@@ -396,10 +461,10 @@ class Classroom(models.Model):
     academic_site_id = models.IntegerField(verbose_name = "Identificador no Acadêmico", default=0)
     name = models.CharField(max_length=255, verbose_name="Nome")
     students = models.ManyToManyField(User, null=True, blank=True, verbose_name="Estudantes", related_name="classrooms")
-    disciplines = models.ManyToManyField(Discipline, null=True, verbose_name="Disciplinas")
+    disciplines = models.ManyToManyField(Discipline, null=True, verbose_name="Disciplinas", related_name="classrooms")
     closed_topics = models.ManyToManyField(Topic, null=True, blank=True, verbose_name="Tópicos Fechados")
-    closed_tests = models.ManyToManyField(Test, null=True, blank=True, related_name="closed_tests", verbose_name="Avaliações Fechadas")
-    tests = models.ManyToManyField(Test, null=True, blank=True, verbose_name="Avaliações")
+    closed_tests = models.ManyToManyField(Test, null=True, blank=True, related_name="closed_for_classrooms", verbose_name="Avaliações Fechadas")
+    tests = models.ManyToManyField(Test, null=True, blank=True, verbose_name="Avaliações", related_name="classrooms")
 
     class Meta:
         verbose_name_plural = 'Turmas'
@@ -466,7 +531,7 @@ class Question(models.Model):
     ref_keywords = models.TextField(verbose_name="Palavras-Chave para Feedback Automático", blank=True)
     file_types_accepted = models.CharField(max_length=255, verbose_name="Tipos de arquivos aceitos", null=True, blank="True")
     text_required = models.BooleanField(default=False, verbose_name='Resposta de texto obrigatória?')
-    weight = models.PositiveSmallIntegerField(default=1, verbose_name='Peso')
+    weight = models.FloatField(default=1.0,  verbose_name='Peso')
     file_upload_only = models.BooleanField(default=False, verbose_name="Aceitar somente upload de arquivos?")
     punish_copies = models.BooleanField(default=False,verbose_name="punir cópias exatas?")
     punishment_percent = models.PositiveSmallIntegerField(default=30, verbose_name="Percentual da Punição")
@@ -661,10 +726,10 @@ class Answer(models.Model):
     feedback = models.TextField(null=True, blank=True, verbose_name="Correções")
     status = models.IntegerField(choices=(STATUS_CHOICES + EVAL_CHOICES), default=SENT, verbose_name="Avaliação")
     grade = models.FloatField(default=0.0, verbose_name="Nota")
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Questão")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name="Questão", related_name="answers")
     student = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Estudante")
     team = models.ForeignKey(Team, on_delete=models.CASCADE, verbose_name="Equipe", related_name='answers', null=True, blank=True)
-    test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Avaliação")
+    test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Avaliação", related_name="answers")
     choice = models.ForeignKey(Choice, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Alternativa")
     comments = models.TextField(blank=True)
     
@@ -687,6 +752,7 @@ class Answer(models.Model):
     def text_escaped(self):
         return u'%s' % html.unescape(strip_tags(self.answer_text))
 
+        
     def get_next_for_student(self):
         next_answer = self.question.get_next_answer_for_student(self.student)
         
@@ -705,7 +771,7 @@ class Answer(models.Model):
                         return reverse('mydidata:feedback', args=(next_answer.id,))
 
         return ""
-
+    
     def multiple_choice_correct(self):
         correct_choice = self.question.choices.filter(is_correct=True).first()
         if correct_choice == self.choice:
@@ -725,7 +791,6 @@ class Answer(models.Model):
 
         r = subprocess.call(["gcc", "./"+str(self.id)+".c", "-o", str(self.id)])
         # 
-        print("COMPILE RESULTS: ", r)
         if r == 1:
             os.remove("./" + str(self.id) + ".c")
             self.feedback = "A resposta possui erros de compilação. Corrija e envie novamente até a finalização do tópico!"
@@ -743,9 +808,7 @@ class Answer(models.Model):
         expected_outputs = self.question.expected_output.split(";")
         errors = []
         for expected, output in zip(expected_outputs, outputs):
-            print("%s expected %s"%(output, expected))
             if expected not in str(output):
-                print(" NOT FOUND: %s expected %s"%(output, expected))
                 errors.append((input, expected))
 
         
@@ -765,6 +828,7 @@ class Answer(models.Model):
     def correct(self):
         # if self.question.expected_output:
             # return self.correct_c_programming_answer()
+        
         if not self.question.is_discursive():
             return self.multiple_choice_correct()
         self.save()
@@ -830,8 +894,8 @@ class OverwriteStorage(FileSystemStorage):
         return name
         
 class TestUserRelation(models.Model):
-    student = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    test = models.ForeignKey(Test, on_delete=models.DO_NOTHING)
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name="test_relations")
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name="test_user_relations")
     index_list = models.CharField(max_length=255, verbose_name=_("índices"),)
     is_closed = models.BooleanField(default=False)
     tries = models.IntegerField(default=1)
@@ -867,9 +931,19 @@ class TestUserRelation(models.Model):
     
     def current_questions(self):
         index_array = self.index_list_as_array()
-        
         return [list(self.test.questions.order_by('uuid'))[i-1] for i in index_array ]
 
+    def current_non_answered_questions(self):
+        index_array = self.index_list_as_array()
+        current_questions = [list(self.test.questions.prefetch_related("answers").order_by('uuid'))[i-1] for i in index_array ]
+        non_answerd_questions = list(self.test.questions.exclude(answers__test= self.test, answers__student = self.student).all())
+
+        non_answerd_questions.sort(key=lambda q: current_questions.index(q))
+        return non_answerd_questions
+    
+    def remaining_tries(self):
+        return self.test.max_tries - self.tries
+    
     def has_next_try(self):
         return self.test.has_next_try(self.student)
     
@@ -907,16 +981,18 @@ class TestUserRelation(models.Model):
     def set_index_list(self, index_list):
         self.index_list = str(index_list)
     
+    #TODO refactor
     def get_next_question(self, question):
         questions = self.current_questions()
-        print("BASE QUESTION ", question)
+        non_answerd_questions = self.current_non_answered_questions()
         self_index = questions.index(question)
-        print("SELF INDEX: ", self_index)
+        next_index = self_index + 1
+        while next_index < len(questions) and questions[next_index] not in non_answerd_questions:
+            next_index += 1
+        
+        if next_index < len(questions):
+            return questions[next_index]
 
-        if self_index < len(questions) - 1:
-            print("Next Question: ", questions[self_index + 1])
-            return questions[self_index + 1]
-        print("NO NEXT QUESTIONS!")
         return None
     
     def get_next_answer_url(self, question):
@@ -930,13 +1006,16 @@ class TestUserRelation(models.Model):
     def close(self):
         self.is_closed = True
         self.save()
-        
+    
+    def open(self):
+        self.is_closed = False
+        self.save()
         
         
 
 class Deadline(models.Model, AdminURLMixin):
-    topic = models.ForeignKey(Topic, on_delete=models.DO_NOTHING, verbose_name="Tópico")
-    classroom = models.ForeignKey(Classroom, on_delete=models.DO_NOTHING)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, verbose_name="Tópico")
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
     due_datetime = models.DateTimeField()
     
     def __str__(self):
@@ -949,3 +1028,12 @@ class Deadline(models.Model, AdminURLMixin):
         formatedDate = self.due_datetime.strftime("%d/%m/%Y às %H:%M:%S")
         return formatedDate
 
+
+class Comment(models.Model):
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    body = RichTextUploadingField(null=True, blank=True, verbose_name="Texto")
+    date_added = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return "%s: %s - %s..."%(self.author.first_name, self.topic.topic_title, self.body[:20])

@@ -2,10 +2,9 @@ from __future__ import with_statement
 from ast import With
 
 from django.shortcuts import get_object_or_404, render,redirect
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from .models import ContentVersion, Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline, Team
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseForbidden,  HttpResponseNotAllowed
+from .models import Comment, ContentVersion, Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline, Team
 from django.template import loader
-from django.http import Http404
 from django.urls import reverse
 import sys
 from django.views.generic.base import TemplateView
@@ -14,7 +13,7 @@ from background_task.models import Task
 from django.views import View
 
 from .nlp_analyzer import score_keywords, score, assess, read_lines
-from .forms import ContentVersionForm, SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, MultipleChoiceQuestionForm, DiscursiveQuestionForm, AnswerFormUploadOnly, AnswerForm, MultipleChoiceQuestionFormSet, ChoiceFormSet, CProgrammingQuestionForm, TeamForm
+from .forms import ContentVersionForm, SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, MultipleChoiceQuestionForm, DiscursiveQuestionForm, AnswerFormUploadOnly, AnswerForm, MultipleChoiceQuestionFormSet, ChoiceFormSet, CProgrammingQuestionForm, TeamForm, CommentForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -35,6 +34,8 @@ from django.http import JsonResponse
 import subprocess
 import os
 from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import PermissionDenied
+
 
 def superuser_required(view_func):
     decorated_view_func = user_passes_test(lambda u: u.is_superuser, login_url='/mydidata/login/')(view_func)
@@ -94,25 +95,6 @@ class ResourceRoomList(ListView):
     def dispatch(self, *args, **kwargs):
         return super(ResourceRoomList, self).dispatch(*args, **kwargs)
 
-class TestList(ListView):
-    model = Test
-    template_name = 'mydidata/test_list.html'
-    context_object_name = 'tests'
-
-    def get_queryset(self):
-    	user = self.request.user
-    	classes = Classroom.objects.filter(students__id=user.id).order_by('name').all()
-    	tests = []
-    	
-    	if not user.is_superuser:
-    		[tests.extend(c.tests.all()) for c in classes]
-    	else:
-    		tests = Test.objects.all().order_by('title')
-    	return tests
-
-    
-    def dispatch(self, *args, **kwargs):
-        return super(TestList, self).dispatch(*args, **kwargs)
 
 class AdsView(View):
     
@@ -157,6 +139,7 @@ class DisciplineList(ListView):
     def dispatch(self, *args, **kwargs):
         return super(DisciplineList, self).dispatch(*args, **kwargs)
 
+
 def content(request, label):
     topics = Topic.objects.filter(label=label)
     if topics:
@@ -169,7 +152,7 @@ def topic_edit(request, topic_uuid):
     discipline = topic.discipline
     form = ContentVersionForm(instance=topic, user=request.user)
     
-    if request.POST:
+    if request.method == "POST":
         form = ContentVersionForm(request.POST, instance=topic)
         if form.is_valid():
             form.save()
@@ -180,7 +163,7 @@ def topic_edit(request, topic_uuid):
 def version_edit(request, version_id):
     version = get_object_or_404(ContentVersion, pk=version_id)
     
-    if request.POST:
+    if request.method == "POST":
         version_form = ContentVersionForm(request.POST, instance=version, user=request.user)
         if version_form.is_valid():
             version_form.save()
@@ -200,7 +183,7 @@ def version_detail(request, version_id):
 def version(request, topic_id):
     topic = get_object_or_404(Topic, pk=topic_id)
 
-    if request.POST:
+    if request.method == "POST":
         form = ContentVersionForm(request.POST, topic=topic, user=request.user)
         if form.is_valid():
             saved_version = form.save()
@@ -232,7 +215,7 @@ def version_update(request, version_id):
 def topic(request, discipline_uuid):
     discipline = get_object_or_404(Discipline, uuid=discipline_uuid)
     print("post", request.POST)
-    if request.POST:
+    if request.method == "POST":
         form = TopicForm(request.POST, owner=request.user)
         
         if form.is_valid():
@@ -256,7 +239,7 @@ def academico(request, class_id, topic_uuid):
     classroom = get_object_or_404(Classroom, pk=class_id)
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     diary = str(classroom.academic_site_id)
-    if request.POST:
+    if request.method == "POST":
         login = request.POST.get('username')
         password = request.POST.get('password')
         milestone= request.POST.get('etapa')
@@ -328,12 +311,14 @@ def subscriber_new(request, classroom_id, template='mydidata/subscriber_new.html
             user.set_password(password)
             
             user.save()
+            user.profile.student_id = form.cleaned_data["enrollment"]
+            user.profile.save()
             
             # disciplines = form.cleaned_data['disciplines']
             
-            for discipline in classroom.disciplines.all():
-                discipline.students.add(user)
-                discipline.save()
+            # for discipline in classroom.disciplines.all():
+                # discipline.students.add(user)
+                # discipline.save()
                 
             classroom.students.add(user)
             classroom.save()
@@ -425,21 +410,48 @@ def topic_assess(request, topic_uuid, class_id):
 
     return redirect('mydidata:class_progress', class_id=class_id, )
 
+
+###
+### TEST VIEWS
+###
+@login_required
+def assessments(request):
+    user = request.user
+    if user.is_superuser:
+        assessments = Test.objects.select_related("topic").all().order_by("topic__order")
+    else:
+        topics = Topic.objects.prefetch_related("tests").filter(discipline__classrooms__in=user.classrooms.all()).order_by("order")
+        assessments = [a for t in topics for a in t.tests.all()]
+    return render(request, "mydidata/assessment_list.html", context={"assessments": assessments})
+
+@login_required
+def test_list(request, id):
+    classroom = get_object_or_404(Classroom, pk=id)
+    user = request.user
+    
+    student_id_param = request.GET.get("student", None)
+
+    if student_id_param and (user.id == student_id_param or user.is_superuser):
+        tests = Test.objects.filter(test_user_relations__student__id=student_id_param, classrooms__in=[classroom]).distinct()
+        return render(request, "mydidata/test_list.html", context={"tests": tests, "classroom": classroom})
+    
+    if user.is_superuser:
+        tests = Test.objects.filter(classrooms__in=[classroom]).distinct()
+        return render(request, "mydidata/test_list.html", context={"tests": tests, "classroom": classroom})
+    
+    raise PermissionDenied("Você não tem permissão para acessar este recurso")
+
 def test_close(request, uuid, class_id):
     klass = get_object_or_404(Classroom, pk=class_id)
-    topic = get_object_or_404(Topic, uuid=uuid)
-    klass.closed_topics.add(topic)
-    klass.save()
-
-    return redirect('mydidata:class_progress', class_id=class_id, )
+    test = get_object_or_404(Test.objects.prefetch_related("test_user_relations"), uuid=uuid)
+    test.close(klass)
+    return redirect('mydidata:tests', id=class_id, )
 
 def test_open(request, uuid, class_id):
     klass = get_object_or_404(Classroom, pk=class_id)
-    topic = get_object_or_404(Topic, uuid=uuid)
-    klass.closed_topics.remove(topic)
-    klass.save()
-
-    return redirect('mydidata:class_progress', class_id=class_id, )
+    test = get_object_or_404(Test.objects.prefetch_related("test_user_relations"), uuid=uuid)
+    test.open(klass)
+    return redirect('mydidata:tests', id=class_id, )
 
 def close_test_for_student(request, test_id, student_id):
     test = get_object_or_404(Test, pk=test_id)
@@ -449,15 +461,14 @@ def close_test_for_student(request, test_id, student_id):
     return redirect('mydidata:student_progress', test_id=test_id, student_id=student_id )
 
 def test_assess(request, uuid, class_id):
-    classroom = get_object_or_404(Classroom, pk=class_id)
-    test = get_object_or_404(Test, uuid=uuid)
+    classroom = get_object_or_404(Classroom.objects.prefetch_related("students"), pk=class_id)
+    test = get_object_or_404(Test.objects.prefetch_related("questions"), uuid=uuid)
+    
     student_list = classroom.students.all().order_by('first_name')
-    for student in student_list:
-        for q in test.questions.all():
-            answers = Answer.objects.filter(student=student, question=q, test=test).all()
-            
-            for a in answers:
-                a.correct()
+    answers = Answer.objects.filter(student__in=student_list, question__in=test.questions.all(), test=test).select_related("question").all()
+    correct_answers.now(answers)
+
+    
     return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
 
 @login_required
@@ -568,7 +579,7 @@ def test_to_academico(request, class_id, test_uuid):
 
     diary = str(classroom.academic_site_id)
 
-    if request.POST:
+    if request.method == "POST":
         login = request.POST.get('username')
         password = request.POST.get('password')
         milestone= request.POST.get('etapa')
@@ -597,7 +608,7 @@ def test_answer(request, question_uuid, test_id):
     test = get_object_or_404(Test, pk=test_id)
     tuserrelation = test.get_or_create_test_user_relation(request.user)
     
-    if request.POST:
+    if request.method == "POST":
         form = AnswerForm(request.POST, request.FILES, question=question, test=test, user=request.user)
         
         answer = Answer.objects.filter(student=request.user, question=question).first()
@@ -625,10 +636,8 @@ def test_answer(request, question_uuid, test_id):
             form.save()
 
             if tuserrelation.get_next_answer_url(question):
-                print("NEXT URL: ", tuserrelation.get_next_question(question))
 
                 return HttpResponseRedirect(tuserrelation.get_next_answer_url(question))
-            print("NEXT URL: ", reverse('mydidata:test_detail', args=(test.uuid,)))
 
             return redirect('mydidata:student_progress', student_id=request.user.id, test_id=test.id)
             
@@ -644,7 +653,24 @@ def test_answer(request, question_uuid, test_id):
         return render(request, "mydidata/answer_cru.html", context)
     
     return HttpResponseRedirect(reverse('mydidata:test_detail', args=(test.uuid,)))
-        
+
+@superuser_required
+def delete_test_answer(request, id):
+    
+    
+    
+    answer = get_object_or_404(Answer.objects.select_related("test"), pk=id)
+    test = answer.test
+    answer.delete()
+
+    redirect_to_url = request.GET.get("redirect_to", None)
+    if redirect_to_url:
+        return HttpResponseRedirect(redirect_to_url)
+    
+    class_id = answer.student.classrooms.first().id
+
+    return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
+
 
 
 @login_required
@@ -659,7 +685,7 @@ def answer(request, question_uuid):
             if question.topic in closed_topics:
                 return redirect(question.topic.get_absolute_url())
 
-    if request.POST:
+    if request.method == "POST":
         if not request.user.is_authenticated:
             return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
                 #TODO insert test logic here
@@ -751,7 +777,7 @@ def feedback(request, answer_id):
         next_answer_for_student_url = reverse('mydidata:feedback', args=(next_answer_for_student.id,))
     
 
-    if request.POST:
+    if request.method == "POST":
         form = SuperuserAnswerFormSimplified(request.POST, instance=answer)
         form.save()
         context = {
@@ -779,7 +805,7 @@ def multiple_choice_answer(request, question_uuid):
     #TODO remove duplicated code with #discursive_answer
     question = get_object_or_404(Question, uuid=question_uuid)
 
-    if request.POST:
+    if request.method == "POST":
         form = AnswerForm(request.POST, request.FILES, question=question, user=request.user)
         if form.is_valid():
             answer = form.save()
@@ -815,7 +841,7 @@ def discursive_answer(request, question_uuid):
     
     
     
-    if request.POST:
+    if request.method == "POST":
         form = AnswerForm(request.POST, request.FILES, question=question, user=user)
         
         if form.is_valid():
@@ -855,7 +881,7 @@ def test_progress(request, uuid, class_id):
         students = [request.user]
     else:
         students = classroom.students.all().order_by('first_name')
-
+    # import pdb; pdb.set_trace()
     grades_by_student = test.calculate_grades(classroom, students)
     
     return render(request, 'mydidata/test_progress.html', {'classroom':classroom, 'students': students, 'test':test, 'student_grades': grades_by_student,})
@@ -869,8 +895,10 @@ def student_progress(request, test_id, student_id):
 
 @login_required()
 def calculate_student_grades(request, test_id, student_id):
-    test = get_object_or_404(Test, pk=test_id)
+    test = get_object_or_404(Test.objects.prefetch_related("answers__student"), pk=test_id)
     student = get_object_or_404(User, pk=student_id)
+    student_answers = [a for a in list(test.answers.all()) if a.student == student]
+    correct_answers.now(student_answers)
     grades = test.calculate_grades_for_student(student)
     test_user = TestUserRelation.objects.get(test=test, student=student)
     return render(request, 'mydidata/test_progress.html', {'students': [student], 'test_user': test_user, 'test': test, 'student_grades': grades,})
@@ -962,7 +990,8 @@ def topic_detail(request, uuid):
     context = {
         'topic': topic,
         'questions': questions,
-        'test_user_relation': test_user_relation
+        'test_user_relation': test_user_relation,
+        'comment_form': CommentForm()
     }
     if request.user.is_authenticated:
         klass = Classroom.objects.filter(students__id = request.user.id).first()
@@ -976,11 +1005,13 @@ def topic_detail(request, uuid):
 
 @login_required
 def start_test(request, uuid):
-    test = get_object_or_404(Test, uuid=uuid)
+    test = get_object_or_404(Test.objects.prefetch_related("questions"), uuid=uuid)
     test_user = test.get_or_create_test_user_relation(request.user)
-    first_question = test_user.current_questions()[0]
-    print("URL: ", first_question.get_answer_url_for_test(test))
-    return HttpResponseRedirect(first_question.get_answer_url_for_test(test))
+    current_non_answerd_questions = test_user.current_non_answered_questions()
+    if current_non_answerd_questions:
+        first_question = current_non_answerd_questions[0]
+        return HttpResponseRedirect(first_question.get_answer_url_for_test(test))
+    return redirect('mydidata:student_progress', test_id=test.id, student_id=request.user.id )
 
     
 @login_required
@@ -1043,7 +1074,7 @@ def multiple_choice_question(request, topic_uuid):
 
     topic = get_object_or_404(Topic, uuid=topic_uuid)
 
-    if request.POST:
+    if request.method == "POST":
         questionform_set = MultipleChoiceQuestionFormSet(request.POST, prefix="question")
         choice_formset = ChoiceFormSet(request.POST, prefix='choice')
 
@@ -1085,7 +1116,7 @@ def multiple_choice_question(request, topic_uuid):
 @superuser_required
 def discursive_question(request, topic_uuid):
     topic = get_object_or_404(Topic, uuid=topic_uuid)
-    if request.POST:
+    if request.method == "POST":
         form = DiscursiveQuestionForm(request.POST)
         if form.is_valid():
             question = form.save()
@@ -1105,7 +1136,7 @@ def discursive_question(request, topic_uuid):
 def c_programming_question(request, topic_uuid):
     topic = get_object_or_404(Topic, uuid=topic_uuid)
 
-    if request.POST:
+    if request.method == "POST":
         form = CProgrammingQuestionForm(request.POST)
         if form.is_valid():
             question = form.save()
@@ -1120,7 +1151,7 @@ def c_programming_question(request, topic_uuid):
 @superuser_required
 def discursive_question_edit(request, uuid):
     question = get_object_or_404(Question, uuid=uuid)
-    if request.POST:
+    if request.method == "POST":
         form = DiscursiveQuestionForm(request.POST, instance=question)
         if form.is_valid():
             form.save()
@@ -1136,7 +1167,7 @@ def discursive_question_edit(request, uuid):
 @superuser_required
 def c_programming_question_edit(request, uuid):
     question = get_object_or_404(Question, uuid=uuid)
-    if request.POST:
+    if request.method == "POST":
         form = CProgrammingQuestionForm(request.POST, instance=question)
         if form.is_valid():
             form.save()
@@ -1152,7 +1183,7 @@ def c_programming_question_edit(request, uuid):
 @superuser_required
 def multiple_choice_question_edit(request, uuid):
     question = get_object_or_404(Question, uuid=uuid)
-    if request.POST:
+    if request.method == "POST":
         questionform_set = MultipleChoiceQuestionFormSet(request.POST, prefix="question", instance=question)
         choice_formset = ChoiceFormSet(request.POST, prefix='choice')
 
@@ -1239,8 +1270,7 @@ def download_answers(request, topic_uuid, class_id):
 
 @login_required()
 def create_team(request):
-    print("ENTREI NA VIEW")
-    if request.POST:
+    if request.method == "POST":
         form = TeamForm(request.POST, user=request.user)
         if form.is_valid():
             team = form.save()
@@ -1262,7 +1292,7 @@ def create_team(request):
 @login_required()
 def team_edit(request, id):
     team = get_object_or_404(Team, pk=id)
-    if request.POST:
+    if request.method == "POST":
         form = TeamForm(request.POST, instance=team, user=request.user)
         team = form.save()
         team.members.set(form.cleaned_data['members'])
@@ -1294,7 +1324,7 @@ def define_team(request):
                 {'errorMessages': ["Não é possível definir equipes no momento"],})
         
     
-    if request.POST:
+    if request.method == "POST":
 
 
         index = 1;
@@ -1335,7 +1365,7 @@ def test_job(request, answer_id):
 
 def get_corrections(request, answer_id):
     answer_obj = get_object_or_404(Answer, pk=answer_id)
-    correct_answers.now([answer_id])
+    correct_answers.now([answer_obj])
     if request.user.is_superuser:
 
         return feedback(request, answer_obj.id)
@@ -1346,7 +1376,7 @@ def correct_topic(request, class_id, topic_uuid):
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     klass = get_object_or_404(Classroom, pk=class_id)
     
-    correct_answers([a.id for a in klass.get_answers_for_topic(topic)])
+    correct_answers.now([a for a in klass.get_answers_for_topic(topic)])
     
     return HttpResponseRedirect(topic.get_absolute_url())
 
@@ -1374,18 +1404,6 @@ def assess_answers(request):
 
     return JsonResponse({"results": json_results})
 
-@login_required()
-def detect_copies(request, question_uuid):
-
-    classroom = Classroom.objects.filter(students__id=request.user.id).first()
-    question = get_object_or_404(Question, uuid=question_uuid)
-
-    answers = Answer.objects.filter(question = question, student__id__in=classroom.students.all())
-
-    [(a2, a1) for a1 in answers for a2 in answers if a1.text.replace(" ", "") == a2.text.replace(" ", "")]
-
-
-    return render(request, 'mydidata/copy_detector.html', {'question': question, 'answers': [a.student for a in answers]})
 
 @login_required()
 def send_mail_to_class(request, class_id):
@@ -1405,3 +1423,85 @@ def send_mail_to_class(request, class_id):
         if (d.due_datetime - localtime)  <= t_diff:
             topic = d.topic 
             user.email_user("AprendaFazendo: prazo para atividades em %s encerram hoje!"%topic.topic_title, "Acesse suas atividades em: https://aprendafazendo.net/%s"%topic.uuid )
+
+@login_required()
+def comment_create(request, topic_id):
+    topic = get_object_or_404(Topic, pk=topic_id)
+    user = request.user
+    form = CommentForm(request.POST or None)
+    
+    if request.method == "POST":
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.topic = topic
+            comment.author = user
+            comment.save()
+        else:
+            return render(request, "mydidata/partials/comment_form.html", context = { "form": form})
+    
+    context = {
+        "form": form,
+        "user": user,
+        "comments": topic.comments,
+        "topic": topic
+    }
+    form = CommentForm()
+
+    return render(request, "mydidata/partials/comment_list.html", context)
+
+@login_required
+def comment_update(request, id):
+
+    comment = get_object_or_404(Comment, pk=id)
+    if (request.user != comment.author and not request.user.is_superuser):
+        return PermissionDenied("Para remover um comentário o usuário deve ser o próprio autor ou ter acesso de Admin!")
+    form = CommentForm(request.POST or None, instance=comment)
+
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+            return render(request, "mydidata/partials/comment_list.html", {"topic": comment.topic})
+
+    context = {
+        "form": form,
+        "comment": comment
+    }
+
+    return render(request, "mydidata/partials/comment_form.html", context)
+
+
+@login_required
+def comment_delete(request, id):
+    
+    comment = get_object_or_404(Comment, id=id)
+    if (request.user != comment.author and not request.user.is_superuser):
+        return PermissionDenied("Para remover um comentário o usuário deve ser o próprio autor ou ter acesso de Admin!")
+
+    if request.method == "POST":
+        comment.delete()
+        return HttpResponse("")
+
+    return HttpResponseNotAllowed(
+        [
+            "POST",
+        ]
+    )
+
+def comment_detail(request, id):
+    comment = get_object_or_404(Comment, id=id)
+    context = {
+        "comment": comment
+    }
+    return render(request, "mydidata/partials/comment_detail.html", context)
+
+@login_required
+def create_comment_form(request, topic_id):
+    topic = get_object_or_404(Topic, id=topic_id)
+
+    form = CommentForm()
+    context = {
+        "form": form,
+        "topic": topic
+    }
+
+    return render(request, "mydidata/partials/comment_form.html", context)

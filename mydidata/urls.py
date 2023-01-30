@@ -1,7 +1,7 @@
 from django.conf.urls import url, include
 from mydidata import views
 from django.contrib.auth import views as auth_views
-from mydidata.views import HomePage, TopicList, DisciplineList, ClassList, ResourceRoomList, TestList
+from mydidata.views import HomePage, TopicList, DisciplineList, ClassList, ResourceRoomList
 
 app_name = 'mydidata'
 urlpatterns = [
@@ -45,23 +45,22 @@ urlpatterns = [
     url(r'^correct_the_whole_topic/(?P<class_id>[0-9]+)/(?P<topic_uuid>[\w-]+)/$', views.correct_the_whole_topic, name="correct_the_whole_topic"),
     url(r'^test_to_academico/(?P<class_id>[0-9]+)/(?P<test_uuid>[\w-]+)/$', views.test_to_academico, name="test_to_academico"),
     url(r'^send_mail/(?P<class_id>[0-9]+)/$', views.send_mail_to_class, name="send_mail_to_class"),
+    url(r'^assessments/$',views.assessments, name='assessments'),
     url(r'^assess_answers/$',views.assess_answers, name='assess_answers'),
-    url(r'^tests$', TestList.as_view(), name="tests"),
+    url(r'^tests/(?P<id>[0-9]+)/$', views.test_list, name="tests"),
     url(r'^test_detail/(?P<uuid>[\w-]+)/$', views.test_detail, name='test_detail'),
     url(r'^start_test/(?P<uuid>[\w-]+)/$', views.start_test, name="start_test"),
     url(r'^test/progress/(?P<uuid>[\w-]+)/$',views.test_progress, name='test_progress'),
     url(r'^test/close/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_close, name='test_close'),
     url(r'^test/open/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_open, name='test_open'),
     url(r'^test/assess/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_assess, name='test_assess'),
-    url(r'^test/results_sum/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_results_sum, name='test_results_sum'),
-    url(r'^test/results_wavg/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/$',views.test_results_wavg, name='test_results_wavg'),
     url(r'^test_progress/(?P<uuid>[\w-]+)/$', views.test_progress, name='test_progress'),
     url(r'^test_progress/(?P<uuid>[\w-]+)/(?P<class_id>[0-9]+)/$',views.test_progress, name='test_progress'),
+    url(r'^delete_test_answer/(?P<id>[0-9]+)/$',views.delete_test_answer, name='delete_test_answer'),
     url(r'^student_progress/(?P<test_id>[0-9]+)/(?P<student_id>[0-9]+)/$',views.student_progress, name='student_progress'),
     url(r'^close_test_for_student/(?P<test_id>[0-9]+)/(?P<student_id>[0-9]+)/$',views.close_test_for_student, name='close_test_for_student'),
     url(r'^calculate_student_grades/(?P<test_id>[0-9]+)/(?P<student_id>[0-9]+)/$',views.calculate_student_grades, name='calculate_student_grades'),
     url(r'^next_try/(?P<test_user_id>[0-9]+)/$', views.next_try, name='next_try'),
-    url(r'^detect_copies/(?P<question_uuid>[\w-]+)/$',views.detect_copies, name='detect_copies'),
     url(r'^finish_test/(?P<class_id>[0-9]+)/(?P<uuid>[\w-]+)/(?P<key>[\w-]+)/$',views.finish_test, name='finish_test'),
     url(r'^get_corrections/(?P<answer_id>[0-9]+)/$',views.get_corrections, name='get_corrections'),
     url(r'^correct_topic/(?P<topic_uuid>[\w-]+)/(?P<class_id>[0-9]+)/$',views.correct_topic, name='correct_topic'),
@@ -100,4 +99,10 @@ urlpatterns = [
     url(r'^teams/list/$',views.team_list, name='list_teams'),
     url(r'^teams/edit/(?P<id>[0-9]+)/$',views.team_edit, name='edit_team'),
     url(r'^teams/(?P<id>[0-9]+)/$',views.team_detail, name='team_detail'),
+    
+    url(r'^comment/create/(?P<topic_id>[0-9]+)/$',views.comment_create, name='comment_create'),
+    url(r'^comment/update/(?P<id>[0-9]+)/$',views.comment_update, name='comment_update'),
+    url(r'^comment/delete/(?P<id>[0-9]+)/$',views.comment_delete, name='comment_delete'),
+    url(r'^comment/detail/(?P<id>[0-9]+)/$',views.comment_detail, name='comment_detail'),
+    url(r'^comment/create-form/(?P<topic_id>[0-9]+)/$',views.create_comment_form, name='comment_create_form')
 ]

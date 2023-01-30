@@ -31,6 +31,10 @@
                                     <label class = "{%get_choice_label_class answer choice%}" for="choice{{ forloop.counter }}">{{ choice.choice_text | safe}}</label><br />
                                 </div>
                             {% endfor %}
+                            
+                            {% if answer.test and request.user.is_superuser%}
+                                <a type="button" class="btn btn-danger" href="{% url 'mydidata:delete_test_answer' answer.id %}"> Remover </a>
+                            {% endif %}
 
                     </div>
                 </div>

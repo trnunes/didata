@@ -1,0 +1,28 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Avaliações{% endblock title %}
+
+
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <div id="al-container" class="side-p">
+            <div id="al-control">
+                <h3 class="ad-mh">Avaliações
+                </h3>
+                {# Account Search Form #}
+            </div>
+            {# List of Accounts #}
+            {% for assessment in assessments %}
+            <div class="mt-3 py-3 px-3 bg-white shadow border border-gray-100">
+                {%if assessment.is_closed%}
+                    <a href="{% url 'mydidata:student_progress' assessment.id request.user.id %}" >{{ assessment.title }} (Fechada)</a>
+                {% else %}
+                    <a href="{% url 'mydidata:start_test' assessment.uuid %}" >{{ assessment.title }}</a>
+
+                {% endif%}
+            </div>
+            {%endfor%}
+
+            {# Pagination Section #}
+        </div>
+    </div>
+{% endblock content %}

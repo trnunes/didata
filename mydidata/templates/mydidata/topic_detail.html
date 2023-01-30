@@ -75,6 +75,20 @@
                 </div>
             </div>
         {%endif%}
+        <div id="cd-container" >
+            <div class="ad-headers">
+                <h4 class="ad-mh m-none">Comentários...</h4>
+                <div class="mt-4 flex md:mt-0 md:ml-4">
+                    <button type="button" hx-get="{% url 'mydidata:comment_create_form' topic.id %}" hx-target="#commentforms" hx-swap="beforeend" class="btn btn-primary">
+                        Comentar
+                    </button>
+                </div>
+                <div id="comments_area"> 
+                    {% include 'mydidata/partials/comment_list.html' %}
+                </div>
+            </div>
+        </div>
+
         {%if test_user_relation and not test_user_relation.is_closed%}
             <a class="btn btn-lg btn-primary" href="{%url 'mydidata:start_test' test_user_relation.test.uuid%}"> Fazer Avaliação </a>
         {%endif%}
@@ -82,5 +96,5 @@
 
         {# List Communications #}
     </div>
-
 {% endblock %}
+<!-- Modal -->

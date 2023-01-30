@@ -5,7 +5,7 @@ from django.contrib import admin
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.utils.html import format_html
 from .models import Question, Discipline
-from .models import ContentVersion, Choice, Topic, Test, Answer, Classroom, ResourceRoom, TestUserRelation, Deadline, Team
+from .models import Comment, ContentVersion, Choice, Topic, Test, Answer, Classroom, ResourceRoom, TestUserRelation, Deadline, Team, Profile
 from django.utils.safestring import mark_safe
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext_lazy as _
@@ -76,7 +76,6 @@ class ResourceRoomAdmin(admin.ModelAdmin):
 
 class DisciplineAdmin(admin.ModelAdmin):
     model = Discipline
-    filter_horizontal = ('students',)
     inlines = [
         TopicInline,
     ]
@@ -138,7 +137,7 @@ class TestAdminForm(forms.ModelForm):
     super(TestAdminForm, self).__init__(*args, **kwargs)
 
     if self.instance and self.instance.pk:
-      self.fields['classrooms_closed'].initial = self.instance.closed_tests.all()
+      self.fields['classrooms_closed'].initial = self.instance.closed_for_classrooms.all()
       self.fields['classrooms_closed'].label = "Fechado para Turmas"
       self.fields['classrooms'].initial = self.instance.classrooms.all()
       self.fields['classrooms'].label = "Turmas"
@@ -154,7 +153,7 @@ class TestAdminForm(forms.ModelForm):
 
     if test.pk:
         test.classrooms.set(self.cleaned_data['classrooms'])
-        test.closed_tests.set(self.cleaned_data['classrooms_closed'])
+        test.closed_for_classrooms.set(self.cleaned_data['classrooms_closed'])
         self.save_m2m()
         for croom in self.cleaned_data['classrooms']:
             for student in croom.students.all():
@@ -198,6 +197,8 @@ admin.site.register(TestUserRelation)
 admin.site.register(Deadline)
 admin.site.register(ContentVersion)
 admin.site.register(Team, TeamAdmin)
+admin.site.register(Comment)
+admin.site.register(Profile)
 
 
 
