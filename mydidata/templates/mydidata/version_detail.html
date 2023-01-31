@@ -16,17 +16,17 @@
                 <div class="gi-header">
                     <h3 class="ad-mh">{{version.topic.topic_title}}(versão: {{version.id}}) de {{version.user.first_name}} {{version.user.last_name}}</h3>
                         {% if version.approved %}
-                            <span style="color: blue;">status: integrada </span>
+                            <h4><span style="color: blue;">Status: integrada </span></h4>
 
                         {%else%}
-                            <span style="color: brown;">status: aguardando avaliação </span>
+                            <h4><span style="color: brown;">Status: aguardando avaliação do moderador do tópico </span></h4>
 
                         {% endif %}
                         
                     
 
                 </div>
-                <a href="{{ version.get_diff_url }}">Comparar Versão</a> | <a href="{{version.topic.get_absolute_url}}">VOLTAR PARA O TÓPICO</a>
+                <a href="/mydidata/version/{{version.topic.id}}/"> Editar </a> | <a href="{{ version.get_diff_url }}">Comparar Versão</a> | <a href="{{version.topic.get_absolute_url}}">VOLTAR PARA O TÓPICO</a>
                 
                 <p>{{ version.content | safe}}</p>
 

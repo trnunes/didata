@@ -40,7 +40,7 @@ def get_test_user(student_grades_dict, student):
 @register.simple_tag
 def is_closed(test, classroom):
 	return test.is_closed(classroom)
-	
+
 @register.simple_tag
 def get_class(test, user):
 	if not user.is_superuser:

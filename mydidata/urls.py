@@ -58,6 +58,7 @@ urlpatterns = [
     url(r'^test_progress/(?P<uuid>[\w-]+)/(?P<class_id>[0-9]+)/$',views.test_progress, name='test_progress'),
     url(r'^delete_test_answer/(?P<id>[0-9]+)/$',views.delete_test_answer, name='delete_test_answer'),
     url(r'^student_progress/(?P<test_id>[0-9]+)/(?P<student_id>[0-9]+)/$',views.student_progress, name='student_progress'),
+    url(r'^profile_detail/(?P<student_id>[0-9]+)/$',views.profile_detail, name='profile_detail'),
     url(r'^close_test_for_student/(?P<test_id>[0-9]+)/(?P<student_id>[0-9]+)/$',views.close_test_for_student, name='close_test_for_student'),
     url(r'^calculate_student_grades/(?P<test_id>[0-9]+)/(?P<student_id>[0-9]+)/$',views.calculate_student_grades, name='calculate_student_grades'),
     url(r'^next_try/(?P<test_user_id>[0-9]+)/$', views.next_try, name='next_try'),
@@ -92,6 +93,8 @@ urlpatterns = [
     url(r'^my_progress/(?P<discipline_uuid>[\w-]+)/$',views.my_progress, name='my_progress'),
 
     url(r'^class_progress/(?P<class_id>[\w-]+)/$',views.class_progress, name='class_progress'),
+    url(r'^class_detail/(?P<class_id>[\w-]+)/$',views.class_detail, name='class_detail'),
+    
     url(r'^resource_room_progress/(?P<uuid>[\w-]+)/$',views.resource_room_progress, name='resource_room_progress'),    
     url(r'^define_team/$',views.define_team, name='define_team'),
     url(r'^test_job/(?P<answer_id>[0-9]+)$',views.test_job, name='test_job'),

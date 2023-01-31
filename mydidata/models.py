@@ -46,7 +46,21 @@ class Greeting(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     student_id =  models.CharField(max_length=100, blank=True, verbose_name="Matrícula")
-    actions_log = models.TextField(verbose_name="Descrição", blank=True, null=True)
+    actions_log = models.TextField(verbose_name="Descrição", default="", blank=True, null=True)
+    def register_action(self, action):
+        current_date_time = timezone.localtime().strftime("%d/%m/%Y às %H:%M:%S")
+        if not self.actions_log:
+            self.actions_log = ""
+        self.actions_log += f"\n {action} em {current_date_time};"
+        self.save()
+    def list_actions(self):
+        if self.actions_log:
+            return self.actions_log.split("\n")
+        return []
+    @models.permalink
+    def get_absolute_url(self):
+        return 'mydidata:profile_detail', [self.user.id]
+
     def __str__(self):
         return self.user.username
 
@@ -471,8 +485,11 @@ class Classroom(models.Model):
     
     @models.permalink
     def get_absolute_url(self):
+        return 'mydidata:class_detail', [self.id]
+    
+    @models.permalink
+    def get_progress_url(self):
         return 'mydidata:class_progress', [self.id]
-
     @models.permalink
     def get_percentage_progress_url(self):
         return 'mydidata:percentage_progress', [self.id]

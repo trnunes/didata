@@ -251,7 +251,7 @@ MEDIA_ROOT = "%s/media" % (UPLOAD_URL)
 MEDIA_URL = '/media/'
 CKEDITOR_UPLOAD_PREFIX = MEDIA_ROOT
 CKEDITOR_UPLOAD_PATH = 'uploads/'
-LOGIN_REDIRECT_URL = '/mydidata/disciplines'
+LOGIN_REDIRECT_URL = '/mydidata/disciplines/?restrict=true'
 
 
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')

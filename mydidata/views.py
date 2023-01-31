@@ -67,6 +67,8 @@ class HomePage(TemplateView):
         context['categories_left'] = categories_left
         
         context['main'] = desc_orderd_topics[0]
+        if self.request.user.is_authenticated:
+            self.request.user.profile.register_action("Acessando a Home Page")
 
         return context
 
@@ -113,7 +115,8 @@ class TopicList(ListView):
         resource_room_only = self.request.GET.get('resource_room_only', False) == "True"
         discipline = Discipline.objects.get(uuid=discipline_id)
         topic_list = Topic.objects.filter(discipline=discipline, is_resource=resource_room_only, is_assessment=False, visible=True).order_by('order')
-        
+        if self.request.user.is_authenticated:
+            self.request.user.profile.register_action(f"Acessando a tópicos da disciplina {discipline.name}")
         return topic_list
     def dispatch(self, *args, **kwargs):
         return super(TopicList, self).dispatch(*args, **kwargs)
@@ -133,9 +136,13 @@ class DisciplineList(ListView):
             
         else:
             discipline_list = Discipline.objects.filter(enabled=True).order_by('name')
+        
+        if self.request.user.is_authenticated:
+            self.request.user.profile.register_action(f"Acessando Meus Cursos")
+
         return discipline_list
         
-
+        
     def dispatch(self, *args, **kwargs):
         return super(DisciplineList, self).dispatch(*args, **kwargs)
 
@@ -165,12 +172,14 @@ def version_edit(request, version_id):
     
     if request.method == "POST":
         version_form = ContentVersionForm(request.POST, instance=version, user=request.user)
+        request.user.profile.register_action(f"Enviando alteração da versão {version_id} para o tópico {version.topic.topic_title}")
         if version_form.is_valid():
             version_form.save()
+            request.user.profile.register_action(f"Alteração da versão {version_id} para o tópico {version.topic.topic_title} enviada com sucesso")
             return HttpResponseRedirect(reverse('mydidata:version_detail', args=(version.id,)))
     
     version_form = ContentVersionForm(instance=version, user=request.user)
-    
+    request.user.profile.register_action(f"Acessando a edição da versão {version_id} para o tópico {version.topic.topic_title}")
     return render(request, 'mydidata/version_edit.html', context={'form': version_form})
 
 @login_required
@@ -182,11 +191,13 @@ def version_detail(request, version_id):
 @login_required
 def version(request, topic_id):
     topic = get_object_or_404(Topic, pk=topic_id)
-
+    
     if request.method == "POST":
         form = ContentVersionForm(request.POST, topic=topic, user=request.user)
+        request.user.profile.register_action(f"Enviando nova versão para o tópico {topic.topic_title}")
         if form.is_valid():
             saved_version = form.save()
+            request.user.profile.register_action(f"Nova versão para o tópico {topic.topic_title} enviada com sucesso")
             return HttpResponseRedirect(reverse('mydidata:version_detail', args=(saved_version.id,)))
     else:
         form = ContentVersionForm(topic=topic, user=request.user)
@@ -195,7 +206,7 @@ def version(request, topic_id):
             return HttpResponseRedirect(reverse('mydidata:version_edit', args=(filtered_versions.first().id,)))
             
 
-        
+    request.user.profile.register_action(f"Acessando formulário de nova versão para o tópico {topic.topic_title} enviada com sucesso")
     return render(request, "mydidata/version.html", context={'form': form})
         
 def version_list(request, topic_id):
@@ -488,6 +499,7 @@ def topic_progress(request, topic_uuid, class_id):
         students = klass.students.all().order_by('first_name')
     return render(request, 'mydidata/topic_progress.html', {'classroom': klass, 'students': students, 'topics':[topic],})
 
+#Deprecated
 @login_required
 def finish_test(request, uuid, class_id, key):
     user = request.user
@@ -512,6 +524,14 @@ def resource_room_progress(request, uuid):
     topics = r_room.topics.all()    
     return render(request, 'mydidata/topic_progress.html', {'students': students, 'topics':topics,})
 
+@login_required
+@superuser_required
+def profile_detail(request, student_id):
+    student = get_object_or_404(User.objects.select_related("profile").prefetch_related("classrooms"), pk=student_id)
+    activities = student.profile.list_actions()
+
+    return render(request, 'mydidata/profile_detail.html', {'student': student, "activities": activities})
+
 @login_required 
 def my_progress(request, discipline_uuid):
     discipline = get_object_or_404(Discipline, uuid=discipline_uuid)
@@ -533,12 +553,19 @@ def class_progress(request, class_id):
     classroom = get_object_or_404(Classroom, pk=class_id)
     discipline_list = classroom.disciplines.all()
     topics = []
-    students = classroom.students.all().order_by('first_name');
+    students = classroom.students.all().order_by('first_name')
     
     for discipline in discipline_list:
         topics.extend(discipline.topic_set.all())
     topics.sort(key=lambda topic: topic.order)
     return render(request, 'mydidata/progress.html', {'classroom': classroom, 'students': students, 'topics':topics,})
+
+@login_required
+def class_detail(request, class_id):
+    classroom = get_object_or_404(Classroom, pk=class_id)
+    students = classroom.students.all().order_by('first_name')
+    
+    return render(request, 'mydidata/class_detail.html', {'classroom': classroom, 'students': students, })
 
 @login_required
 def percentage_progress(request, class_id):
@@ -670,68 +697,6 @@ def delete_test_answer(request, id):
     class_id = answer.student.classrooms.first().id
 
     return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
-
-
-
-@login_required
-def answer(request, question_uuid):
-
-    question = get_object_or_404(Question, uuid=question_uuid)
-    
-    if request.user.is_authenticated:
-        classrooms = Classroom.objects.filter(students__id = request.user.id)
-        for klass in classrooms:
-            closed_topics = klass.closed_topics.all()
-            if question.topic in closed_topics:
-                return redirect(question.topic.get_absolute_url())
-
-    if request.method == "POST":
-        if not request.user.is_authenticated:
-            return redirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
-                #TODO insert test logic here
-        
-        form = get_answer_form(request.POST, request.FILES, instance=answer, question=question)
-        
-        answer = form.instance
-        answer.status = Answer.SENT
-        
-        redirect_url = question.topic.get_absolute_url()
-        
-        if request.FILES.get('assignment_file', False):
-            file_name = request.FILES['assignment_file'].name
-            request.FILES['assignment_file'].name = answer.get_answer_file_id() + "." +  file_name.split(".")[-1]
-        
-        if form.is_valid():
-            form.save()
-
-            #TODO insert logic for team work
-
-        else:
-            context = {
-                'question': question,            
-                'form': form,
-            }
-            return render(request, 'mydidata/answer_cru.html', context)
-        if question.is_discursive():
-            form = SuperuserAnswerFormSimplified(instance = answer)
-            # return render(request, 'mydidata/discursive_answer_detail.html', {'answer': answer, 'form': form, "next": redirect_url})
-            return HttpResponseRedirect(question.topic.get_absolute_url_questionary_anchor())
-
-        return HttpResponseRedirect(redirect_url)
-
-
-    if request.user.is_authenticated:
-        answer = Answer.find(student=request.user, question=question, test=test)
-        form = get_answer_form(instance=answer, question=question, user=request.user)
-
-    context = {
-        'question': question,        
-        'form': form,
-    }
-    return render(request, 'mydidata/answer_cru.html', context)
-
-
-
 def discursive_answer_detail(request, answer_id):
     answer = Answer.objects.get(pk=answer_id)
 
@@ -843,22 +808,27 @@ def discursive_answer(request, question_uuid):
     
     if request.method == "POST":
         form = AnswerForm(request.POST, request.FILES, question=question, user=user)
-        
+        action = f"Enviando resposta para a questão {question.index} do tópico {topic.topic_title}"
         if form.is_valid():
             answer = form.save()
             answer.status = Answer.SENT
             answer.save()
+            action += f"\n Resposta para a questão {question.index} do tópico {topic.topic_title} enviada com sucesso"
             save_and_get_feedback_input_pressed = "save_and_feedback" in request.POST
             
             if save_and_get_feedback_input_pressed:
                 return redirect(reverse("mydidata:get_corrections", args=(answer.id,)))
 
+            request.user.profile.register_action(action)
             return redirect(answer.get_detail_url())
         else:
             context = {
                 'question': question,
                 'form': form
             }
+
+            action += f"\n Problema no envio da resposta para a questão {question.index} do tópico {topic.topic_title}: {form.errors.as_data()}"
+            request.user.profile.register_action(action)    
 
             return render(request, "mydidata/answer_cru.html", context)
             
@@ -868,6 +838,7 @@ def discursive_answer(request, question_uuid):
         'question': question,
         'form': form
     }
+    request.user.profile.register_action(f"abrindo formulário de resposta para a questão {question.index} do tópico {topic.topic_title}")
     
     return render(request, "mydidata/answer_cru.html", context)
     
@@ -909,7 +880,8 @@ def next_try(request, test_user_id):
     test_user_rel = get_object_or_404(TestUserRelation, pk=test_user_id)
     test = test_user_rel.test
     test.next_try(test_user_rel.student)
-    print("TRIES", test_user_rel.tries)
+    if request.user.is_authenticated:
+        request.user.profile.register_action(f"Iniciando tentativa {test_user_rel.tries} para a avaliação {test.title}")
     return HttpResponseRedirect(reverse("mydidata:start_test", args=(test.uuid,)))
     
 @login_required()
@@ -966,7 +938,10 @@ def test_results_sum(request, class_id, uuid):
     return render(request, 'mydidata/test_results.html', {'classroom': classroom, 'students': students, 'test':test, 'student_grades': student_grade})
 
 def topic_detail(request, uuid):
+
     topic = Topic.objects.get(uuid=uuid)
+    if request.user.is_authenticated:
+        request.user.profile.register_action(f"Acessando tópico {topic.topic_title}")
     topic.topic_content = topic.topic_content.replace("<iframe", "<iframe allowfullscreen=\"allowfullscreen\"")
     urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', topic.topic_content)
     for url in urls:
@@ -982,10 +957,7 @@ def topic_detail(request, uuid):
     test_user_relation = None
     test = topic.tests.all().first()
     if( test and request.user.is_authenticated):
-        test_questions = test.questions.all()
-        test_user_relation = TestUserRelation.objects.filter(test=test, student=request.user).first()
-        if (not test_user_relation):
-            test_user_relation = TestUserRelation.objects.create(student=request.user, test=test)
+        test_user_relation = test.get_or_create_test_user_relation(request.user)
     
     context = {
         'topic': topic,
@@ -1006,6 +978,7 @@ def topic_detail(request, uuid):
 @login_required
 def start_test(request, uuid):
     test = get_object_or_404(Test.objects.prefetch_related("questions"), uuid=uuid)
+    request.user.profile.register_action(f"Acessando Avaliação: {test.title}")
     test_user = test.get_or_create_test_user_relation(request.user)
     current_non_answerd_questions = test_user.current_non_answered_questions()
     if current_non_answerd_questions:
@@ -1277,6 +1250,7 @@ def create_team(request):
             team.owner = request.user
             team.members.set(form.cleaned_data['members'])
             team.save()
+            request.user.profile.register_action(f"Salvando equipe {team.name}")
             redirect_url = reverse('mydidata:team_detail', args=(team.pk,))
             if request.POST.get("redirect_to", None):
                 redirect_url = request.POST.get("redirect_to")
@@ -1297,6 +1271,7 @@ def team_edit(request, id):
         team = form.save()
         team.members.set(form.cleaned_data['members'])
         team.save()
+        request.user.profile.register_action(f"Editando equipe {team.name}")
         return redirect(reverse('mydidata:team_detail', args=(team.id, )))
     else:
         form = TeamForm(user=request.user)
@@ -1366,6 +1341,8 @@ def test_job(request, answer_id):
 def get_corrections(request, answer_id):
     answer_obj = get_object_or_404(Answer, pk=answer_id)
     correct_answers.now([answer_obj])
+    if request.user.is_authenticated:
+        request.user.profile.register_action(f"Obtendo feedback para resposta da questão {answer_obj.question.get_absolute_url()}")
     if request.user.is_superuser:
 
         return feedback(request, answer_obj.id)
@@ -1436,6 +1413,7 @@ def comment_create(request, topic_id):
             comment.topic = topic
             comment.author = user
             comment.save()
+            request.user.profile.register_action(f"Adicionando comentário ao tópico {topic.topic_title}")
         else:
             return render(request, "mydidata/partials/comment_form.html", context = { "form": form})
     

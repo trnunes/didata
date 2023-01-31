@@ -1,0 +1,24 @@
+{% extends 'mydidata/base.html' %}
+
+{% block content %}
+    {% load question_extras %}
+    {% load answer_extras %}
+    {% load classroom_extras %}
+    <div id="content-container" class="container p-none">
+		{% if classroom %}
+			<h1>{{classroom.name}}</h1>
+			<p>Compartilhe esse link com seus alunos para inscrição: https://mydidata.herokuapp.com{{classroom.get_signup_link}} </p>
+		{%endif%}
+		<ul class="list-group">
+            {% for student in students %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{{student.profile.get_absolute_url}}">{{ student.first_name }} {{ student.last_name }} ({{student.username}})</a>
+                
+                <!-- <a class="badge badge-primary badge-pill" href="/mydidata/my_progress/{{discipline.uuid}}">Ver Progresso</a> -->
+            </li>
+                
+                
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

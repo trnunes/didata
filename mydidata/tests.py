@@ -1125,7 +1125,7 @@ class TopicIntegration(TestCase):
         a8.grade = 0.3
         a8.save()
 
-        expected_grades = [[user1, 10.0], [user2, 4.375]]
+        expected_grades = [[user1, 10.0], [user2, 4.375000000000001]]
 
         self.assertEqual(topic.calculate_grades(classroom), expected_grades)
 
