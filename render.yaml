@@ -29,7 +29,7 @@ services:
         value: /app/.apt/opt/google/chrome/google-chrome
       - key: GOOGLE_CREDENTIALS # Imported from Heroku app
         value: {
-  &quot;type&quot;: &quot;service_account&quot;,
+  "&quot;type&quot;: &quot;service_account&quot;,
   &quot;project_id&quot;: &quot;aprendafazendo&quot;,
   &quot;private_key_id&quot;: &quot;dcf0c04e7e0e74f895a8490898786345a02bbadb&quot;,
   &quot;private_key&quot;: &quot;-----BEGIN PRIVATE KEY-----\nMIIEugIBADANBgkqhkiG9w0BAQEFAASCBKQwggSgAgEAAoIBAQDPas5zTj/Zer9+\nCA2I6ifw4tzTfxoGfFNKpCspnZFSxBr4sxmSTxkcdoFNqMHTAedxFe5Ee9ewGyYE\nKegaOqRursIiB/Hl13LItohmS8dwG9qAZOMvW4PKhIe8AEQ5+zTGuTbXagvvdVny\n03rYU6lp6HTUzNyfgncIVwq6DfUE8bxd9v/8K4uV3ha4237A8c0gCqeiBx5swnrO\nRCW49mPZcgSke40DirAVCSF5sSr0Ni5kE7UYX/l1VEKhRga3B5wReGK62P9IiZH5\nuzUtlaDI7lIBuDPEoknEZWUpyFfXWDc4iVSEWcF7Z2X6jEGXu0Sreq+kA/N3U2cO\nFQi4i161AgMBAAECgf9Sk0M8Cuiq/eZ2gJ2mUdOZicXZciSY23ZysuRpig367F2Y\nqhH2K0GL4ngMQfbxjzSSlrsrdfPMo/RSYEC/D+Qg7+/JcrQQnBmR02QPJzgJmsKz\n+T5vumgFpZha5ZsHZ7LsndAUnsQKZOgGaZrwkqiOOUDMTYZUx2ZySvhZs5aG4KpJ\nF5s8PU7Z87yk7DrxKhYfzmDGrJAoh0en1PHVugkuucHVRDgHJoVhWuQGYB5OtRNv\nGtLiHEzSK/IzUKE995jZZASTM2PUlEGxIqr+URAwiudBIxlDYwOxqK91GOc/V54o\ng8k9dm+/58AUeOxIfyETkjj4VXsYZjtBATS0zI8CgYEA/bjawjjM6bzKrBFBZb1y\nXQ+AnEGCNskqH0IphN7t4mEX/pDGPAh4H6kRQKEmyRC4GS1uVoqJ+wPh5kLmXgWW\ncwDik+tsk7GFKTjY3mLAQv/eQEnHU8IY1yBJ3FvHEsBTCmqPtkxRYg9CR4wLligd\nohwvBa9Pt6YfQYocHAzWRVMCgYEA0UeGyRmXrb616kOqE990iuat0htEgPvw5+33\njbVjDOYIPoluK4AMLzp6Ib8wB+TvXKxz/huB9VggH9XZ9D868aBt0NCEvGRstIXx\n5h8zZPZrsyUDGcfpOiC3C4PneVZuk3faG+Ci0Sd3pMhSuAPyUhbjGzQuBTbp46nV\nMqGxgtcCgYB6TmnlxkvBQOjSGV9VFAXVJmvw5wNGNaLAfrxU+MHjprpSVKe6uLpv\nSKiwZv6zXgPg3y2ZOh9ZiX2T6hvypu7ncT3H4GzupVxzipvAWAomQgF5LBeSILao\nvT/docBNIbjmBIhScGeqxYBFzRSoxZ3DT6K7Ms9S0BmxFkqGmwmPUQKBgCh4zqYh\nXuXo1cFiKIgDVMRv6/mP8GWJU4Nmz9MF2wvpiHqflUCwWKrhgjD4ik9chLXFXAEu\nTKmnyz6c2rOTbtC/l70kNidAvI0Ewk0gh43k4dsZM0pPENl+7ic58Q/UGTpHmVR+\n0r3kBg1F+ElB6iDZ8D2Yj7XOctjmRSavgmatAoGATCTVT+LNMJaSdHaHxNquTFek\nk43bZmTmDta3wYdpnbAGf5owPRgObSrod91SUrXFMHlYzEzrYl2GCfULNwVkmQ0i\nfsIpdluN4F8YMoNjKGAdUE07xqEhGgYfFkAYkIE9xNrwkC/wjB64jzqYg+hPIDHj\nWkOrGNVn81sEoqtI3BQ&#x3D;\n-----END PRIVATE KEY-----\n&quot;,
@@ -38,7 +38,7 @@ services:
   &quot;auth_uri&quot;: &quot;https://accounts.google.com/o/oauth2/auth&quot;,
   &quot;token_uri&quot;: &quot;https://oauth2.googleapis.com/token&quot;,
   &quot;auth_provider_x509_cert_url&quot;: &quot;https://www.googleapis.com/oauth2/v1/certs&quot;,
-  &quot;client_x509_cert_url&quot;: &quot;https://www.googleapis.com/robot/v1/metadata/x509/aprenda-fazendo%40aprendafazendo.iam.gserviceaccount.com&quot;
+  &quot;client_x509_cert_url&quot;: &quot;https://www.googleapis.com/robot/v1/metadata/x509/aprenda-fazendo%40aprendafazendo.iam.gserviceaccount.com&quot;"
 }
       - key: LD_LIBRARY_PATH # Imported from Heroku app
         value: /usr/local/lib:/usr/lib:/lib:/app/vendor
