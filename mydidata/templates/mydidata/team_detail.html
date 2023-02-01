@@ -1,12 +1,12 @@
 {% extends 'mydidata/base.html' %}
-{% block title %}Questões{% endblock title %}
+{% block title %}Equipe{% endblock title %}
 
 {% block content %}
     <div id="content-container" class="container p-none">
         <div id="al-container" class="side-p">
             <div id="al-control">
                 <h3 class="ad-mh">Equipe: {{team.name}}</h3>
-                <a href="/mydidata/edit/{{team.id}}"> Editar Equipe </a>
+                <a href="{{team.get_edit_url}}"> Editar Equipe </a>
                 {# Account Search Form #}
             </div>
             {# List of Accounts #}

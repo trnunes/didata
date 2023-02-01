@@ -1256,16 +1256,17 @@ def create_team(request):
                 redirect_url = request.POST.get("redirect_to")
             return redirect(redirect_url)
     else:
+        form = TeamForm(initial={'owner': request.user, "members": [request.user]}, user=request.user)
         context = {'form': form}
         if request.GET.get("redirect_to", None):
             context["redirect_to"] = request.GET.get("redirect_to")
 
-        form = TeamForm(initial={'owner': request.user, "members": [request.user]}, user=request.user)
+        
     return render(request, 'mydidata/team_cru.html', context=context)
 
 @login_required()
 def team_edit(request, id):
-    team = get_object_or_404(Team, pk=id)
+    team = get_object_or_404(Team.objects.prefetch_related("members"), pk=id)
     if request.method == "POST":
         form = TeamForm(request.POST, instance=team, user=request.user)
         team = form.save()
@@ -1274,7 +1275,7 @@ def team_edit(request, id):
         request.user.profile.register_action(f"Editando equipe {team.name}")
         return redirect(reverse('mydidata:team_detail', args=(team.id, )))
     else:
-        form = TeamForm(user=request.user)
+        form = TeamForm(user=request.user, instance=team)
     return render(request, 'mydidata/team_cru.html', {'form': form})
 
 @login_required()

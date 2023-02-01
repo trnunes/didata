@@ -13,7 +13,7 @@
             <ul class="list-group">
                 {% for t in teams %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <a href="">{{t.name}}</a>
+                    <a href="{{t.get_absolute_url}}">{{t.name}}</a>
                 </li>
                     
                     

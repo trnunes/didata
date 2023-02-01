@@ -712,7 +712,9 @@ class Team(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return "mydidata:team_detail", [self.id]
-    
+    @models.permalink
+    def get_edit_url(self):
+        return "mydidata:edit_team", [self.id]
     def __str__(self):
         return self.name
 
