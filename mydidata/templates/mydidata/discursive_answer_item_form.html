@@ -84,7 +84,6 @@
 
 
 {% if user.is_superuser %}
-	{%get_copy_detect_url question.uuid as detect_url%}
     {%if answer.id and answer.answer_text and answer.question.ref_keywords or answer.question.expected_output%}
     
         
@@ -92,6 +91,5 @@
 
     
     {%endif%}
-	<a href='{{ detect_url }}'>Detectar Cópias</a>
     <a href='{{ classroom.get_absolute_url }}'>Voltar para Progresso da Turma</a>
 {%endif%}
