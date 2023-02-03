@@ -107,5 +107,18 @@ urlpatterns = [
     url(r'^comment/update/(?P<id>[0-9]+)/$',views.comment_update, name='comment_update'),
     url(r'^comment/delete/(?P<id>[0-9]+)/$',views.comment_delete, name='comment_delete'),
     url(r'^comment/detail/(?P<id>[0-9]+)/$',views.comment_detail, name='comment_detail'),
-    url(r'^comment/create-form/(?P<topic_id>[0-9]+)/$',views.create_comment_form, name='comment_create_form')
+    url(r'^comment/create-form/(?P<topic_id>[0-9]+)/$',views.create_comment_form, name='comment_create_form'),
+
+    url(r'^forum/post/list/(?P<topic_id>[0-9]+)/$',views.post_list, name='post_list'),
+    url(r'^forum/post/create/(?P<topic_id>[0-9]+)/$',views.post_create, name='post_create'),
+    url(r'^forum/post/update/(?P<id>[0-9]+)/$',views.post_update, name='post_update'),
+    url(r'^forum/post/delete/(?P<id>[0-9]+)/$',views.post_delete, name='post_delete'),
+    url(r'^forum/post/detail/(?P<id>[0-9]+)/$',views.post_detail, name='post_detail'),
+
+    url(r'^forum/reply/create/(?P<post_id>[0-9]+)/$',views.reply_create, name='reply_create'),
+    url(r'^forum/reply/update/(?P<id>[0-9]+)/$',views.reply_update, name='reply_update'),
+    url(r'^forum/reply/delete/(?P<id>[0-9]+)/$',views.reply_delete, name='reply_delete'),
+    url(r'^forum/reply/detail/(?P<id>[0-9]+)/$',views.reply_detail, name='reply_detail'),
+    url(r'^forum/reply/create-form/(?P<post_id>[0-9]+)/$',views.reply_create_form, name='reply_create_form'),
+
 ]

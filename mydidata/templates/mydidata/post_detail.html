@@ -1,0 +1,55 @@
+{% extends 'mydidata/base.html' %}
+{%block page_description%}
+    <meta name="description" content="{{post.title}}">
+{%endblock page_description%}
+{%block title%}
+    {{post.title}}
+{%endblock title%}
+{% block content %}
+    <div id="content-container" class="container p-none">
+        <hr class="my-3" />
+        <div >
+            
+            <div id="gi-container" class="ad-container2">
+                
+                
+                <a href="{{post.edit_url}}"> Editar </a>
+                
+                <div class="gi-header">
+                    <h3 class="ad-mh">{{ post.title }}
+                        
+                    </h3>
+                
+                </div>
+                <div class="row gi-body">
+                    <div class="col-md-9">
+                
+                        <p>{{ post.content | safe}}</p>
+                    </div>
+                </div>
+                
+                
+            </div>
+            
+
+        </div>
+        
+        <div id="cd-container" >
+            <div class="ad-headers">
+                <h4 class="ad-mh m-none">Respostas...</h4>
+                <div id="replies_area"> 
+                    {% include 'mydidata/partials/reply_list.html' %}
+                </div>
+                <div class="mt-4 flex md:mt-0 md:ml-4">
+                    <button type="button" hx-get="{% url 'mydidata:reply_create_form' post.id %}" hx-target="#replyforms" hx-swap="beforeend" class="btn btn-primary">
+                        Responder
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        {# List Communications #}
+    </div>
+{% endblock %}
+<!-- Modal -->

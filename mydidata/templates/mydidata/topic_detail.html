@@ -26,8 +26,10 @@
             
                 <div id="gi-container" class="ad-container2">
                     
+                    
                     <a href="/mydidata/version/{{topic.id}}/"> Editar </a>
                     | <a href="/mydidata/version_list/{{topic.id}}/"> Versões </a>
+                    | <a href="{% url 'mydidata:post_list' topic.id%}"> Fórum de Discussão </a>
                     
                     {% include 'mydidata/topic_item_view.html' %}
                     
@@ -75,6 +77,10 @@
                 </div>
             </div>
         {%endif%}
+        {%if test_user_relation and not test_user_relation.is_closed%}
+            <a class="btn btn-lg btn-primary" href="{%url 'mydidata:start_test' test_user_relation.test.uuid%}"> Fazer Avaliação </a>
+        {%endif%}
+        
         <div id="cd-container" >
             <div class="ad-headers">
                 <h4 class="ad-mh m-none">Comentários...</h4>
@@ -89,9 +95,6 @@
             </div>
         </div>
 
-        {%if test_user_relation and not test_user_relation.is_closed%}
-            <a class="btn btn-lg btn-primary" href="{%url 'mydidata:start_test' test_user_relation.test.uuid%}"> Fazer Avaliação </a>
-        {%endif%}
 
 
         {# List Communications #}

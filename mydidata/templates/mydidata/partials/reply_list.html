@@ -1,0 +1,12 @@
+<div id="replies_area">
+    <div id="replyforms"></div>
+    {% if not replies %}
+        Não há respostas ainda... Seja o primeiro!
+    {% else %}
+        {% for reply in replies %}
+            {% include "mydidata/partials/reply_detail.html" %}
+           
+        {% endfor %}
+
+    {%endif%}
+</div>

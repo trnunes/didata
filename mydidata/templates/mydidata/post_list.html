@@ -1,0 +1,29 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Tópicos{% endblock title %}
+
+{% block content %}
+{%load student_extras%}
+    <div id="content-container" class="container p-none">
+        <div id="al-container" class="side-p">
+            <div id="al-control">
+                <h3 class="ad-mh">
+                    Fórum do Tópico {{topic.topic_title}}
+                    <span class="pull-right">
+                        <a href="{% url 'mydidata:post_create' topic.id %}"
+                           class="btn btn-link p-r-none">+ Criar Novo Post</a>
+                    </span>
+                </h3>
+                {# Account Search Form #}
+            </div>
+            {# List of Accounts #}
+            
+            <div class="list-group" style="margin-bottom: 1rem;">
+                {% for post in posts %}
+                        <a href="{{ post.get_absolute_url }}" class="list-group-item list-group-item-action"><strong>{{ post.title }}</strong></a>
+                {% endfor %}
+    
+            </div>
+            {# Pagination Section #}
+        </div>
+    </div>
+{% endblock content %}

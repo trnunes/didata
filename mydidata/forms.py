@@ -5,7 +5,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import UserChangeForm
 from django.forms.models import ModelMultipleChoiceField
 
-from .models import Comment, ContentVersion, Team, Topic, Question, Profile, Choice, Discipline, Classroom, Answer, TestUserRelation
+from .models import Reply, ForumPost, Comment, ContentVersion, Team, Topic, Question, Profile, Choice, Discipline, Classroom, Answer, TestUserRelation
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -159,7 +159,7 @@ class CProgrammingQuestionForm(forms.ModelForm):
         model = Question
         fields = ("question_text", 'difficulty_level', 'question_type', "is_team_work", "test_inputs", "expected_output", "weight", "punish_copies",)
         widgets = {
-            'question_text': forms.CharField(widget=CKEditorUploadingWidget, label='Enunciado'),
+            'question_text': forms.CharField(widget=CKEditorUploadingWidget(), label='Enunciado'),
             'expected_output': forms.TextInput(
                 attrs={
                     'placeholder':'Digite as saídas esperadas para cada entrada separadas por vírgula',
@@ -194,6 +194,36 @@ CommentFormSet = inlineformset_factory(
     Topic,
     Comment,
     CommentForm,
+    can_delete = False,
+    min_num=2,
+    extra=0
+)
+
+class PostForm(forms.ModelForm):
+    class Meta:
+        model = ForumPost
+        fields = ("title", "content",)
+        widgets = {
+            'content': forms.CharField(widget=CKEditorUploadingWidget, label='Texto'),
+        }
+        
+    title = forms.CharField(
+        required=True, widget=forms.TextInput(attrs={'class':'form-control'})
+    )
+    
+
+class ReplyForm(forms.ModelForm):
+    class Meta:
+        model = Reply
+        fields = ("content",)
+        widgets = {
+            "content": forms.CharField(widget=CKEditorUploadingWidget(), label='Texto da Resposta')
+        }
+
+RepliesFormSet = inlineformset_factory(
+    ForumPost,
+    Reply,
+    ReplyForm,
     can_delete = False,
     min_num=2,
     extra=0

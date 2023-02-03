@@ -155,7 +155,6 @@ class GradingStrategy(object):
         return list(grades_sum_per_student.values())
 
 
-
 class Topic(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)
     topic_title = models.CharField(max_length=200, verbose_name="Título")
@@ -321,6 +320,33 @@ class ContentVersion(models.Model, AdminURLMixin):
 
     def __str__(self):
         return self.topic.topic_title + "." +str(self.id)
+
+class ForumPost(models.Model, AdminURLMixin):
+    
+    topic = models.ForeignKey(Topic, verbose_name="Postagem em Fórum", on_delete=models.CASCADE, related_name="posts")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="posts")
+    title = models.TextField(verbose_name="Título", unique=True)
+    content = RichTextUploadingField(verbose_name="Conteúdo")
+    publish_date = models.DateField(auto_now=True)
+    
+
+    def __str__(self):
+        return u"%s"%self.title
+    
+    @models.permalink
+    def get_absolute_url(self):
+        return "mydidata:post_detail", (self.id,)
+
+    
+
+class Reply(models.Model, AdminURLMixin):
+    to_post = models.ForeignKey(ForumPost, verbose_name="Resposta", on_delete=models.CASCADE, related_name="replies")
+    publish_date = models.DateField(auto_now=True)
+    content = RichTextUploadingField(verbose_name="Resposta")
+
+    def __str__(self):
+        creator_str = f"{self.author.first_name}({self.author.username})"
+        return u"Resposta de '%s' por %s"%(self.to_post.title, creator_str)
 
 class Test(models.Model, AdminURLMixin):
     uuid = ShortUUIDField(unique=True)

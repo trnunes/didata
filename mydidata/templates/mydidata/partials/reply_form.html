@@ -1,0 +1,32 @@
+<div hx-target="#replies_area" hx-swap="outerHTML" class="">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.media}}
+        {{ form.as_p }}
+        {% if reply %}
+            <button type="submit" hx-post="{% url 'mydidata:reply_update' reply.id %}"
+                >
+                Alterar
+            </button>
+            <button hx-get="{% url 'mydidata:post_detail' reply.post.id %}" type="button"
+                >
+                Cancelar
+            </button>
+        {% else %}
+            <button type="submit" hx-post="{% url 'mydidata:reply_create' post.id %}"
+                >
+                Enviar
+            </button>
+        {% endif %}
+        <script>
+            ClassicEditor
+                .create( document.querySelector( '#id_content' ) )
+                .then( editor => {
+                    console.log( editor );
+                } )
+                .catch( error => {
+                    console.error( error );
+                } );
+        </script>
+    </form>
+</div>

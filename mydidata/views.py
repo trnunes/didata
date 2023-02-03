@@ -3,7 +3,7 @@ from ast import With
 
 from django.shortcuts import get_object_or_404, render,redirect
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseForbidden,  HttpResponseNotAllowed
-from .models import Comment, ContentVersion, Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline, Team
+from .models import ForumPost, Reply, Comment, ContentVersion, Question, Choice, Topic, Test, Discipline, Classroom, ResourceRoom, Answer, TestUserRelation, Profile, Deadline, Team
 from django.template import loader
 from django.urls import reverse
 import sys
@@ -13,7 +13,7 @@ from background_task.models import Task
 from django.views import View
 
 from .nlp_analyzer import score_keywords, score, assess, read_lines
-from .forms import ContentVersionForm, SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, MultipleChoiceQuestionForm, DiscursiveQuestionForm, AnswerFormUploadOnly, AnswerForm, MultipleChoiceQuestionFormSet, ChoiceFormSet, CProgrammingQuestionForm, TeamForm, CommentForm
+from .forms import PostForm, ReplyForm, ContentVersionForm, SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, MultipleChoiceQuestionForm, DiscursiveQuestionForm, AnswerFormUploadOnly, AnswerForm, MultipleChoiceQuestionFormSet, ChoiceFormSet, CProgrammingQuestionForm, TeamForm, CommentForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -1421,11 +1421,9 @@ def comment_create(request, topic_id):
     context = {
         "form": form,
         "user": user,
-        "comments": topic.comments,
+        "comments": topic.comments.all(),
         "topic": topic
     }
-    form = CommentForm()
-
     return render(request, "mydidata/partials/comment_list.html", context)
 
 @login_required
@@ -1484,3 +1482,92 @@ def create_comment_form(request, topic_id):
     }
 
     return render(request, "mydidata/partials/comment_form.html", context)
+
+
+
+###
+### FORUM POST AND REPLY VIEWS
+###
+
+@login_required
+def post_create(request, topic_id):
+    topic = get_object_or_404(Topic, pk=topic_id)
+    user = request.user
+    form = PostForm(request.POST or None)
+    
+    if request.method == "POST":
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.topic = topic
+            post.author = user
+            post.save()
+            request.user.profile.register_action(f"Criando postagem com título '{post.title}' no fórum ao tópico {topic.topic_title}")
+
+            return redirect(reverse("mydidata:post_list", args=(topic.id,)))
+        
+    return redirect(request, "mydidata/post_create.html", context = { "form": form, "topic": topic})
+    
+    
+def post_list(request, topic_id):
+    topic = get_object_or_404(Topic.objects.prefetch_related("posts"), pk=topic_id)
+    posts = topic.posts.all()
+    return render(request, "mydidata/post_list.html", context={"topic": topic, "posts": posts})
+
+def post_update(request, id):
+    return None
+
+def post_delete(request, id):
+    return None
+
+def post_detail(request, id):
+    post = get_object_or_404(ForumPost.objects.prefetch_related("replies"), pk=id)
+
+    context = {
+        "post": post,
+        "replies": post.replies.all()
+    }
+
+    return render(request, "mydidata/post_detail.html", context=context)
+
+def reply_create(request, post_id):
+    post = get_object_or_404(ForumPost, pk=post_id)
+    user = request.user
+    form = ReplyForm(request.POST or None)
+    
+    if request.method == "POST":
+        if form.is_valid():
+            reply = form.save(commit=False)
+            reply.to_post = post
+            reply.author = user
+            reply.save()
+            request.user.profile.register_action(f"Respondendo ao Post '{post.title}'")
+        else:
+            return render(request, "mydidata/partials/reply_form.html", context = { "form": form})
+    
+    context = {
+        "form": form,
+        "user": user,
+        "replies": post.replies.all(),
+        "post": post
+    }
+    return render(request, "mydidata/partials/reply_list.html", context)
+
+def reply_update(request, id):
+    return None
+
+def reply_delete(request, id):
+    return None
+
+def reply_detail(request, id):
+    return None
+
+def reply_create_form(request, post_id):
+    post = get_object_or_404(ForumPost, id=post_id)
+
+    form = ReplyForm()
+    context = {
+        "form": form,
+        "post": post
+    }
+
+    return render(request, "mydidata/partials/reply_form.html", context)
