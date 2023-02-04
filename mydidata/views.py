@@ -682,6 +682,16 @@ def test_answer(request, question_uuid, test_id):
     return HttpResponseRedirect(reverse('mydidata:test_detail', args=(test.uuid,)))
 
 @superuser_required
+def delete_answer(request, id):
+    answer = get_object_or_404(Answer.objects.select_related("question__topic"), pk=id)
+    topic = answer.question.topic
+    classroom = answer.student.classrooms.all().first()
+    answer.delete()
+    return redirect('mydidata:class_progress', class_id=classroom.id)
+
+
+
+@superuser_required
 def delete_test_answer(request, id):
     
     

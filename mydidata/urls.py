@@ -57,6 +57,7 @@ urlpatterns = [
     url(r'^test_progress/(?P<uuid>[\w-]+)/$', views.test_progress, name='test_progress'),
     url(r'^test_progress/(?P<uuid>[\w-]+)/(?P<class_id>[0-9]+)/$',views.test_progress, name='test_progress'),
     url(r'^delete_test_answer/(?P<id>[0-9]+)/$',views.delete_test_answer, name='delete_test_answer'),
+    url(r'^delete_answer/(?P<id>[0-9]+)/$',views.delete_answer, name='delete_answer'),
     url(r'^student_progress/(?P<test_id>[0-9]+)/(?P<student_id>[0-9]+)/$',views.student_progress, name='student_progress'),
     url(r'^profile_detail/(?P<student_id>[0-9]+)/$',views.profile_detail, name='profile_detail'),
     url(r'^close_test_for_student/(?P<test_id>[0-9]+)/(?P<student_id>[0-9]+)/$',views.close_test_for_student, name='close_test_for_student'),
