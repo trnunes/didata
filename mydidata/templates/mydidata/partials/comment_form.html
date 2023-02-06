@@ -20,3 +20,15 @@
         {% endif %}
     </form>
 </div>
+
+{% block footer_javascript_page %}
+<script>
+    document.body.addEventListener('htmx:configRequest', (event) => {
+        debugger;
+        var element = new CKEDITOR.dom.element( document.getElementById( '{{ form.body.id_for_label }}' ) );
+        event.detail.parameters['{{ form.body.html_name }}'] = element.getEditor().getData();
+        debugger;
+    })
+</script>
+
+{%endblock%}

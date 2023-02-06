@@ -342,7 +342,8 @@ class ForumPost(models.Model, AdminURLMixin):
 class Reply(models.Model, AdminURLMixin):
     to_post = models.ForeignKey(ForumPost, verbose_name="Resposta", on_delete=models.CASCADE, related_name="replies")
     publish_date = models.DateField(auto_now=True)
-    content = RichTextUploadingField(verbose_name="Resposta")
+    content = RichTextUploadingField(null=True, blank=True, verbose_name="Resposta")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="replies")
 
     def __str__(self):
         creator_str = f"{self.author.first_name}({self.author.username})"

@@ -41,7 +41,7 @@
                     {% include 'mydidata/partials/reply_list.html' %}
                 </div>
                 <div class="mt-4 flex md:mt-0 md:ml-4">
-                    <button type="button" hx-get="{% url 'mydidata:reply_create_form' post.id %}" hx-target="#replyforms" hx-swap="beforeend" class="btn btn-primary">
+                    <button id="answer_post" type="button" hx-get="{% url 'mydidata:reply_create_form' post.id %}" hx-target="#replyforms" hx-swap="beforeend" class="btn btn-primary">
                         Responder
                     </button>
                 </div>
@@ -53,3 +53,8 @@
     </div>
 {% endblock %}
 <!-- Modal -->
+{% block footer_javascript_page %}
+<script type="text/javascript" src="/static/ckeditor/ckeditor-init.js" data-ckeditor-basepath="/static/ckeditor/ckeditor/" id="ckeditor-init-script"></script>
+
+<script type="text/javascript" src="/static/ckeditor/ckeditor/ckeditor.js"></script>
+{% endblock %}

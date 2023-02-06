@@ -683,7 +683,7 @@ def test_answer(request, question_uuid, test_id):
 
 @superuser_required
 def delete_answer(request, id):
-    answer = get_object_or_404(Answer.objects.select_related("question__topic"), pk=id)
+    answer = get_object_or_404(Answer.objects.prefetch_related("student__classrooms"), pk=id)
     topic = answer.question.topic
     classroom = answer.student.classrooms.all().first()
     answer.delete()
@@ -1515,7 +1515,7 @@ def post_create(request, topic_id):
 
             return redirect(reverse("mydidata:post_list", args=(topic.id,)))
         
-    return redirect(request, "mydidata/post_create.html", context = { "form": form, "topic": topic})
+    return render(request, "mydidata/post_create.html", context = { "form": form, "topic": topic})
     
     
 def post_list(request, topic_id):
@@ -1552,7 +1552,7 @@ def reply_create(request, post_id):
             reply.save()
             request.user.profile.register_action(f"Respondendo ao Post '{post.title}'")
         else:
-            return render(request, "mydidata/partials/reply_form.html", context = { "form": form})
+            return render(request, "mydidata/partials/reply_form.html", context = { "form": form, "post": post})
     
     context = {
         "form": form,
@@ -1563,13 +1563,45 @@ def reply_create(request, post_id):
     return render(request, "mydidata/partials/reply_list.html", context)
 
 def reply_update(request, id):
-    return None
+    reply = get_object_or_404(Reply, pk=id)
+    if (request.user != reply.author and not request.user.is_superuser):
+        return PermissionDenied("Para editar uma resposta o usuário deve ser o próprio autor ou ter acesso de Admin!")
+    form = ReplyForm(request.POST or None, instance=reply)
+
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+            return render(request, "mydidata/partials/reply_list.html", {"post": reply.to_post, "replies": reply.to_post.replies.all(),})
+
+    context = {
+        "form": form,
+        "reply": reply,
+        "post": reply.to_post
+    }
+
+    return render(request, "mydidata/partials/reply_form.html", context)
 
 def reply_delete(request, id):
-    return None
+    reply = get_object_or_404(Reply.objects.select_related("author"), id=id)
+    if (request.user != reply.author and not request.user.is_superuser):
+        return PermissionDenied("Para remover um comentário o usuário deve ser o próprio autor ou ter acesso de Admin!")
+
+    if request.method == "POST":
+        reply.delete()
+        return HttpResponse("")
+
+    return HttpResponseNotAllowed(
+        [
+            "POST",
+        ]
+    )
 
 def reply_detail(request, id):
-    return None
+    reply = get_object_or_404(Reply, id=id)
+    context = {
+        "reply": reply
+    }
+    return render(request, 'mydidata/partials/reply_detail.html', context)
 
 def reply_create_form(request, post_id):
     post = get_object_or_404(ForumPost, id=post_id)

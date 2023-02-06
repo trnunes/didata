@@ -216,9 +216,6 @@ class ReplyForm(forms.ModelForm):
     class Meta:
         model = Reply
         fields = ("content",)
-        widgets = {
-            "content": forms.CharField(widget=CKEditorUploadingWidget(), label='Texto da Resposta')
-        }
 
 RepliesFormSet = inlineformset_factory(
     ForumPost,

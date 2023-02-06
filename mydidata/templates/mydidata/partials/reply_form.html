@@ -1,32 +1,50 @@
 <div hx-target="#replies_area" hx-swap="outerHTML" class="">
+    {% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+            <div class="alert alert-danger">
+                <strong>{{field.name}}: {{ error|escape }}</strong>
+            </div>
+        {% endfor %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">
+            <strong>{{field}}: {{ error|escape }}</strong>
+        </div>
+    {% endfor %}
+{% endif %}
     <form method="POST">
         {% csrf_token %}
         {{ form.media}}
         {{ form.as_p }}
+
         {% if reply %}
             <button type="submit" hx-post="{% url 'mydidata:reply_update' reply.id %}"
                 >
                 Alterar
             </button>
-            <button hx-get="{% url 'mydidata:post_detail' reply.post.id %}" type="button"
+            <button hx-get="{% url 'mydidata:post_detail' post.id %}" type="button"
                 >
                 Cancelar
             </button>
         {% else %}
+
             <button type="submit" hx-post="{% url 'mydidata:reply_create' post.id %}"
                 >
                 Enviar
             </button>
         {% endif %}
-        <script>
-            ClassicEditor
-                .create( document.querySelector( '#id_content' ) )
-                .then( editor => {
-                    console.log( editor );
-                } )
-                .catch( error => {
-                    console.error( error );
-                } );
-        </script>
     </form>
 </div>
+
+{% block footer_javascript_page %}
+<script>
+    document.body.addEventListener('htmx:configRequest', (event) => {
+        debugger;
+        var element = new CKEDITOR.dom.element( document.getElementById( '{{ form.content.id_for_label }}' ) );
+        event.detail.parameters['{{ form.content.html_name }}'] = element.getEditor().getData();
+        debugger;
+    })
+</script>
+
+{%endblock%}
