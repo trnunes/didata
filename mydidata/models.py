@@ -791,9 +791,6 @@ class Answer(models.Model):
             args['test'] = test
         return cls.objects.filter(**args).first()
 
-    def __str__(self):
-        full_name = self.student.first_name + " " + self.student.last_name
-        return "Answer of %s for %s" % (full_name, str(self.question))
 
     def text_escaped(self):
         return u'%s' % html.unescape(strip_tags(self.answer_text))

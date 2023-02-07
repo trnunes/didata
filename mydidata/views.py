@@ -683,8 +683,7 @@ def test_answer(request, question_uuid, test_id):
 
 @superuser_required
 def delete_answer(request, id):
-    answer = get_object_or_404(Answer.objects.prefetch_related("student__classrooms"), pk=id)
-    topic = answer.question.topic
+    answer = get_object_or_404(Answer, pk=id)
     classroom = answer.student.classrooms.all().first()
     answer.delete()
     return redirect('mydidata:class_progress', class_id=classroom.id)
