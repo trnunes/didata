@@ -37,7 +37,9 @@
 			<div id="answer_form">
 				{% include 'mydidata/discursive_answer_item_form.html' %}
 			</div>
-			<a href="{% url 'mydidata:delete_answer' answer.id %}" class="btn btn-danger">Remover</a>
+			{% if answer %}
+				<a href="{% url 'mydidata:delete_answer' answer.id %}" class="btn btn-danger">Remover</a>
+			{% endif %}
 
 		{%endwith%}
 
