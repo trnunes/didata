@@ -85,12 +85,20 @@
 			}
 
 		});
-		// CKEDITOR.on("instanceReady", function(event){
-			// CKEDITOR.instances.id_answer_text.on('paste', function(evt) {
-			    // evt.cancel();
-				// alert("Não copie e cole conteúdos!");
-			// });
-		// });
+		
+		CKEDITOR.on("instanceReady", function(event){
+			CKEDITOR.instances.id_answer_text.on('paste', function(evt) {
+				let should_block = "{{question.should_block_paste}}"
+				if (should_block === "True"){
+					evt.cancel();
+					alert("Não copie e cole conteúdos!");
+
+				}
+			    
+				
+			});
+		});
+		
 	</script>
 
 {% endblock footer_javascript_page %}

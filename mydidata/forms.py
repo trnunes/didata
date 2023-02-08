@@ -229,7 +229,7 @@ RepliesFormSet = inlineformset_factory(
 class DiscursiveQuestionForm(forms.ModelForm):
     class Meta:
         model = Question
-        fields = ("question_text", 'difficulty_level', 'question_type', "is_team_work", "weight", "ref_keywords", "punish_copies")
+        fields = ("question_text", 'difficulty_level', 'question_type', "is_team_work", "weight", "ref_keywords", "punish_copies", "should_block_paste", )
         widgets = {
             'question_text': forms.CharField(widget=CKEditorUploadingWidget, label='Enunciado'),
             'ref_keywords': forms.TextInput(

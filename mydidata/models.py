@@ -47,6 +47,8 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     student_id =  models.CharField(max_length=100, blank=True, verbose_name="Matrícula")
     actions_log = models.TextField(verbose_name="Descrição", default="", blank=True, null=True)
+    points = models.IntegerField(verbose_name="Pontos Adquiridos", default=0)
+
     def register_action(self, action):
         current_date_time = timezone.localtime().strftime("%d/%m/%Y às %H:%M:%S")
         if not self.actions_log:
@@ -60,6 +62,11 @@ class Profile(models.Model):
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:profile_detail', [self.user.id]
+
+    def update_user_points(self, action):
+        if "comentário" in action:
+            self.points += 1
+
 
     def __str__(self):
         return self.user.username
@@ -582,6 +589,7 @@ class Question(models.Model):
     test_inputs = models.CharField(null=True, blank=True, max_length=255, verbose_name = "entrada separa por vírgulas")
     expected_output = models.CharField(null=True, blank=True, max_length=255, verbose_name = "saída esperada do programa (ou parte)")
     is_team_work = models.BooleanField(default=False, verbose_name="Somente equipes podem responder?")
+    should_block_paste = models.BooleanField(default=True, verbose_name="Deseja impedir ações de copiar e colar nas respostas?")
 
     DIFFICULTY_LIST = (
         (1, 'Difícil'),

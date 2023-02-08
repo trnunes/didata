@@ -716,7 +716,7 @@ def discursive_answer_detail(request, answer_id):
 
     answers = Answer.objects.filter(question__id__in=[q.id for q in topic_questions], student=request.user)
     [answers_by_question.__setitem__(a.question, a) for a in answers]
-
+    
     return render(request, 'mydidata/discursive_answer_detail.html', {'answers_by_question': answers_by_question, 'answer': answer, "form": SuperuserAnswerFormSimplified(instance=answer)})
 
 @login_required()
@@ -814,7 +814,6 @@ def discursive_answer(request, question_uuid):
         return redirect(topic.get_absolute_url())
     
     
-    
     if request.method == "POST":
         form = AnswerForm(request.POST, request.FILES, question=question, user=user)
         action = f"Enviando resposta para a questão {question.index} do tópico {topic.topic_title}"
@@ -848,7 +847,6 @@ def discursive_answer(request, question_uuid):
         'form': form
     }
     request.user.profile.register_action(f"abrindo formulário de resposta para a questão {question.index} do tópico {topic.topic_title}")
-    
     return render(request, "mydidata/answer_cru.html", context)
     
 
