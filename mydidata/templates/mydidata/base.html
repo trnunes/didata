@@ -47,7 +47,7 @@
         <!-- <script data-ad-client="pub-3262579547697172" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> -->
         <!-- <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/fontawesome.min.css" rel="stylesheet"> -->
     </head>
-    
+    {% load badge_extras %}
     <body>
         <script>
             document.body.addEventListener('htmx:configRequest', (event)=> {
@@ -65,7 +65,7 @@
                 <ul class="navbar-nav mr-auto">
                     {%if user.is_authenticated%}
                         <li class="nav-item active">
-                            <a class="nav-link" href="/mydidata">Bem vindo {{user.first_name}}!</a>
+                            <a class="nav-link" href="{% url 'mydidata:profile_detail' user.id%}">Bem vindo {{user.first_name}}!</a>
                         </li>
                         <li class="nav-item active">
                             <a class="nav-link" href="{% url 'mydidata:disciplines' %}?restrict=true"

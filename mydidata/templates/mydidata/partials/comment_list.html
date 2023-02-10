@@ -1,4 +1,16 @@
+{% load badge_extras %}
+  
 <div id="comments_area">
+    
+    {% if badge%}
+        {%get_badge_img badge as badge_path%}
+        {%get_badge_name badge as badge_name%}
+        <div class="overlay" onclick="this.style.animation = 'fadeout 0.5s ease-in-out forwards'; document.querySelector('.medal-icon').style.animation = 'fadeout-and-spin 3s ease-in-out forwards'; this.style.display = 'none'">
+            <div class="text">{{badge_name}}</div>
+            <img class="second-slide medal-icon" onclick="this.style.animation = 'fadeout-and-spin 3s ease-in-out forwards'" src="{{badge_path}}" alt="Second slide">
+        </div>
+        
+    {%endif%}
     <div id="commentforms"></div>
     {% if not topic.comments.all %}
         Não há comentários ainda... Seja o primeiro!

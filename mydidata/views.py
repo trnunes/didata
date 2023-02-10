@@ -525,12 +525,24 @@ def resource_room_progress(request, uuid):
     return render(request, 'mydidata/topic_progress.html', {'students': students, 'topics':topics,})
 
 @login_required
-@superuser_required
 def profile_detail(request, student_id):
+    if int(request.user.id) != int(student_id) and not request.user.is_superuser:
+         return HttpResponse("Acesso não autorizado!", content_type="text/plain")
     student = get_object_or_404(User.objects.select_related("profile").prefetch_related("classrooms"), pk=student_id)
     activities = student.profile.list_actions()
-
-    return render(request, 'mydidata/profile_detail.html', {'student': student, "activities": activities})
+    interest_badges = [b[2] for b in student.profile.get_badges_by_type("Interesse")]
+    particip_badges = [b[2] for b in student.profile.get_badges_by_type("Particip")]
+    colab_badges = [b[2] for b in student.profile.get_badges_by_type("Colab")]
+    creative_badges = [b[2] for b in student.profile.get_badges_by_type("Criativi")]
+    context = {
+        'student': student, 
+        "activities": activities,
+        "interest_badges": interest_badges,
+        "particip_badges": particip_badges,
+        "colab_badges": colab_badges,
+        "creative_badges": creative_badges
+    }
+    return render(request, 'mydidata/profile_detail.html', context=context)
 
 @login_required 
 def my_progress(request, discipline_uuid):
@@ -1414,14 +1426,14 @@ def comment_create(request, topic_id):
     topic = get_object_or_404(Topic, pk=topic_id)
     user = request.user
     form = CommentForm(request.POST or None)
-    
+    badge = None
     if request.method == "POST":
         if form.is_valid():
             comment = form.save(commit=False)
             comment.topic = topic
             comment.author = user
             comment.save()
-            request.user.profile.register_action(f"Adicionando comentário ao tópico {topic.topic_title}")
+            badge = request.user.profile.register_action(f"Adicionando comentário ao tópico {topic.topic_title}")
         else:
             return render(request, "mydidata/partials/comment_form.html", context = { "form": form})
     
@@ -1429,7 +1441,8 @@ def comment_create(request, topic_id):
         "form": form,
         "user": user,
         "comments": topic.comments.all(),
-        "topic": topic
+        "topic": topic,
+        "badge": badge
     }
     return render(request, "mydidata/partials/comment_list.html", context)
 

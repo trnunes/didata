@@ -47,26 +47,164 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     student_id =  models.CharField(max_length=100, blank=True, verbose_name="Matrícula")
     actions_log = models.TextField(verbose_name="Descrição", default="", blank=True, null=True)
-    points = models.IntegerField(verbose_name="Pontos Adquiridos", default=0)
+    comment_points = models.IntegerField(verbose_name="Pontos Adquiridos em comentários", default = 0)
+    answer_points = models.IntegerField(verbose_name="pontos adquiridos em respostas", default = 0)
+    post_points = models.IntegerField(verbose_name="Pontos Adquiridos em Postagens no Fórum", default = 0)
+    reply_points = models.IntegerField(verbose_name="Pontos Adquiridos em Respostas do Fórum", default = 0)
+    badges = models.CharField(verbose_name="Medalhas Adquiridas", default="", max_length=255)
+    
+    INTEREST_IRON = 20
+    INTEREST_STEEL = 1
+    INTEREST_BRONZE = 2
+    INTEREST_SILVER = 3
+    INTEREST_GOLD = 4
+    
+    PARTICIPATION_IRON = 5
+    PARTICIPATION_STEEL = 6
+    PARTICIPATION_BRONZE = 7
+    PARTICIPATION_SILVER = 8
+    PARTICIPATION_GOLD = 9
+    
+    COLAB_IRON = 10
+    COLAB_STEEL = 11
+    COLAB_BRONZE = 12
+    COLAB_SILVER = 13
+    COLAB_GOLD = 14
+
+    CREATIVE_IRON = 15
+    CREATIVE_STEEL = 16
+    CREATIVE_BRONZE = 17
+    CREATIVE_SILVER = 18
+    CREATIVE_GOLD = 19
+    
+    BADGE_TYPES = (
+        (INTEREST_IRON, "Interesse Iron", "/static/images/badges/iron_badge.png"),
+        (INTEREST_STEEL, "Interesse Steel", "/static/images/badges/steel_badge.png"),
+        (INTEREST_BRONZE, "Interesse Bronze", "/static/images/badges/bronze_badge.png"),
+        (INTEREST_SILVER, "Interesse Silver", "/static/images/badges/silver_badge.png"),
+        (INTEREST_GOLD, "Interesse Gold", "/static/images/badges/gold_badge.png"),
+        
+        (PARTICIPATION_IRON, "Participação Iron", "/static/images/badges/iron_badge.png"),
+        (PARTICIPATION_STEEL, "Participação Steel", "/static/images/badges/steel_badge.png"),
+        (PARTICIPATION_BRONZE, "Participação Bronze", "/static/images/badges/bronze_badge.png"),
+        (PARTICIPATION_SILVER, "Participação Silver", "/static/images/badges/silver_badge.png"),
+        (PARTICIPATION_GOLD, "Participação Gold", "/static/images/badges/gold_badge.png"),
+        
+        (COLAB_IRON, "Colaboração Iron", "/static/images/badges/iron_badge.png"),
+        (COLAB_STEEL, "Colaboração Steel", "/static/images/badges/steel_badge.png"),
+        (COLAB_BRONZE, "Colaboração Bronze", "/static/images/badges/bronze_badge.png"),
+        (COLAB_SILVER, "Colaboração Silver", "/static/images/badges/silver_badge.png"),
+        (COLAB_GOLD, "Colaboração Gold", "/static/images/badges/gold_badge.png"),
+        
+        (CREATIVE_IRON, "Criatividade Iron", "/static/images/badges/iron_badge.png"),
+        (CREATIVE_STEEL, "Criatividade Steel", "/static/images/badges/steel_badge.png"),
+        (CREATIVE_BRONZE, "Criatividade Bronze", "/static/images/badges/bronze_badge.png"),
+        (CREATIVE_SILVER, "Criatividade Silver", "/static/images/badges/silver_badge.png"),
+        (CREATIVE_GOLD, "Criatividade Gold", "/static/images/badges/gold_badge.png")
+    )
+
+    @classmethod
+    def get_badge_name(cls, badge_id):
+        badges = [c[1] for c in Profile.BADGE_TYPES if c[0] == badge_id]
+        if badges:
+            return badges[0]
+        return None
+    
+    @classmethod
+    def get_badge_tuples_by_name(cls, badge_name):
+        badges = [c for c in Profile.BADGE_TYPES if badge_name.lower() in c[1].lower()]
+        
+        return badges
+        
+    
+    def get_badges_by_type(self, type):
+        tuples = Profile.get_badge_tuples_by_name(type)
+        filtered_badges = [t for t in tuples if t[1] in self.badges]
+        
+        return filtered_badges
+
+
 
     def register_action(self, action):
         current_date_time = timezone.localtime().strftime("%d/%m/%Y às %H:%M:%S")
         if not self.actions_log:
             self.actions_log = ""
         self.actions_log += f"\n {action} em {current_date_time};"
+        self.update_user_points(action)
+        badge = self.verify_badge_achievement()
         self.save()
+        return badge
+    
     def list_actions(self):
         if self.actions_log:
             return self.actions_log.split("\n")
         return []
+    
     @models.permalink
     def get_absolute_url(self):
         return 'mydidata:profile_detail', [self.user.id]
 
     def update_user_points(self, action):
         if "comentário" in action:
-            self.points += 1
+            self.comment_points += 1
+        if "Respondendo ao Post" in action:
+            self.reply_points += 1
+        if "Resposta" in action and "enviada com sucesso" in action:
+            self.answer_points += 1
+        if "Criando postagem" in action:
+            self.post_points += 1
 
+    def verify_badge_achievement(self):
+        badge = None
+        if self.answer_points == 2:
+            badge = self.INTEREST_IRON
+        if self.answer_points == 5:
+            badge = self.INTEREST_STEEL
+        if self.answer_points == 9:
+            badge = self.INTEREST_BRONZE
+        if self.answer_points == 15:
+            badge = self.INTEREST_SILVER
+        if self.answer_points == 25:
+            badge = self.INTEREST_GOLD
+        
+        if self.comment_points == 2:
+            badge = self.PARTICIPATION_IRON
+        if self.comment_points == 5:
+            badge = self.PARTICIPATION_STEEL
+        if self.comment_points == 9:
+            badge = self.PARTICIPATION_BRONZE
+        if self.comment_points == 15:
+            badge = self.PARTICIPATION_SILVER
+        if self.comment_points == 25:
+            badge = self.PARTICIPATION_GOLD
+
+        if self.reply_points == 1:
+            badge = self.COLAB_IRON
+        if self.reply_points == 3:
+            badge = self.COLAB_IRON
+        if self.reply_points == 5:
+            badge = self.COLAB_IRON
+        if self.reply_points == 10:
+            badge = self.COLAB_IRON
+        if self.reply_points == 15:
+            badge = self.COLAB_IRON
+        
+        if self.post_points == 1:
+            badge = self.CREATIVE_IRON
+        if self.post_points == 3:
+            badge = self.CREATIVE_IRON
+        if self.post_points == 5:
+            badge = self.CREATIVE_IRON
+        if self.post_points == 10:
+            badge = self.CREATIVE_IRON
+        if self.post_points == 15:
+            badge = self.CREATIVE_IRON
+        
+        if badge and not Profile.get_badge_name(badge) in self.badges:
+            self.badges += Profile.get_badge_name(badge) + ";"
+            return badge
+
+        return None
 
     def __str__(self):
         return self.user.username

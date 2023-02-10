@@ -22,8 +22,58 @@ main {
   padding-top: 15px;
 
 }
-  
-  /* CUSTOMIZE THE CAROUSEL
+
+.medal-icon {
+  animation: fadein-and-spin 3s ease-in-out forwards;
+  opacity: 0;
+  transform: rotate(0deg);
+  position: absolute;
+  top: 50%;
+  left: 30%;
+  transform: translate(-50%, -50%);
+}
+.text {
+  position: absolute;
+  top: 45%;
+  left: 35%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-size: 30;
+  color: aqua;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: fadein 0.5s ease-in-out forwards;
+  opacity: 0;
+}
+@keyframes fadein-and-spin {
+  0% { opacity: 0; transform: rotate(0deg); }
+  50% { opacity: 1; }
+  100% { opacity: 1; transform: rotate(1080deg); }
+}
+
+@keyframes fadeout-and-spin {
+  0% { opacity: 1; transform: rotate(0deg); }
+  50% { opacity: 0; }
+  100% { opacity: 0; transform: rotate(-1080deg); }
+}
+
+@keyframes fadein {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes fadeout {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* CUSTOMIZE THE CAROUSEL
   -------------------------------------------------- */
   
   /* Carousel base class */
