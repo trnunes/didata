@@ -744,7 +744,10 @@ def multiple_choice_answer_detail(request, answer_id):
     answer = Answer.objects.get(pk=answer_id)
     return render(request, 'mydidata/multiple_choice_answer_detail.html', {'answer':answer,})
 
-
+@login_required()
+def graphic_feedback(request, answer_id):
+    answer = get_object_or_404(Answer, pk=id)
+    render(request, "canva.html", context={"answer": answer})
 
 @login_required()
 def feedback(request, answer_id):

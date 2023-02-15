@@ -30,6 +30,7 @@
 		{% endif %}
 		{% if form.instance and form.instance.assignment_file %}
 			<a href="{%url 'mydidata:detect_answer_text' form.instance.id%}"> | Detectar Texto</a>	
+			<a href="{%url 'mydidata:graphic_feedback' form.instance.id%}"> | Anotar Imagem Enviada</a>	
 		{% endif %}
         
 		{% with answer=form.instance%}

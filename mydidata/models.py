@@ -78,29 +78,29 @@ class Profile(models.Model):
     CREATIVE_GOLD = 19
     
     BADGE_TYPES = (
-        (INTEREST_IRON, "Interesse Iron", "/static/images/badges/iron_badge.png"),
-        (INTEREST_STEEL, "Interesse Steel", "/static/images/badges/steel_badge.png"),
-        (INTEREST_BRONZE, "Interesse Bronze", "/static/images/badges/bronze_badge.png"),
-        (INTEREST_SILVER, "Interesse Silver", "/static/images/badges/silver_badge.png"),
-        (INTEREST_GOLD, "Interesse Gold", "/static/images/badges/gold_badge.png"),
+        (INTEREST_IRON, "Interesse Iron", "/static/images/iron_badge.png"),
+        (INTEREST_STEEL, "Interesse Steel", "/static/images/steel_badge.png"),
+        (INTEREST_BRONZE, "Interesse Bronze", "/static/images/bronze_badge.png"),
+        (INTEREST_SILVER, "Interesse Silver", "/static/images/silver_badge.png"),
+        (INTEREST_GOLD, "Interesse Gold", "/static/images/gold_badge.png"),
         
-        (PARTICIPATION_IRON, "Participação Iron", "/static/images/badges/iron_badge.png"),
-        (PARTICIPATION_STEEL, "Participação Steel", "/static/images/badges/steel_badge.png"),
-        (PARTICIPATION_BRONZE, "Participação Bronze", "/static/images/badges/bronze_badge.png"),
-        (PARTICIPATION_SILVER, "Participação Silver", "/static/images/badges/silver_badge.png"),
-        (PARTICIPATION_GOLD, "Participação Gold", "/static/images/badges/gold_badge.png"),
+        (PARTICIPATION_IRON, "Participação Iron", "/static/images/iron_badge.png"),
+        (PARTICIPATION_STEEL, "Participação Steel", "/static/images/steel_badge.png"),
+        (PARTICIPATION_BRONZE, "Participação Bronze", "/static/images/bronze_badge.png"),
+        (PARTICIPATION_SILVER, "Participação Silver", "/static/images/silver_badge.png"),
+        (PARTICIPATION_GOLD, "Participação Gold", "/static/images/gold_badge.png"),
         
-        (COLAB_IRON, "Colaboração Iron", "/static/images/badges/iron_badge.png"),
-        (COLAB_STEEL, "Colaboração Steel", "/static/images/badges/steel_badge.png"),
-        (COLAB_BRONZE, "Colaboração Bronze", "/static/images/badges/bronze_badge.png"),
-        (COLAB_SILVER, "Colaboração Silver", "/static/images/badges/silver_badge.png"),
-        (COLAB_GOLD, "Colaboração Gold", "/static/images/badges/gold_badge.png"),
+        (COLAB_IRON, "Colaboração Iron", "/static/images/iron_badge.png"),
+        (COLAB_STEEL, "Colaboração Steel", "/static/images/steel_badge.png"),
+        (COLAB_BRONZE, "Colaboração Bronze", "/static/images/bronze_badge.png"),
+        (COLAB_SILVER, "Colaboração Silver", "/static/images/silver_badge.png"),
+        (COLAB_GOLD, "Colaboração Gold", "/static/images/gold_badge.png"),
         
-        (CREATIVE_IRON, "Criatividade Iron", "/static/images/badges/iron_badge.png"),
-        (CREATIVE_STEEL, "Criatividade Steel", "/static/images/badges/steel_badge.png"),
-        (CREATIVE_BRONZE, "Criatividade Bronze", "/static/images/badges/bronze_badge.png"),
-        (CREATIVE_SILVER, "Criatividade Silver", "/static/images/badges/silver_badge.png"),
-        (CREATIVE_GOLD, "Criatividade Gold", "/static/images/badges/gold_badge.png")
+        (CREATIVE_IRON, "Criatividade Iron", "/static/images/iron_badge.png"),
+        (CREATIVE_STEEL, "Criatividade Steel", "/static/images/steel_badge.png"),
+        (CREATIVE_BRONZE, "Criatividade Bronze", "/static/images/bronze_badge.png"),
+        (CREATIVE_SILVER, "Criatividade Silver", "/static/images/silver_badge.png"),
+        (CREATIVE_GOLD, "Criatividade Gold", "/static/images/gold_badge.png")
     )
 
     @classmethod

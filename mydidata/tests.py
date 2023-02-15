@@ -66,6 +66,7 @@ class TeamTests(TestCase):
         team = form.save()
         self.assertEqual(team.name, 'Test Team')
         self.assertEqual(set(team.members.all()), set([student1, student2, student3]))
+        
 
     def test_create_team_view(self):
         client = Client()
