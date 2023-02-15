@@ -7,6 +7,8 @@ from ..models import Profile
 def get_badge_img(badge):
     if(badge == Profile.INTEREST_IRON):
         return "/static/images/iron_badge.png"
+    if(badge == Profile.INTEREST_STEEL):
+        return "/static/images/steel_badge.png"
     if(badge == Profile.INTEREST_BRONZE):
         return "/static/images/bronze_badge.png"
     if(badge == Profile.INTEREST_SILVER):
@@ -15,6 +17,8 @@ def get_badge_img(badge):
         return "/static/images/gold_badge.png"
     if(badge == Profile.PARTICIPATION_IRON):
         return "/static/images/iron_badge.png"
+    if(badge == Profile.PARTICIPATION_STEEL):
+        return "/static/images/steel_badge.png"
     if(badge == Profile.PARTICIPATION_BRONZE):
         return "/static/images/bronze_badge.png"
     if(badge == Profile.PARTICIPATION_SILVER):
@@ -23,6 +27,8 @@ def get_badge_img(badge):
         return "/static/images/gold_badge.png"    
     if(badge == Profile.COLAB_IRON):
         return "/static/images/iron_badge.png"
+    if(badge == Profile.COLAB_STEEL):
+        return "/static/images/steel_badge.png"
     if(badge == Profile.COLAB_BRONZE):
         return "/static/images/bronze_badge.png"
     if(badge == Profile.COLAB_SILVER):
@@ -31,6 +37,8 @@ def get_badge_img(badge):
         return "/static/images/gold_badge.png"
     if(badge == Profile.CREATIVE_IRON):
         return "/static/images/iron_badge.png"
+    if(badge == Profile.CREATIVE_STEEL):
+        return "/static/images/steel_badge.png"
     if(badge == Profile.CREATIVE_BRONZE):
         return "/static/images/bronze_badge.png"
     if(badge == Profile.CREATIVE_SILVER):

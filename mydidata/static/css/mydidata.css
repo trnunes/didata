@@ -33,14 +33,29 @@ main {
   transform: translate(-50%, -50%);
 }
 .text {
-  position: absolute;
-  top: 45%;
-  left: 35%;
   transform: translate(-50%, -50%);
   text-align: center;
   font-size: 30;
   color: aqua;
 }
+#badge-container {
+  animation: fadein-and-spin 3s ease-in-out forwards;
+  position: absolute;
+  opacity: 0;
+  transform: rotate(0deg);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  font-size: 30;
+  color: aqua;
+}
+
+#badge-container img {
+  display: block;
+  margin: 0 auto;
+}
+
 .overlay {
   position: fixed;
   top: 0;
