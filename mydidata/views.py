@@ -41,6 +41,11 @@ def superuser_required(view_func):
     decorated_view_func = user_passes_test(lambda u: u.is_superuser, login_url='/mydidata/login/')(view_func)
     return decorated_view_func
 
+def verify_badge(profile, context):
+    
+    if profile.has_unotified_badge():
+        context["badge"] = profile.get_and_notify_badge()
+        
 
 class HomePage(TemplateView):
     """
@@ -69,6 +74,8 @@ class HomePage(TemplateView):
         context['main'] = desc_orderd_topics[0]
         if self.request.user.is_authenticated:
             self.request.user.profile.register_action("Acessando a Home Page")
+            verify_badge(self.request.user.profile, context)
+        
 
         return context
 
@@ -109,6 +116,10 @@ class TopicList(ListView):
     model = Topic
     template_name = 'mydidata/topic_list.html'
     context_object_name = 'topics'
+    def get_context_data(self, *args, **kwargs):
+        context = super(TopicList, self).get_context_data(*args, **kwargs)
+        verify_badge(self.request.user.profile, context)
+        return context   
 
     def get_queryset(self):
         discipline_id = self.request.GET.get('discipline', None)
@@ -117,6 +128,7 @@ class TopicList(ListView):
         topic_list = Topic.objects.filter(discipline=discipline, is_resource=resource_room_only, is_assessment=False, visible=True).order_by('order')
         if self.request.user.is_authenticated:
             self.request.user.profile.register_action(f"Acessando a tópicos da disciplina {discipline.name}")
+            
         return topic_list
     def dispatch(self, *args, **kwargs):
         return super(TopicList, self).dispatch(*args, **kwargs)
@@ -125,7 +137,12 @@ class DisciplineList(ListView):
     model = Discipline
     template_name = 'mydidata/discipline_list.html'
     context_object_name = 'disciplines'
-
+    
+    def get_context_data(self, *args, **kwargs):
+        context = super(DisciplineList, self).get_context_data(*args, **kwargs)
+        verify_badge(self.request.user.profile, context)
+        return context
+    
     def get_queryset(self):
         
         
@@ -185,7 +202,9 @@ def version_edit(request, version_id):
 @login_required
 def version_detail(request, version_id):
     version = get_object_or_404(ContentVersion, pk=version_id)
-    return render(request, 'mydidata/version_detail.html', context={'version': version})
+    context={'version': version}
+    verify_badge(request.user.profile, context)
+    return render(request, 'mydidata/version_detail.html', context)
 
 
 @login_required
@@ -225,7 +244,6 @@ def version_update(request, version_id):
 @login_required
 def topic(request, discipline_uuid):
     discipline = get_object_or_404(Discipline, uuid=discipline_uuid)
-    print("post", request.POST)
     if request.method == "POST":
         form = TopicForm(request.POST, owner=request.user)
         
@@ -534,13 +552,17 @@ def profile_detail(request, student_id):
     particip_badges = [b[2] for b in student.profile.get_badges_by_type("Particip")]
     colab_badges = [b[2] for b in student.profile.get_badges_by_type("Colab")]
     creative_badges = [b[2] for b in student.profile.get_badges_by_type("Criativi")]
+    comments = student.comments.all()
+    replies = student.replies.all()
     context = {
         'student': student, 
         "activities": activities,
         "interest_badges": interest_badges,
         "particip_badges": particip_badges,
         "colab_badges": colab_badges,
-        "creative_badges": creative_badges
+        "creative_badges": creative_badges,
+        "comments": comments,
+        "replies": replies
     }
     return render(request, 'mydidata/profile_detail.html', context=context)
 
@@ -718,6 +740,8 @@ def delete_test_answer(request, id):
     class_id = answer.student.classrooms.first().id
 
     return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
+
+@login_required
 def discursive_answer_detail(request, answer_id):
     answer = Answer.objects.get(pk=answer_id)
 
@@ -728,8 +752,15 @@ def discursive_answer_detail(request, answer_id):
 
     answers = Answer.objects.filter(question__id__in=[q.id for q in topic_questions], student=request.user)
     [answers_by_question.__setitem__(a.question, a) for a in answers]
+    context = {
+        'answers_by_question': answers_by_question, 
+        'answer': answer, 
+        "form": SuperuserAnswerFormSimplified(instance=answer)
+    }
     
-    return render(request, 'mydidata/discursive_answer_detail.html', {'answers_by_question': answers_by_question, 'answer': answer, "form": SuperuserAnswerFormSimplified(instance=answer)})
+    verify_badge(request.user.profile, context)
+    
+    return render(request, 'mydidata/discursive_answer_detail.html', )
 
 @login_required()
 def detect_answer_text(request, answer_id):
@@ -842,7 +873,7 @@ def discursive_answer(request, question_uuid):
             if save_and_get_feedback_input_pressed:
                 return redirect(reverse("mydidata:get_corrections", args=(answer.id,)))
 
-            request.user.profile.register_action(action)
+            badge = request.user.profile.register_action(action)
             return redirect(answer.get_detail_url())
         else:
             context = {
@@ -990,6 +1021,7 @@ def topic_detail(request, uuid):
     if request.user.is_authenticated:
         klass = Classroom.objects.filter(students__id = request.user.id).first()
         context['classroom'] = klass
+        verify_badge(request.user.profile, context)
 
         if topic.has_assessment_question and questions:
             context['question'] = questions[0]
@@ -1429,14 +1461,16 @@ def comment_create(request, topic_id):
     topic = get_object_or_404(Topic, pk=topic_id)
     user = request.user
     form = CommentForm(request.POST or None)
-    badge = None
+    
     if request.method == "POST":
         if form.is_valid():
             comment = form.save(commit=False)
             comment.topic = topic
             comment.author = user
             comment.save()
-            badge = request.user.profile.register_action(f"Adicionando comentário ao tópico {topic.topic_title}")
+            request.user.profile.register_action(f"Adicionando comentário ao tópico {topic.topic_title}")
+
+                
         else:
             return render(request, "mydidata/partials/comment_form.html", context = { "form": form})
     
@@ -1445,8 +1479,9 @@ def comment_create(request, topic_id):
         "user": user,
         "comments": topic.comments.all(),
         "topic": topic,
-        "badge": badge
     }
+
+    verify_badge(user.profile, context)
     return render(request, "mydidata/partials/comment_list.html", context)
 
 @login_required
@@ -1479,6 +1514,7 @@ def comment_delete(request, id):
 
     if request.method == "POST":
         comment.delete()
+        request.user.profile.decrement_comment_point()
         return HttpResponse("")
 
     return HttpResponseNotAllowed(
@@ -1525,7 +1561,7 @@ def post_create(request, topic_id):
             post.author = user
             post.save()
             request.user.profile.register_action(f"Criando postagem com título '{post.title}' no fórum ao tópico {topic.topic_title}")
-
+            
             return redirect(reverse("mydidata:post_list", args=(topic.id,)))
         
     return render(request, "mydidata/post_create.html", context = { "form": form, "topic": topic})
@@ -1534,7 +1570,10 @@ def post_create(request, topic_id):
 def post_list(request, topic_id):
     topic = get_object_or_404(Topic.objects.prefetch_related("posts"), pk=topic_id)
     posts = topic.posts.all()
-    return render(request, "mydidata/post_list.html", context={"topic": topic, "posts": posts})
+    context={"topic": topic, "posts": posts}
+    if request.user.is_authenticated:
+        verify_badge(request.user.profile, context)
+    return render(request, "mydidata/post_list.html", context)
 
 def post_update(request, id):
     return None
@@ -1549,9 +1588,11 @@ def post_detail(request, id):
         "post": post,
         "replies": post.replies.all()
     }
+    verify_badge(request.user.profile, context)
 
     return render(request, "mydidata/post_detail.html", context=context)
 
+@login_required
 def reply_create(request, post_id):
     post = get_object_or_404(ForumPost, pk=post_id)
     user = request.user
@@ -1573,6 +1614,9 @@ def reply_create(request, post_id):
         "replies": post.replies.all(),
         "post": post
     }
+    
+    verify_badge(request.user.profile, context)
+    # print("CONTEXT: ", context)
     return render(request, "mydidata/partials/reply_list.html", context)
 
 def reply_update(request, id):
@@ -1601,6 +1645,7 @@ def reply_delete(request, id):
 
     if request.method == "POST":
         reply.delete()
+        reply.author.profile.decrement_reply_point()
         return HttpResponse("")
 
     return HttpResponseNotAllowed(

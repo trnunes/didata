@@ -52,6 +52,7 @@ class Profile(models.Model):
     post_points = models.IntegerField(verbose_name="Pontos Adquiridos em Postagens no Fórum", default = 0)
     reply_points = models.IntegerField(verbose_name="Pontos Adquiridos em Respostas do Fórum", default = 0)
     badges = models.CharField(verbose_name="Medalhas Adquiridas", default="", max_length=255)
+    last_badge_conquered = models.IntegerField(verbose_name="Última Medalha e Status", default=0)
     
     INTEREST_IRON = 20
     INTEREST_STEEL = 1
@@ -123,17 +124,47 @@ class Profile(models.Model):
         
         return filtered_badges
 
+    def decrement_reply_point(self):
+        self.reply_points -= 1
+        badges = self.verify_badge_achievement()
+        self.badges = ";".join(badges)
+        self.save()
+    
+    def decrement_comment_point(self):
+        self.comment_points -= 1
+        badges = self.verify_badge_achievement()
+        self.badges = ";".join(badges)
+        self.save()
 
+    
 
+    def has_unotified_badge(self):
+        return self.last_badge_conquered > 0
+    
+    def get_and_notify_badge(self):
+        badge = self.last_badge_conquered
+        self.last_badge_conquered = 0
+        self.save()
+        return badge
+    
     def register_action(self, action):
         current_date_time = timezone.localtime().strftime("%d/%m/%Y às %H:%M:%S")
         if not self.actions_log:
             self.actions_log = ""
         self.actions_log += f"\n {action} em {current_date_time};"
         self.update_user_points(action)
-        badge = self.verify_badge_achievement()
+        badges = self.verify_badge_achievement()
+        registered_badges = self.badges.split(";")
+        self.badges = ";".join(badges)
+        new_badges = [b for b in badges if not b in registered_badges]
+        if new_badges:
+            newest_badge = new_badges[0]
+            self.last_badge_conquered = Profile.get_badge_tuples_by_name(newest_badge)[0][0]
+            self.save()
+            return self.last_badge_conquered
+        
         self.save()
-        return badge
+        return None
     
     def list_actions(self):
         if self.actions_log:
@@ -151,60 +182,81 @@ class Profile(models.Model):
             self.reply_points += 1
         if "Resposta" in action and "enviada com sucesso" in action:
             self.answer_points += 1
-        if "Criando postagem" in action:
+        if "Criando postagem" in action or "Nova versão" in action:
             self.post_points += 1
 
     def verify_badge_achievement(self):
         badge = None
-        if self.answer_points == 2:
+        badges_achieved = []
+
+        if self.answer_points >= 2:
             badge = self.INTEREST_IRON
-        if self.answer_points == 5:
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.answer_points >= 5:
             badge = self.INTEREST_STEEL
-        if self.answer_points == 9:
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.answer_points >= 9:
             badge = self.INTEREST_BRONZE
-        if self.answer_points == 15:
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.answer_points >= 15:
             badge = self.INTEREST_SILVER
-        if self.answer_points == 25:
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.answer_points >= 25:
             badge = self.INTEREST_GOLD
+            badges_achieved.append(Profile.get_badge_name(badge))
         
-        if self.comment_points == 2:
+        if self.comment_points >= 2:
             badge = self.PARTICIPATION_IRON
-        if self.comment_points == 5:
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.comment_points >= 5:
             badge = self.PARTICIPATION_STEEL
-        if self.comment_points == 9:
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.comment_points >= 9:
             badge = self.PARTICIPATION_BRONZE
-        if self.comment_points == 15:
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.comment_points >= 15:
             badge = self.PARTICIPATION_SILVER
-        if self.comment_points == 25:
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.comment_points >= 25:
             badge = self.PARTICIPATION_GOLD
+            badges_achieved.append(Profile.get_badge_name(badge))
 
-        if self.reply_points == 1:
+        if self.reply_points >= 1:
             badge = self.COLAB_IRON
-        if self.reply_points == 3:
-            badge = self.COLAB_IRON
-        if self.reply_points == 5:
-            badge = self.COLAB_IRON
-        if self.reply_points == 10:
-            badge = self.COLAB_IRON
-        if self.reply_points == 15:
-            badge = self.COLAB_IRON
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.reply_points >= 3:
+            badge = self.COLAB_STEEL
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.reply_points >= 5:
+            badge = self.COLAB_BRONZE
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.reply_points >= 10:
+            badge = self.COLAB_SILVER
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.reply_points >= 15:
+            badge = self.COLAB_GOLD
+            badges_achieved.append(Profile.get_badge_name(badge))
         
-        if self.post_points == 1:
+        if self.post_points >= 1:
             badge = self.CREATIVE_IRON
-        if self.post_points == 3:
-            badge = self.CREATIVE_IRON
-        if self.post_points == 5:
-            badge = self.CREATIVE_IRON
-        if self.post_points == 10:
-            badge = self.CREATIVE_IRON
-        if self.post_points == 15:
-            badge = self.CREATIVE_IRON
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.post_points >= 3:
+            badge = self.CREATIVE_STEEL
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.post_points >= 5:
+            
+            badge = self.CREATIVE_BRONZE
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.post_points >= 10:
+            badge = self.CREATIVE_SILVER
+            badges_achieved.append(Profile.get_badge_name(badge))
+        if self.post_points >= 15:
+            badge = self.CREATIVE_GOLD
+            badges_achieved.append(Profile.get_badge_name(badge))
         
-        if badge and not Profile.get_badge_name(badge) in self.badges:
-            self.badges += Profile.get_badge_name(badge) + ";"
-            return badge
-
-        return None
+        return badges_achieved
+        
+        
 
     def __str__(self):
         return self.user.username

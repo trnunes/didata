@@ -37,13 +37,13 @@
         <div id="cd-container" >
             <div class="ad-headers">
                 <h4 class="ad-mh m-none">Respostas...</h4>
-                <div id="replies_area"> 
-                    {% include 'mydidata/partials/reply_list.html' %}
-                </div>
                 <div class="mt-4 flex md:mt-0 md:ml-4">
                     <button id="answer_post" type="button" hx-get="{% url 'mydidata:reply_create_form' post.id %}" hx-target="#replyforms" hx-swap="beforeend" class="btn btn-primary">
                         Responder
                     </button>
+                </div>
+                <div id="replies_area"> 
+                    {% include 'mydidata/partials/reply_list.html' %}
                 </div>
             </div>
         </div>

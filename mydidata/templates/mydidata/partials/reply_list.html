@@ -1,4 +1,21 @@
+{% load badge_extras %}
 <div id="replies_area">
+    {% if badge %}
+        {%get_badge_img badge as badge_path%}
+        {%get_badge_name badge as badge_name%}
+        <div class="overlay" onclick="this.style.display = 'none';">
+            <div id="badge-container">
+                <p>{{badge_name}}</p>
+                <img  onclick="this.style.animation = 'fadeout-and-spin 3s ease-in-out forwards'" src="{{badge_path}}" alt="Second slide">
+                {% if user.is_authenticated%}
+                    <p> <a href="{{user.profile.get_absolute_url}}">Ver Conquistas!</a></p>
+                {% endif %}
+                <!-- <p>Hello</p> -->
+                <!-- <img  onclick="this.style.animation = 'fadeout-and-spin 3s ease-in-out forwards'" src="/static/images/steel_badge.png" alt="Second slide">  -->
+            </div>
+        </div>
+    {% endif %}
+
     <div id="replyforms"></div>
     {% if not replies %}
         Não há respostas ainda... Seja o primeiro!
@@ -10,3 +27,14 @@
 
     {%endif%}
 </div>
+
+{% block footer_javascript_page %}
+<script>
+    // Get the horizontal scroll position
+    centerOnViewport();
+    // const overlay = document.querySelector(".overlay");
+    // overlay.addEventListener("click", function() {
+    //   overlay.style.display = "none";
+    // });
+</script>
+{% endblock footer_javascript_page%}

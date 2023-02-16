@@ -40,12 +40,13 @@ main {
 }
 #badge-container {
   animation: fadein-and-spin 3s ease-in-out forwards;
-  position: absolute;
+  position: fixed;
   opacity: 0;
   transform: rotate(0deg);
-  top: 50%;
-  left: 50%;
   transform: translate(-50%, -50%);
+  top: 30%;
+  left: 50%;
+  
   text-align: center;
   font-size: 30;
   color: aqua;

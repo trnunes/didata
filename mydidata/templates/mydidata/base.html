@@ -1,6 +1,7 @@
 '{# HTML5 declaration #}
 <!DOCTYPE html>
 <html>
+    {% load badge_extras %}
     {# Make modifiable head elements #}
     <head>
         <title>{% block title %}Home {% endblock title %}</title>
@@ -127,9 +128,26 @@
         
             {# The Document Body #}
             <div id="site-wrapper">
+                
                 {% block content %}
                     if you see this, something is wrong!
                 {% endblock content %}
+                <!-- TODO remove the duplication from comment_list.html and reply_list.html templates -->
+                {% if badge %}
+                    {%get_badge_img badge as badge_path%}
+                    {%get_badge_name badge as badge_name%}
+                    <div class="overlay" onclick="this.style.display = 'none'">
+                        <div id="badge-container">
+                            <p>{{badge_name}}</p>
+                            <img  onclick="this.style.animation = 'fadeout-and-spin 3s ease-in-out forwards'" src="{{badge_path}}" alt="Second slide">
+                            {% if user.is_authenticated%}
+                                <p> <a href="{{user.profile.get_absolute_url}}">Ver Conquistas!</a></p>
+                            {% endif %}
+                            <!-- <p>Hello</p> -->
+                            <!-- <img  onclick="this.style.animation = 'fadeout-and-spin 3s ease-in-out forwards'" src="/static/images/steel_badge.png" alt="Second slide">  -->
+                        </div>
+                    </div>
+                {% endif %}
             </div>
             {# The Footer #}
         </main>
@@ -166,6 +184,19 @@
             <script>
                 snippets = $('pre code');   
                 snippets.each(function(i){hljs.highlightBlock(snippets[i]);});
+                function centerOnViewport(){
+                var scrollLeft = window.scrollX;
+
+                var scrollTop = window.scrollY;
+                // Adjust the left position of the element
+                var element = document.getElementById("badge-container");
+                element.style.left = "calc(50% + " + scrollLeft + "px)";
+                element.style.top = "calc(30% + " + scrollTop + "px)";
+                debugger;
+
+            }
+            centerOnViewport();
+
             </script>
             
         {% endblock footer_javascript_site %}

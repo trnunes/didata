@@ -1,20 +1,22 @@
 {% load badge_extras %}
   
 <div id="comments_area">
-    
-    {% if badge%}
+    {% if badge %}
         {%get_badge_img badge as badge_path%}
         {%get_badge_name badge as badge_name%}
-        <div class="overlay" onclick="this.style.animation = 'fadeout 0.5s ease-in-out forwards'; document.querySelector('.medal-icon').style.animation = 'fadeout-and-spin 3s ease-in-out forwards'; this.style.display = 'none'">
+        <div class="overlay" onclick="this.style.display = 'none'">
             <div id="badge-container">
                 <p>{{badge_name}}</p>
-                <img  onclick="this.style.animation = 'fadeout-and-spin 3s ease-in-out forwards'" src="{{badge_path}}" alt="Second slide">
+                <img  onclick="this.style.display = 'none';" src="{{badge_path}}" alt="Second slide">
+                {% if user.is_authenticated%}
+                    <p> <a href="{{user.profile.get_absolute_url}}">Ver Conquistas!</a></p>
+                {% endif %}
                 <!-- <p>Hello</p> -->
                 <!-- <img  onclick="this.style.animation = 'fadeout-and-spin 3s ease-in-out forwards'" src="/static/images/steel_badge.png" alt="Second slide">  -->
             </div>
         </div>
-        
-    {%endif%}
+    {% endif %}
+
     <div id="commentforms"></div>
     {% if not topic.comments.all %}
         Não há comentários ainda... Seja o primeiro!
@@ -26,3 +28,9 @@
 
     {%endif%}
 </div>
+{% block footer_javascript_page %}
+<script>
+    // Get the horizontal scroll position
+    centerOnViewport();
+</script>
+{% endblock footer_javascript_page%}
