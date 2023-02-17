@@ -777,8 +777,10 @@ def multiple_choice_answer_detail(request, answer_id):
 
 @login_required()
 def graphic_feedback(request, answer_id):
-    answer = get_object_or_404(Answer, pk=id)
-    render(request, "canva.html", context={"answer": answer})
+    answer = get_object_or_404(Answer, pk=answer_id)
+    question = answer.question
+    form = SuperuserAnswerFormSimplified(instance=answer)
+    return render(request, "mydidata/canva.html", context={"form": form, "question": question})
 
 @login_required()
 def feedback(request, answer_id):

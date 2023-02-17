@@ -959,9 +959,9 @@ class Answer(models.Model):
 
     EVAL_CHOICES = [
         (CORRECT, 'Excelente! (1.0)'),
-        (ALMOST_CORRECT, 'Quase Perfeita (0.8)'),
-        (ACCEPTABLE, 'Aceitável (0.6)'),
-        (ALMOST_INCORRECT, 'Apresenta muitos erros (0.3)'),
+        (ALMOST_CORRECT, 'Quase Perfeita (0.6 - 0.8)'),
+        (ACCEPTABLE, 'Aceitável (0.3 - 0.6)'),
+        (ALMOST_INCORRECT, 'Apresenta muitos erros (0.1 - 0.3)'),
         (INCORRECT, 'Errada (0.0)'),
     ]
 

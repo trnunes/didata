@@ -1,38 +1,37 @@
-<html>
-    <head>
-        <title>
-            Marque a Imagem para Corrigir o Texto
-        </title>
+{% extends 'mydidata/base.html' %}
+{% block content %}
 
-        <style>
-            #canvas {
-                border: 1px solid black;
-            }
-        </style>
-
-
-    </head>
-
-    <body>
-        
-        <canvas id="canvas" width="1200" height="1900"></canvas>
+    <div id="content-container" class="container p-none">
+        <canvas id="canvas" style= "border: 1px solid black;" width="1200" height="1900"></canvas>
         <br/>
         <input type="text" id="textInput">
         
         <button id="markButton"> Marcar </button>
         <input type="color" name="" id="markColor">
         <input type="range" name="" min="1" max="20" value="1" id="markSize">
+        {% with answer=form.instance%}
+        <div id="answer_form">
+            {% include 'mydidata/discursive_answer_item_form.html' %}
+        </div>
+        {%endwith%}
+    </div>
 
+{%endblock content%}
 
-        <script>
+{% block footer_javascript_page %}
+	<script>
             var canvas = document.getElementById('canvas');
             canvas.width = 0.8 * window.innerWidth;
             canvas.height = 0.8* window.innerHeight;
             var context = canvas.getContext('2d');
 
             var image = new Image();
-            image.src="{{answer.file_link}}";
+            image.src="{{form.instance.assignment_file.url}}";
             image.onload = function() {
+                
+                canvas.width = image.width;
+                canvas.height = image.height;
+  
                 context.drawImage(image, 0, 0, canvas.width, canvas.height)
             };
 
@@ -136,17 +135,17 @@
 
             }
 
-            document.getElementById("addTextBtn").addEventListener("click", function() {
-              var text = document.getElementById("textInput").value;
-              context.fillStyle = "black";
-              context.font = "20px Arial";
-              if(selectedRect){
-                context.fillText(text, startX + 10, startY + 25);
-                selectedRect.text = text;
-                redraw()
-              } else {alert("Selecione uma marcação para adicionar o texto")}
-
-            });
+            // document.getElementById("addTextBtn").addEventListener("click", function() {
+            //   var text = document.getElementById("textInput").value;
+            //   context.fillStyle = "black";
+            //   context.font = "20px Arial";
+            //   if(selectedRect){
+                // context.fillText(text, startX + 10, startY + 25);
+                // selectedRect.text = text;
+                // redraw()
+            //   } else {alert("Selecione uma marcação para adicionar o texto")}
+// 
+            // });
             
             canvas.addEventListener("click", function(e) {
                 let rectangles = context.rectangles
@@ -180,12 +179,56 @@
             
             });
 
+		$('#answer_form ul').addClass('list-group');
+		$('#answer_form ul li').addClass('list-group-item');
+		$("#save_next_answer").on("click", function(e){
+            e.preventDefault();
+			$('input[type=hidden][name=redirect_to]').val("{{next_answer_url}}")
+			$('#form_feedback').submit();
+            
+        });
+		$("#save_next_student").on("click", function(e){
+		    e.preventDefault();
+			$('input[type=hidden][name=redirect_to]').val("{{next_student_answer_url}}")
+		    $('#form_feedback').submit();
+		});
+		$('input[type=radio][name=status]').change(function(e){
 
+			switch(parseInt(this.value)){
+				case 2:
+					$('#id_grade').val("1.0");
+					break;
+				case 5:
+					$('#id_grade').val("0.8");
+					break;
+				case 7:
+					$('#id_grade').val("0.6");
+					break
+				case 6:
+					$('#id_grade').val("0.3");
+					break
+				default:
+					$('#id_grade').val("0.0");
+					break
+				
 
-        </script>
-    </body>
-    
-    
-    
+			}
 
-</html>
+		});
+		
+		CKEDITOR.on("instanceReady", function(event){
+			CKEDITOR.instances.id_answer_text.on('paste', function(evt) {
+				let should_block = "{{question.should_block_paste}}"
+				if (should_block === "True"){
+					evt.cancel();
+					alert("Não copie e cole conteúdos!");
+
+				}
+			    
+				
+			});
+		});
+		
+	</script>
+
+{% endblock footer_javascript_page %}
