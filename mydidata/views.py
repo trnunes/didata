@@ -760,7 +760,7 @@ def discursive_answer_detail(request, answer_id):
     
     verify_badge(request.user.profile, context)
     
-    return render(request, 'mydidata/discursive_answer_detail.html', )
+    return render(request, 'mydidata/discursive_answer_detail.html', context)
 
 @login_required()
 def detect_answer_text(request, answer_id):
