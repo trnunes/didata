@@ -189,10 +189,16 @@
 
                 var scrollTop = window.scrollY;
                 // Adjust the left position of the element
-                var element = document.getElementById("badge-container");
-                element.style.left = "calc(50% + " + scrollLeft + "px)";
-                element.style.top = "calc(30% + " + scrollTop + "px)";
                 debugger;
+                var element = document.getElementById("badge-container");
+                if (element){
+                    element.style.left = "calc(50% + " + scrollLeft + "px)";
+                    element.style.top = "calc(30% + " + scrollTop + "px)";
+
+                }
+                
+                
+                
 
             }
             centerOnViewport();

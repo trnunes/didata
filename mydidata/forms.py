@@ -469,10 +469,11 @@ class AnswerForm(forms.ModelForm):
 
 class SuperuserAnswerFormSimplified(forms.ModelForm):
     status = forms.ChoiceField(widget=forms.RadioSelect, choices=Answer.EVAL_CHOICES)
+    graphic_annotations = forms.CharField(widget=forms.HiddenInput())
     class Meta:
         model = Answer
-        fields = [ "assignment_file", "status", 'feedback', 'grade', ]
-        field_order = ["status", "feedback", "grade"]
+        fields = [ "assignment_file", 'feedback', "status", 'grade', 'graphic_annotations' ]
+        field_order = ["feedback", "status", "grade"]
         labels = {}
         # labels = {
             # 'answer_text': 'Resposta Enviada',

@@ -30,49 +30,62 @@
 	{%get_test_url question test as answer_form_url%}
 {%endif%}
 
-
-
 <form enctype="multipart/form-data" action="{{ answer_form_url }}" id="form_feedback" method="post" >
-<input type="hidden" name="redirect_to" value="{{answer_form_url}}"/>
-{%if user.is_superuser%}
-<h3 class="gi-sh">Resposta Enviada</h3>
-<p>{{ answer.answer_text | safe}}</p>
-{%endif%}
-
-{% csrf_token %}
-    
-{{ form.media }}
-{% if question.is_discursive %}
-{{ form.as_p }}
-{%endif%}
-{% if question.is_team_work%}
-<div class="form-group">
-    <a href="{% url 'mydidata:create_team' %}">Criar uma Equipe</a>
-</div>
-{% endif %}
-<label for="choice">{{ form.choice.label }}</label>
-{% for choice in form.choice.field.choices %}
-    <div class="form-group">
-        <input type="radio" name="choice" value="{{ choice.0 }}">
-        <label>{{ choice.1 | safe}}</label>
-    </div>
-
-{% endfor %}
-
-
-{% if user.is_superuser%}
-    <input type="submit" class="btn btn-primary btn-lg" name="save_next_answer" id="save_next_answer" value="Salvar e Próximo Resposta" />
-    <input type="submit" class="btn btn-primary btn-lg" name="save_next_student" id="save_next_student" value="Salvar e Próximo Aluno" />
-{%else%}
-    <input type="submit" class="btn btn-primary btn-lg" value="Salvar" />
-    {%if answer.id and answer.answer_text and answer.question.ref_keywords or answer.question.expected_output%}
+    <input type="hidden" name="redirect_to" value="{{answer_form_url}}"/>
+    {%if user.is_superuser%}
+        <h3 class="gi-sh">Resposta Enviada
+        
+        
+        {%if answer.is_automatic_verification_enabled%}
+        
+            
+            <a class="btn btn-primary btn-sm" role="button" href="/mydidata/get_corrections/{{answer.id}}">Correção Automática</a>
     
         
-        <input class="btn btn-primary btn-lg" type="submit" name="save_and_feedback" value="Salvar e Obter Feedback">
+        {%endif%}
+        </h3>
 
-    
+        <p>{{ answer.answer_text | safe}}</p>
     {%endif%}
-{% endif%}
+
+    {% csrf_token %}
+
+    {{ form.media }}
+    
+    {% if question.is_discursive %}
+        {{ form.as_p }}
+    {%endif%}
+    
+    {% if question.is_team_work%}
+        <div class="form-group">
+            <a href="{% url 'mydidata:create_team' %}">Criar uma Equipe</a>
+        </div>
+    {% endif %}
+    
+    <label for="choice">{{ form.choice.label }}</label>
+    
+    {% for choice in form.choice.field.choices %}
+        <div class="form-group">
+            <input type="radio" name="choice" value="{{ choice.0 }}">
+            <label>{{ choice.1 | safe}}</label>
+        </div>
+
+    {% endfor %}
+
+
+    {% if user.is_superuser%}
+        <input type="submit" class="btn btn-primary btn-lg" name="save_next_answer" id="save_next_answer" value="Salvar e Próximo Resposta" />
+        <input type="submit" class="btn btn-primary btn-lg" name="save_next_student" id="save_next_student" value="Salvar e Próximo Aluno" />
+    {%else%}
+        <input type="submit" class="btn btn-primary btn-lg" value="Salvar" />
+        {%if answer.id and answer.answer_text and answer.question.ref_keywords or answer.question.expected_output%}
+
+
+            <input class="btn btn-primary btn-lg" type="submit" name="save_and_feedback" value="Salvar e Obter Feedback">
+
+
+        {%endif%}
+    {% endif%}
 
 
 </form>
@@ -84,12 +97,5 @@
 
 
 {% if user.is_superuser %}
-    {%if answer.id and answer.answer_text and answer.question.ref_keywords or answer.question.expected_output%}
-    
-        
-        <a class="btn btn-primary btn-lg" role="button" href="/mydidata/get_corrections/{{answer.id}}">Correção Automática</a>
-
-    
-    {%endif%}
     <a href='{{ classroom.get_absolute_url }}'>Voltar para Progresso da Turma</a>
 {%endif%}

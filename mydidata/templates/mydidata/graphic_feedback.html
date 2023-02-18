@@ -1,0 +1,123 @@
+{% extends 'mydidata/base.html' %}
+{% block content %}
+
+    <div id="content-container" class="container p-none">
+        
+        
+
+        <canvas id="canvas" style= "border: 1px solid black;" width="1200" height="1900"></canvas>
+    </div>
+
+{%endblock content%}
+
+{% block footer_javascript_page %}
+	<script>
+            var canvas = document.getElementById('canvas');
+            canvas.width = 0.8 * window.innerWidth;
+            canvas.height = 0.8* window.innerHeight;
+            var context = canvas.getContext('2d');
+
+            var image = new Image();
+            image.src="{{answer.assignment_file.url}}";
+            image.onload = function() {
+                
+                canvas.width = image.width;
+                canvas.height = image.height;
+  
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                {% if answer.graphic_annotations %}
+                    let rectangles_json =  "{{answer.graphic_annotations_unscaped}}";
+
+                    let rectangles_json_unescaped = rectangles_json.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+
+                    context.rectangles = JSON.parse(rectangles_json_unescaped);
+                {%endif%}
+                selectedRect = {};
+                
+                redraw();
+
+
+            };
+
+            function redraw(){
+                context.clearRect(0,0,canvas.width, canvas.height);
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                
+                context.lineWidth = 1;
+
+                context.rectangles.forEach(function(rect){
+                    context.lineWidth = rect.lineWidth;
+                    console.log(rect.color);
+                    context.strokeStyle = rect.color;
+                    context.setLineDash([]);
+                    if (rect == selectedRect){
+                        
+                        context.setLineDash([6]);
+                        context.strokeStyle = "blue";
+                        
+    
+                    }
+                    
+                    context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+                    context.fillStyle = "black";
+                    context.font = "12px Arial";
+                    context.fillText(rect.text, rect.x + 10, rect.y + 20);
+                });
+
+
+            }
+
+            // document.getElementById("addTextBtn").addEventListener("click", function() {
+            //   var text = document.getElementById("textInput").value;
+            //   context.fillStyle = "black";
+            //   context.font = "20px Arial";
+            //   if(selectedRect){
+                // context.fillText(text, startX + 10, startY + 25);
+                // selectedRect.text = text;
+                // redraw()
+            //   } else {alert("Selecione uma marcação para adicionar o texto")}
+// 
+            // });
+            
+
+		$('#answer_form ul').addClass('list-group');
+		$('#answer_form ul li').addClass('list-group-item');
+		$("#save_next_answer").on("click", function(e){
+            e.preventDefault();
+			$('input[type=hidden][name=redirect_to]').val("{{next_answer_url}}")
+			$('#form_feedback').submit();
+            
+        });
+		$("#save_next_student").on("click", function(e){
+		    e.preventDefault();
+			$('input[type=hidden][name=redirect_to]').val("{{next_student_answer_url}}")
+		    $('#form_feedback').submit();
+		});
+		$('input[type=radio][name=status]').change(function(e){
+
+			switch(parseInt(this.value)){
+				case 2:
+					$('#id_grade').val("1.0");
+					break;
+				case 5:
+					$('#id_grade').val("0.8");
+					break;
+				case 7:
+					$('#id_grade').val("0.6");
+					break
+				case 6:
+					$('#id_grade').val("0.3");
+					break
+				default:
+					$('#id_grade').val("0.0");
+					break
+				
+
+			}
+
+		});
+		
+		
+	</script>
+
+{% endblock footer_javascript_page %}

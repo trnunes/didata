@@ -975,12 +975,15 @@ class Answer(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, verbose_name="Equipe", related_name='answers', null=True, blank=True)
     test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Avaliação", related_name="answers")
     choice = models.ForeignKey(Choice, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Alternativa")
-    comments = models.TextField(blank=True)
+    graphic_annotations = models.TextField(blank=True)
     
     
 
     class Meta:
         verbose_name_plural = 'Respostas'
+    
+    def is_graphic_answer(self):
+        return self.assignment_file and self.assignment_file.url.lower().split(".")[-1] in ["jpg", "png", "jpeg", "pdf", "tiff", "psd"]
     
     @classmethod
     def find(cls, student, question, test=None):
@@ -989,7 +992,12 @@ class Answer(models.Model):
             args['test'] = test
         return cls.objects.filter(**args).first()
 
-
+    def graphic_annotations_unscaped(self):
+        return html.unescape(self.graphic_annotations)
+    
+    def is_automatic_verification_enabled(self):
+        return self.id and self.answer_text and self.question.ref_keywords or self.question.expected_output
+    
     def text_escaped(self):
         return u'%s' % html.unescape(strip_tags(self.answer_text))
 

@@ -2,18 +2,26 @@
 {% block content %}
 
     <div id="content-container" class="container p-none">
-        <canvas id="canvas" style= "border: 1px solid black;" width="1200" height="1900"></canvas>
-        <br/>
-        <input type="text" id="textInput">
         
-        <button id="markButton"> Marcar </button>
-        <input type="color" name="" id="markColor">
-        <input type="range" name="" min="1" max="20" value="1" id="markSize">
-        {% with answer=form.instance%}
-        <div id="answer_form">
-            {% include 'mydidata/discursive_answer_item_form.html' %}
+        
+        <div>
+            <h4>Barra de Ferramentas</h4>
+            <!-- <button id="markButton"> Marcar </button> -->
+            <span>Cor da linha: </span>
+            <input type="color" name="" id="markColor">
+            <span>Espessura da Linha: </span>
+            <input type="range" name="" min="1" max="20" value="1" id="markSize">
         </div>
-        {%endwith%}
+        <br/>
+
+        <canvas id="canvas" style= "border: 1px solid black;" width="1200" height="1900"></canvas>
+        {%if user.is_superuser%}
+            {% with answer=form.instance%}
+            <div id="answer_form">
+                {% include 'mydidata/discursive_answer_item_form.html' %}
+            </div>
+            {%endwith%}
+        {%endif%}
     </div>
 
 {%endblock content%}
@@ -32,22 +40,36 @@
                 canvas.width = image.width;
                 canvas.height = image.height;
   
-                context.drawImage(image, 0, 0, canvas.width, canvas.height)
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                console.log("{{form.instance.graphic_annotations}}");
+                {% if form.instance.graphic_annotations %}
+                    let rectangles_json =  "{{form.instance.graphic_annotations_unscaped}}";
+
+                    let rectangles_json_unescaped = rectangles_json.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+
+                    context.rectangles = JSON.parse(rectangles_json_unescaped);
+                {%endif%}
+                selectedRect = {};
+                startDrawing();
+                redraw();
+
+
             };
 
-            document.getElementById('markButton').addEventListener('click',
+            function startDrawing(){
+                var color = document.getElementById("markColor").value;
+                var size = document.getElementById("markSize").value;
+                context.strokeStyle = color;
+                context.lineWidth = size;
+                context.beginPath();
+                canvas.addEventListener('mousedown', onMouseDown);
+            }
+            
 
-                function(){
-                    var color = document.getElementById("markColor").value;
-                    var size = document.getElementById("markSize").value;
-                    context.strokeStyle = color;
-                    context.lineWidth = size;
-                    context.beginPath();
-                    canvas.addEventListener('mousedown', onMouseDown);
-                    
-            });
+            // document.getElementById('markButton').addEventListener('click', startDrawing);
 
             function onMouseDown(event){
+                startDrawing();
                 var x = event.offsetX;
                 var y = event.offsetY;
                 context.strokeStyle = document.getElementById("markColor").value;
@@ -88,6 +110,7 @@
                     width: x - context.rectStart.x,
                     height: y - context.rectStart.y,
                     color: document.getElementById("markColor").value,
+                    lineWidth: document.getElementById("markSize").value,
                     text: ""
 
                 };
@@ -115,21 +138,24 @@
                 context.lineWidth = 1;
 
                 context.rectangles.forEach(function(rect){
-                    context.lineWidth = 2;
+                    context.lineWidth = rect.lineWidth;
                     console.log(rect.color);
                     context.strokeStyle = rect.color;
                     context.setLineDash([]);
                     if (rect == selectedRect){
-                        context.lineWidth = 3;
+                        
                         context.setLineDash([6]);
                         context.strokeStyle = "blue";
                         
     
                     }
+                    
                     context.strokeRect(rect.x, rect.y, rect.width, rect.height);
                     context.fillStyle = "black";
                     context.font = "12px Arial";
                     context.fillText(rect.text, rect.x + 10, rect.y + 20);
+                    document.getElementById("id_graphic_annotations").value = JSON.stringify(context.rectangles);
+                    console.log(JSON.stringify(context.rectangles));
                 });
 
 
@@ -216,18 +242,6 @@
 
 		});
 		
-		CKEDITOR.on("instanceReady", function(event){
-			CKEDITOR.instances.id_answer_text.on('paste', function(evt) {
-				let should_block = "{{question.should_block_paste}}"
-				if (should_block === "True"){
-					evt.cancel();
-					alert("Não copie e cole conteúdos!");
-
-				}
-			    
-				
-			});
-		});
 		
 	</script>
 

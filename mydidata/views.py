@@ -786,7 +786,7 @@ def graphic_feedback(request, answer_id):
 def feedback(request, answer_id):
     answer = get_object_or_404(Answer, pk=answer_id)
     question = answer.question
-    form = SuperuserAnswerFormSimplified(instance=answer)
+    form = SuperuserAnswerFormSimplified(instance=answer, initial={"status": Answer.CORRECT, "grade": 1.0}, )
     classroom = Classroom.objects.filter(students__id=answer.student.id).first()
 
     next_answer_for_student_url = reverse('mydidata:class_progress', args=(classroom.id,))
@@ -820,6 +820,10 @@ def feedback(request, answer_id):
         'next_student_answer_url': next_student_answer,
         'next_answer_url': next_answer_for_student_url,
     }
+    
+    if answer.is_graphic_answer():
+        return render(request, "mydidata/canva.html", context)
+    
     return render(request, 'mydidata/answer_cru.html', context)
 
 @login_required()
@@ -1398,8 +1402,10 @@ def test_job(request, answer_id):
 def get_corrections(request, answer_id):
     answer_obj = get_object_or_404(Answer, pk=answer_id)
     correct_answers.now([answer_obj])
+    
     if request.user.is_authenticated:
         request.user.profile.register_action(f"Obtendo feedback para resposta da questão {answer_obj.question.get_absolute_url()}")
+    
     if request.user.is_superuser:
 
         return feedback(request, answer_obj.id)
