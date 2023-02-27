@@ -46,6 +46,7 @@ def verify_badge(profile, context):
     if profile.has_unotified_badge():
         context["badge"] = profile.get_and_notify_badge()
         
+        
 
 class HomePage(TemplateView):
     """

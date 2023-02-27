@@ -32,23 +32,22 @@ main {
   left: 30%;
   transform: translate(-50%, -50%);
 }
+
 .text {
   transform: translate(-50%, -50%);
   text-align: center;
   font-size: 30;
   color: aqua;
 }
+
 #badge-container {
   animation: fadein-and-spin 3s ease-in-out forwards;
-  position: fixed;
+  
   opacity: 0;
   transform: rotate(0deg);
   transform: translate(-50%, -50%);
-  top: 30%;
-  left: 50%;
-  
   text-align: center;
-  font-size: 30;
+  font-size: 25;
   color: aqua;
 }
 
@@ -59,13 +58,16 @@ main {
 
 .overlay {
   position: fixed;
-  top: 0;
+  width: 100vw;
+  height: 150vw;
   right: 0;
   bottom: 0;
   left: 0;
   background-color: rgba(0, 0, 0, 0.5);
   animation: fadein 0.5s ease-in-out forwards;
   opacity: 0;
+  justify-content: center;
+  align-items: center;
 }
 @keyframes fadein-and-spin {
   0% { opacity: 0; transform: rotate(0deg); }
