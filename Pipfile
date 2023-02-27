@@ -56,5 +56,6 @@ celery = "*"
 importlib-metadata = "==4.13.0"
 redis = "*"
 django-bootstrap-datepicker-plus = "*"
+typing-extensions = "*"
 
 [dev-packages]
