@@ -12,11 +12,113 @@ import re
 import unidecode
 from django.conf import settings
 from background_task import background
-from .models import Answer
+from .models import Answer, Profile
 import requests
 from django.shortcuts import get_object_or_404
 import json
 from .nlp_analyzer import score_keywords, score, assess, read_lines, normalize
+from .models import Classroom
+from celery import shared_task
+from django.utils import timezone
+from django.utils.html import format_html
+from django.core.mail import send_mail
+from django.template import Template, Context
+
+def send_alert_email(classroom, students):
+    # Get the teachers related to the classroom
+    teachers = classroom.teachers.all()
+    teacher_emails = [teacher.email for teacher in teachers]
+
+    # Build the email body HTML
+    student_template = Template('<li><h3>{{ student_name }}</h3><ul>{% for alert in alerts %}<li><span style="color:red">{{ alert }}</span></li>{% endfor %}</ul></li>')
+    student_alerts = [student_template.render(Context({'student_name': student.first_name + f"({student.username})", 'alerts': student.profile.alerts.split(";")})) for student in students]
+    email_body = '<h2>Alertas para a Turma {}</h2><ul>{}</ul>'.format(classroom.name, ''.join(student_alerts))
+
+
+    # Send the email
+    print(teacher_emails)
+    subject = '[AprendaFazendo] Alertas para Turma {}'.format(classroom.name)
+    recipient_list = teacher_emails
+    send_mail(subject, '', "", recipient_list, html_message=email_body)
+
+
+
+
+
+
+
+
+
+@shared_task
+def diagnose(classroom_id):
+    classroom = get_object_or_404(Classroom.objects.prefetch_related("students"), pk=classroom_id)
+    student_alerts = []
+    students = classroom.students.all()
+    current_datetime = timezone.now()
+    deadlines = classroom.deadlines.all()
+    for student in students:
+        try:
+            student.profile
+        except Exception:
+            Profile.objects.create(user=student, actions_log="Criado em %s"%timezone.localtime().strftime("%d/%m/%Y às %H:%M:%S"))
+
+        # Get the datetime one week ago from the current datetime
+        one_week_ago = current_datetime - timezone.timedelta(weeks=1)
+        student.profile.alerts = ""
+        # Compare the last login datetime to one week ago
+        if student.last_login < one_week_ago:
+            # Do something if the last login was more than a week ago
+            alert_msg = "Usuário não acessa há mais de uma semana;"
+            print(student.first_name)
+            print(alert_msg)
+            student.profile.alerts += "Usuário não acessa há mais de uma semana;"
+            student_alerts.append(student)
+    
+    
+        for deadline in deadlines:
+            if deadline.due_datetime < current_datetime and not deadline.topic.has_completed(student):
+                alert_msg = f"Estudante não cumpriu prazo limite de envio de atividades para o tópico:  {deadline.topic.topic_title};"
+                print(student.first_name)
+                print(alert_msg)
+                student.profile.alerts += alert_msg
+                student_alerts.append(student)
+        
+        message = analyze_time_spent_on_topics(student)
+        
+        if message:
+            student.profile.alerts += message
+            student_alerts.append(student)
+        
+        student.save()
+
+    
+    send_alert_email(classroom, student_alerts)
+
+
+def analyze_time_spent_on_topics(user):
+    topic_times_dict = {}
+    alerts = ""
+    if user.profile and user.profile.actions_log:
+        actions = user.profile.actions_log.split(";")
+        topic_time_actions = [a for a in actions if "Tempo gasto" in a]
+        for time_action in topic_time_actions:
+            minute_seconds = time_action.split("=")[-1].split(" s")[0].split("em")[0].strip()
+            topic = time_action.split('"')[-1].split('"')[0]
+            if not topic_times_dict.get(topic, None):
+                topic_times_dict[topic] = 0
+            print("TIME ACTION: ", time_action)
+            print("MINUTES AND SECONDS: ", minute_seconds)
+            
+            topic_times_dict[topic] += time_to_seconds(minute_seconds)
+        
+        for topic, time in topic_times_dict.items():
+            if time < 5 * 60:
+                alerts +=  f'Tempo gasto no tópico "{topic}" inferior a 5 min: {time} seconds;'
+    return alerts
+
+def time_to_seconds(time_str):
+    minutes, seconds = map(int, time_str.split(':'))
+    return minutes * 60 + seconds
 
 def detect_text_uri(uri):
     """Detects text in the file located in Google Cloud Storage or on the Web.

@@ -14,9 +14,12 @@ import os
 import django_heroku
 from whitenoise import WhiteNoise
 import nltk
+from django.conf.global_settings import DATETIME_INPUT_FORMATS
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -46,9 +49,10 @@ INSTALLED_APPS = [
     'django.contrib.sitemaps',
     'ckeditor_uploader',    
     'storages',
+    'bootstrap_datepicker_plus',
     
 ]
-
+CELERY_APP = 'mydidata.celery:app'
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'  # During development only
 SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
@@ -159,6 +163,9 @@ RQ_QUEUES = {
     }
 }
 
+BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
 nltk.data.path.append('./nltk_data/')
 
 # Internationalization
@@ -261,3 +268,5 @@ AWS_S3_REGION_NAME = "sa-east-1"
 DEFAULT_FILE_STORAGE = 'mydidata.storage_backends.PublicMediaStorage'
 ENABLE_TEAM_LINK = os.environ.get('ENABLE_TEAM_LINK') in ["True", "true"]
 django_heroku.settings(locals())
+
+

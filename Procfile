@@ -1,2 +1,2 @@
 web: gunicorn gettingstarted.wsgi --reload
-worker: python manage.py process_tasks
+worker: celery -A mydidata worker -l info

@@ -52,5 +52,9 @@ pandas = "*"
 django-rq = "*"
 google-cloud-vision = "*"
 selenium = "==2.53.6"
+celery = "*"
+importlib-metadata = "==4.13.0"
+redis = "*"
+django-bootstrap-datepicker-plus = "*"
 
 [dev-packages]

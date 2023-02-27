@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Delete Classroom</h1>
+  <p>Are you sure you want to delete "{{ classroom.name }}"?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Delete</button>
+    <a href="{% url 'classroom_detail' classroom.uuid %}">Cancel</a>
+  </form>
+{% endblock %}

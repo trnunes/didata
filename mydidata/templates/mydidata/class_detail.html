@@ -7,9 +7,20 @@
     <div id="content-container" class="container p-none">
 		{% if classroom %}
 			<h1>{{classroom.name}}</h1>
-			<p>Compartilhe esse link com seus alunos para inscrição: https://mydidata.herokuapp.com{{classroom.get_signup_link}} </p>
+			<p>Compartilhe esse link com seus alunos para inscrição: <a href="https://aprendafazendo.net{{classroom.get_signup_link}}">https://aprendafazendo.net{{classroom.get_signup_link}}</a>  </p>
 		{%endif%}
+        
+        <div class="mt-2">
+            <a class="btn btn-primary" href="{% url 'mydidata:classroom_update' classroom.uuid %}">Editar Turma</a>
+    
+            <a type="button" class="btn btn-primary" href="{{ classroom.get_grades_url }}">Notas para Tópicos Fechados</a>
+            
+            <a type="button" href="{{ classroom.get_progress_url }}" class="btn btn-primary" href="">Progresso</a>
+        
+            <a type="button" class="btn btn-primary" href="{% url 'mydidata:tests' classroom.id %}">Avaliações</a>
+        </div>
 		<ul class="list-group">
+
             {% for student in students %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <a href="{{student.profile.get_absolute_url}}">{{ student.first_name }} {{ student.last_name }} ({{student.username}})</a>

@@ -13,7 +13,7 @@ from background_task.models import Task
 from django.views import View
 
 from .nlp_analyzer import score_keywords, score, assess, read_lines
-from .forms import PostForm, ReplyForm, ContentVersionForm, SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, MultipleChoiceQuestionForm, DiscursiveQuestionForm, AnswerFormUploadOnly, AnswerForm, MultipleChoiceQuestionFormSet, ChoiceFormSet, CProgrammingQuestionForm, TeamForm, CommentForm
+from .forms import ClassroomForm, PostForm, ReplyForm, ContentVersionForm, SuperuserAnswerFormSimplified, TopicForm, SubscriberForm, ProfileForm, UserUpdateForm, TopicForm, MultipleChoiceQuestionForm, DiscursiveQuestionForm, AnswerFormUploadOnly, AnswerForm, MultipleChoiceQuestionFormSet, ChoiceFormSet, CProgrammingQuestionForm, TeamForm, CommentForm, DeadlineForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView
@@ -25,7 +25,7 @@ import re
 import json
 from django.db.models import Q
 import csv
-from .tasks import go_academico, correct_answers, correct_whole_topic, to_csv, detect_text_uri
+from .tasks import diagnose, go_academico, correct_answers, correct_whole_topic, to_csv, detect_text_uri
 import datetime
 from django.utils import timezone
 from datetime import timedelta
@@ -174,10 +174,12 @@ def content(request, label):
 def topic_edit(request, topic_uuid):
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     discipline = topic.discipline
-    form = ContentVersionForm(instance=topic, user=request.user)
+    if request.user.is_superuser:
+        form = TopicForm(request.POST or None, instance = topic, owner=request.user)
+    else:
+        form = ContentVersionForm(request.POST or None, instance=topic, user=request.user)
     
     if request.method == "POST":
-        form = ContentVersionForm(request.POST, instance=topic)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse("mydidata:topic_detail", args=(topic.uuid,)))
@@ -1018,11 +1020,19 @@ def topic_detail(request, uuid):
     if( test and request.user.is_authenticated):
         test_user_relation = test.get_or_create_test_user_relation(request.user)
     
+    if request.user.is_superuser:
+
+        deadlines = topic.get_deadlines()
+    else:
+        deadlines = topic.get_deadlines(request.user.classrooms.all())
+    
+    
     context = {
         'topic': topic,
         'questions': questions,
         'test_user_relation': test_user_relation,
-        'comment_form': CommentForm()
+        'comment_form': CommentForm(),
+        'deadlines': [(d.classroom, d.get_local_due_date(), d.get_remaining_time(), d.id) for d in deadlines ]
     }
     if request.user.is_authenticated:
         klass = Classroom.objects.filter(students__id = request.user.id).first()
@@ -1679,3 +1689,107 @@ def reply_create_form(request, post_id):
     }
 
     return render(request, "mydidata/partials/reply_form.html", context)
+
+###
+### CLASSROOM VIEWS
+###
+
+def classroom_list(request):
+    classrooms = Classroom.objects.all()
+    return render(request, 'mydidata/classroom_list.html', {'classrooms': classrooms})
+
+@login_required
+def classroom_create(request):
+    if request.method == 'POST':
+        form = ClassroomForm(request.POST, initials={"teachers": [request.user]})
+        if form.is_valid():
+            classroom = form.save()
+            return redirect(reverse('mydidata:class_detail', args=(classroom.id,)))
+    else:
+        form = ClassroomForm()
+    return render(request, 'mydidata/classroom_form.html', {'form': form})
+
+def classroom_update(request, uuid):
+    classroom = get_object_or_404(Classroom, uuid=uuid)
+    if request.method == 'POST':
+        form = ClassroomForm(request.POST, instance=classroom)
+        if form.is_valid():
+            classroom = form.save()
+            return redirect(reverse('mydidata:class_detail', args=(classroom.id,)))
+    else:
+        form = ClassroomForm(instance=classroom)
+    return render(request, 'mydidata/classroom_form.html', {'form': form})
+
+def classroom_delete(request, uuid):
+    classroom = get_object_or_404(Classroom, uuid=uuid)
+    if request.method == 'POST':
+        classroom.delete()
+        return redirect('mydidata:class_list')
+    return render(request, 'mydidata/classroom_confirm_delete.html', {'classroom': classroom})
+
+def get_classroom_diagnostics(request, class_id):
+
+    diagnose.delay(classroom_id=class_id)
+    
+    return redirect(reverse('mydidata:class_detail', args=(class_id,)))
+
+def record_duration(request, topic_id):
+
+    if request.user.is_authenticated:
+        if request.user.profile:
+            profile = request.user.profile
+
+            duration = request.POST.get('duration')
+            topic_title = request.POST.get('topic_title')
+            action = f'Tempo gasto no tópico "{topic_title}"({topic_id}) = {duration} s'
+            profile.register_action(action)
+            print(action)
+        
+
+    # Record the duration in your database or log it to a file
+    # ...
+    return HttpResponse(status=200)
+
+###
+## DEADLINES
+###
+@login_required
+@superuser_required
+def create_deadline(request, topic_id):
+    topic = get_object_or_404(Topic, pk=topic_id)
+    form = DeadlineForm(request.POST or None, initial={"topic":topic})
+    
+    if request.method == 'POST':
+        if form.is_valid():
+            classroom = form.cleaned_data['classroom']
+            deadline = form.save(commit=False)
+            deadline.classroom = classroom
+            deadline.topic = topic
+            deadline.save()
+
+            return redirect(reverse('mydidata:topic_detail', args=(topic.uuid,)))
+    
+    return render(request, 'mydidata/create_deadline.html', {'form': form, 'topic': topic})
+
+@login_required
+@superuser_required
+def edit_deadline(request, pk):
+    deadline = get_object_or_404(Deadline, pk=pk)
+    form = DeadlineForm(request.POST or None, instance=deadline)
+
+    if request.method == 'POST':
+        if form.is_valid():
+            deadline = form.save()
+            return redirect(reverse('mydidata:topic_detail', args=(deadline.topic.uuid,)))
+
+    return render(request, 'mydidata/create_deadline.html', {'form': form})
+
+@login_required
+@superuser_required
+def delete_deadline(request, deadline_id):
+    deadline = get_object_or_404(Deadline, pk=deadline_id)
+    topic = deadline.topic
+    
+    deadline.delete()
+        
+    return redirect(reverse('mydidata:topic_detail', args=(topic.uuid,)))

@@ -25,6 +25,7 @@ import html
 import difflib
 from django.db.models import Avg, Q, Sum, F
 from django.db.models.query import QuerySet
+from django.core.mail import send_mail
 
 class AdminURLMixin(object):
     def get_admin_url(self):
@@ -53,6 +54,7 @@ class Profile(models.Model):
     reply_points = models.IntegerField(verbose_name="Pontos Adquiridos em Respostas do Fórum", default = 0)
     badges = models.CharField(verbose_name="Medalhas Adquiridas", default="", max_length=255)
     last_badge_conquered = models.IntegerField(verbose_name="Última Medalha e Status", default=0)
+    alerts = models.TextField(verbose_name="Alertas", default="", blank=True)
     
     INTEREST_IRON = 20
     INTEREST_STEEL = 1
@@ -143,8 +145,15 @@ class Profile(models.Model):
     
     def get_and_notify_badge(self):
         badge = self.last_badge_conquered
-        self.last_badge_conquered = 0
-        self.save()
+        if badge:
+            self.last_badge_conquered = 0
+            self.save()
+            classrooms = self.user.classrooms.all()
+            for classroom in classrooms:
+                message_to_teachers = f'[AprendaFazendo] {self.user.first_name} ganhou uma nova medalha!'
+                [send_mail(message_to_teachers, '', '', [teacher.email], html_message=message_to_teachers) for teacher in classroom.teachers.all()]
+
+        
         return badge
     
     def register_action(self, action):
@@ -379,6 +388,15 @@ class Topic(models.Model, AdminURLMixin):
     def __str__(self):
         return u"%s" % self.topic_title
     
+    def get_deadlines(self, classrooms=[]):
+        if classrooms:
+            deadlines = self.deadlines.filter(classroom__in= classrooms).all()
+            return deadlines
+        
+        deadlines = self.deadlines.all()
+        return deadlines
+        
+        
     def text_escaped(self):
         return u'%s' % html.unescape(strip_tags(self.topic_content))
     
@@ -391,6 +409,12 @@ class Topic(models.Model, AdminURLMixin):
     
     def sorted_versions(self):
         return self.versions.order_by("-id")
+
+    def has_completed(self, student):
+        questions_count = self.question_set.count()
+        answers_count = Answer.objects.filter(student = student, question__in = self.question_set.all()).count()
+        has_sent_answers_to_all_questions =  answers_count >= questions_count
+        return has_sent_answers_to_all_questions
 
 
     def get_non_approved_versions(self):
@@ -703,6 +727,7 @@ class Classroom(models.Model):
     closed_topics = models.ManyToManyField(Topic, null=True, blank=True, verbose_name="Tópicos Fechados")
     closed_tests = models.ManyToManyField(Test, null=True, blank=True, related_name="closed_for_classrooms", verbose_name="Avaliações Fechadas")
     tests = models.ManyToManyField(Test, null=True, blank=True, verbose_name="Avaliações", related_name="classrooms")
+    teachers = models.ManyToManyField(User, verbose_name = "Professores")
 
     class Meta:
         verbose_name_plural = 'Turmas'
@@ -1263,8 +1288,8 @@ class TestUserRelation(models.Model):
         
 
 class Deadline(models.Model, AdminURLMixin):
-    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, verbose_name="Tópico")
-    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, verbose_name="Tópico", related_name="deadlines")
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE, related_name="deadlines")
     due_datetime = models.DateTimeField()
     
     def __str__(self):
@@ -1276,6 +1301,26 @@ class Deadline(models.Model, AdminURLMixin):
     def datetime_to_str(self):
         formatedDate = self.due_datetime.strftime("%d/%m/%Y às %H:%M:%S")
         return formatedDate
+    
+    def get_remaining_time(self):
+        time_remaining = self.due_datetime - timezone.now()
+        # time_remaining_str = str(time_remaining)
+        days_remaining = time_remaining.days
+        if time_remaining.total_seconds() > 0:
+            days_remaining = time_remaining.days
+            hours_remaining = int(time_remaining.seconds / 3600)
+            minutes_remaining = int((time_remaining.seconds % 3600) / 60)
+            seconds_remaining = int(time_remaining.seconds % 60)
+        else:
+            days_remaining = 0
+            hours_remaining = 0
+            minutes_remaining = 0
+            seconds_remaining = 0
+        
+        time_remaining_str = f"{days_remaining}d {hours_remaining}h {minutes_remaining}m {seconds_remaining}s"
+        
+        
+        return time_remaining_str
 
 
 class Comment(models.Model):

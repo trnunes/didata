@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Virtual Learning Environment</title>
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+	<style>
+		body {
+			background-color: #fff;
+			color: #333;
+			font-family: 'Roboto', sans-serif;
+		}
+
+		.header {
+			background-color: #5e5d5d;
+			height: 50px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 20px;
+			color: #fff;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 10;
+			box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+		}
+
+		.logo {
+			font-size: 24px;
+			font-weight: bold;
+		}
+
+		.sidenav-trigger i {
+			font-size: 28px;
+			cursor: pointer;
+		}
+
+		nav {
+			background-color: #fff;
+			box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+		}
+
+		nav a {
+			color: #333;
+		}
+
+		nav a:hover {
+			background-color: #eee;
+		}
+
+		.cta {
+			background-color: #0f8a5f;
+			color: #fff;
+			padding: 80px 0;
+			text-align: center;
+		}
+
+		.cta h2 {
+			font-weight: 500;
+			font-size: 48px;
+			margin-bottom: 40px;
+			line-height: 1.2;
+		}
+
+		.cta p {
+			font-size: 20px;
+			margin-bottom: 40px;
+		}
+
+		.btn-large {
+			background-color: #fff;
+			color: #0f8a5f;
+			padding: 0 40px;
+			height: 60px;
+			line-height: 60px;
+			border-radius: 30px;
+			font-weight: bold;
+			font-size: 20px;
+			transition: background-color 0.3s ease;
+		}
+
+		.btn-large:hover {
+			background-color: #eee;
+		}
+
+		.feature {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			text-align: center;
+			margin: 40px 0;
+			border-radius: 20px;
+			padding: 40px 20px;
+			box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.2);
+		}
+
+		.feature i {
+			font-size: 48px;
+			margin-bottom: 20px;
+		}
+
+		.feature h3 {
+			font-size: 24px;
+			margin-bottom: 20px;
+		}
+
+		.feature p {
+			font-size: 18px;
+		}
+
+        .feature:nth-child(odd) {
+            background-color: #fff;
+        }
+    
+        .wave-container {
+            position: relative;
+            height: 100px;
+            margin-top: -50px;
+            margin-bottom: 50px;
+            background-color: #fff;
+            overflow: hidden;
+        }
+    
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background-color: #0f8a5f;
+            transform: translate3d(0, 0, 0);
+        }
+    
+        @keyframes move-wave {
+            0% {
+                transform: translate3d(-90px, 0, 0);
+            }
+            100% {
+                transform: translate3d(85px, 0, 0);
+            }
+        }
+    
+        .wave:before {
+            content: "";
+            display: block;
+            position: absolute;
+            top: -3px;
+            left: 0;
+            right: 0;
+            height: 20px;
+            background-color: #fff;
+        }
+    
+        .wave:after {
+            content: "";
+            display: block;
+            position: absolute;
+            top: -6px;
+            left: 0;
+            right: 0;
+            height: 25px;
+            background-color: #0f8a5f;
+        }
+    
+        .wave.one {
+            animation: move-wave 3s;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+        }
+    
+        .wave.two {
+            animation: move-wave 4s;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+            opacity: 0.5;
+        }
+    
+        .wave.three {
+            animation: move-wave 5s;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+            opacity: 0.2;
+        }
+    </style>
+    </head>
+    <body>
+        <header class="header">
+            <div class="logo">Virtual Learning Environment</div>
+            <a href="#" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+        </header>
+        <ul class="sidenav">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Courses</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+        <main>
+            <section class="cta">
+                <h2>Welcome to Virtual Learning Environment</h2>
+                <p>The best way to learn anything, anywhere, anytime.</p>
+                <a href="#" class="btn-large">Get started</a>
+            </section>
+            <section class="features">
+                <div class="container">
+                    <div class="row">
+                        <div class="col s12 m6 l6 feature">
+                            <i class="material-icons">lightbulb_outline</i>
+                            <h3>Innovative</h3>
+                            <p>Our platform is designed to offer innovative ways of learning that are engaging, interactive and effective.</p>
+                        </div>
+                        <div class="col s12 m6 l6 feature">
+                            <i class="material-icons">access_time</i>
+                            <h3>Flexible</h3>
+                            <p>We understand that everyone has different schedules and learning styles, which is why our courses are available 24/7.</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col s12 m6 l6 feature">
+                            <i class="material-icons">group</i>
+                            <h3>Collaborative</h3>
+                            <p>Our platform allows you to collaborate with other students and instructors, making learning a more social experience.</p>
+                        </div>
+                        <div class="col s12 m6 l6 feature">
+                            <i class="material-icons">verified_user</i>
+                            <h3>Trusted</h3>
+                            <p>Our courses are developed and taught by experienced professionals in their respective fields, ensuring high-quality and reliable content.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="about">
+                <div class="container">
+                    <div class="row">
+                        <div class="col s12 m6 l6 about-image">
+                            <img src="https://via.placeholder.com/500x500" alt="About us">
+                        </div>
+                        <div class="col s12 m6 l6 about-text">
+                            <h2>About Us</h2>
+                            <p>We are a team of passionate educators and technologists who believe that learning should be accessible to everyone. We started Virtual Learning Environment to help bridge the gap between traditional education and the modern, digital world. Our mission is to empower individuals to pursue their goals and achieve success through education.</p>
+                            <a href="#" class="btn-large">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="contact">
+                <div class="container">
+                    <div class="row">
+                        <div class="col s12 m6 l6 contact-text">
+                            <h2>Contact Us</h2>
+                            <p>Have a question or suggestion? We'd love to hear from you. Fill out the form below and we'll get back to you as soon as possible.</p>
+                        </div>
+                        <div class="col s12 m6 l6 contact-form">
+                            <form action="">
+                                <div class="input-field">
+                                    <input type="text" id="name">
+                                    <label for="name">Name</label>
+                                </div>
+                                <div class="input-field">
+                                    <input type="email" id="email">
+                                    <label for="email">Email</label>
+                                </div>
+                                <div class="input-field">
+                                    <textarea name="message" id="message" cols="30" rows="10"></textarea>
+                                    <label for="message">Message</label>
+                                </div>
+                                <button type="submit" class="btn-large">Send</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col s12 m6 l6 footer-text">
+                        <p>&copy; 2023 Virtual Learning Environment. All rights reserved.</p>
+                    </div>
+                    <div class="col s12 m6 l6 footer-links">
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms and Conditions</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+        <script>
+        $(document).ready(function(){
+        $('.sidenav').sidenav();
+        });
+        </script>
+        
+        </body>
+        </html>
+            
+    
+        

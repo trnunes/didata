@@ -1,0 +1,20 @@
+{% extends 'mydidata/base.html' %}
+
+{% block content %}
+<div id="content-container" class="container p-none">
+  <h1>{% if classroom %}Editar{% else %}Criar{% endif %} Turma</h1>
+  
+  <form method="post">
+    {{ form.media }}
+    {% csrf_token %}
+    
+    <table>
+    {{ form.as_table }}
+    </table>
+    <script type="text/javascript" src="{% url 'jsi18n' %}"></script>
+    <div>
+    <button class="btn btn-primary" type="submit">{% if classroom %}Alterar{% else %}Criar{% endif %} Turma</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

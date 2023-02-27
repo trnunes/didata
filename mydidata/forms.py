@@ -5,13 +5,16 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import UserChangeForm
 from django.forms.models import ModelMultipleChoiceField
 
-from .models import Reply, ForumPost, Comment, ContentVersion, Team, Topic, Question, Profile, Choice, Discipline, Classroom, Answer, TestUserRelation
+from .models import Deadline, Reply, ForumPost, Comment, ContentVersion, Team, Topic, Question, Profile, Choice, Discipline, Classroom, Answer, TestUserRelation
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.forms import modelform_factory, formset_factory, inlineformset_factory, modelformset_factory
 from django.contrib.auth.models import User
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.forms.widgets import DateTimeInput
+from bootstrap_datepicker_plus.widgets import DateTimePickerInput
+
 
 from django.db.models import Q
 
@@ -45,13 +48,6 @@ class SubscriberForm(UserCreationForm):
         del self.fields['password2']
     
 
-    # disciplines = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple)
-    # def __init__(self,*args,**kwargs):
-    #     print kwargs
-    #     self.classroom = kwargs.pop('classroom')
-    #     super(SubscriberForm,self).__init__(*args,**kwargs)
-    #     self.fields['disciplines'] = forms.MultipleChoiceField(required=True, widget=forms.CheckboxSelectMultiple, choices=self.classroom.disciplines.all().values_list('id', 'name'))
-
 class UserUpdateForm(UserChangeForm):
     def __init__(self, *args, **kwargs):
         super(UserUpdateForm, self).__init__(*args, **kwargs)
@@ -77,10 +73,35 @@ class UserUpdateForm(UserChangeForm):
             code='duplicate_username',
         )
 
+class DeadlineForm(forms.ModelForm):
+    classroom = forms.ModelChoiceField(
+        queryset=Classroom.objects.all(),
+        widget=forms.RadioSelect(),
+        required=True
+        
+    )
+    topic = forms.ModelChoiceField(
+        queryset=Topic.objects.all(),
+        widget=forms.HiddenInput,
+        required=True
+    )
+
+
+    class Meta:
+        model = Deadline
+        fields = ('due_datetime', 'topic', 'classroom',)
+        widgets = {
+            'due_datetime': DateTimePickerInput(),
+
+
+        }
+
 class TopicForm(forms.ModelForm):
+
+
     class Meta:
         model = Topic
-        fields = ('topic_title', 'label','topic_content', 'order')
+        fields = ('topic_title', 'label','topic_content', 'order', )
         widgets = {
             'topic_title': forms.TextInput(
                 attrs={
@@ -96,7 +117,7 @@ class TopicForm(forms.ModelForm):
                     'class':'gi-form-addr form-control'
                 }
             ),
-            
+
         }
     
     def is_valid(self):
@@ -106,7 +127,9 @@ class TopicForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         if kwargs.get("owner", None):
             self.owner = kwargs.pop("owner")
-        super(TopicForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+
         # self.fields['owner'] =  forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=User.objects.all(), label="Selecione o dono do tópico", empty_label=None, )
 
     def save(self, *args, **kwargs):
@@ -115,7 +138,6 @@ class TopicForm(forms.ModelForm):
         instance.save()
         if not instance.versions.exists():
             first_version = instance.versions.create(content=instance.topic_content, approved=True, topic=instance, user = instance.owner)
-        
         
         return instance
 
@@ -369,17 +391,7 @@ class AnswerForm(forms.ModelForm):
 
         else:
             self.fields.pop("team", None)
-            
-
-    # def clean_choice(self):
-    #     question = self.instance.question
-    #     choice = question.choices.get(pk=self.cleaned_data['choice'])
-    #     print("Selected choice: ", choice.choice_text)
-    #     if not choice:
-    #         raise ValidationError(_("A resposta selecionada não existe mais!"))
-        
-    #     return choice
-
+    
     def clean_assignment_file(self):
 
         file = self.cleaned_data.get("assignment_file")
@@ -428,44 +440,6 @@ class AnswerForm(forms.ModelForm):
         
         self.instance.save()
         return self.instance
-# class SuperuserAnswerForm(forms.ModelForm):
-    # status = forms.MultipleChoiceField(choices=Answer.STATUS_CHOICES, widget=forms.CheckboxSelectMultiple()),
-    # class Meta:
-        # model = Answer
-        # fields = ['answer_text', 'assignment_file']
-# 
-        # widgets = {
-            # 'answer_text': forms.CharField(widget=CKEditorUploadingWidget(), label="Resposta", required=False),
-# 
-        # }
-        # labels = {
-            # 'answer_text': 'Resposta Aqui',
-        # }
-# 
-        # fields += ['feedback', 'status', 'grade']
-        # 
-        # 
-        # labels['feedback'] = 'Correções Aqui'
-        # 
-    # def clean_grade(self):
-        # if float(self.cleaned_data.get("status")) == Answer.CORRECT:
-            # self.cleaned_data["grade"] = 1.0
-# 
-            # 
-            # 
-        # if float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT:
-            # self.cleaned_data["grade"] = 0.8
-        # 
-        # if float(self.cleaned_data.get("status")) == Answer.ALMOST_INCORRECT:
-            # self.cleaned_data["grade"] = 0.4
-        # 
-        # if float(self.cleaned_data.get("status")) == Answer.INCORRECT:
-            # self.cleaned_data["grade"] = 0.0
-        # 
-        # return self.cleaned_data["grade"]
-# 
-    # def is_valid(self):
-        # return True
 
 class SuperuserAnswerFormSimplified(forms.ModelForm):
     status = forms.ChoiceField(widget=forms.RadioSelect, choices=Answer.EVAL_CHOICES)
@@ -475,48 +449,8 @@ class SuperuserAnswerFormSimplified(forms.ModelForm):
         fields = [ "assignment_file", 'feedback', "status", 'grade', 'graphic_annotations' ]
         field_order = ["feedback", "status", "grade"]
         labels = {}
-        # labels = {
-            # 'answer_text': 'Resposta Enviada',
-        # }
-        # widgets = {
-            # 'answer_text': forms.Textarea(attrs={'cols': 80, 'rows': 20}),
-        # }
         labels['feedback'] = 'Correções Aqui'
     
-    # def clean_grade(self):
-        # print("Cleaning data: ", float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT)
-        # if float(self.cleaned_data.get("status")) == Answer.CORRECT:
-            # self.cleaned_data["grade"] = 1.0
-            # self.ins
-            # 
-            # 
-        # if float(self.cleaned_data.get("status")) == Answer.ALMOST_CORRECT:
-            # self.cleaned_data["grade"] = 0.8
-        # 
-        # if float(self.cleaned_data.get("status")) == Answer.ALMOST_INCORRECT:
-            # self.cleaned_data["grade"] = 0.4
-        # 
-        # if float(self.cleaned_data.get("status")) == Answer.INCORRECT:
-            # self.cleaned_data["grade"] = 0.0
-        # 
-        # return self.cleaned_data["grade"]
-                
-    # def clean_status(self):
-        # print("Cleaning status")
-        # if self.cleaned_data.get("status") == Answer.CORRECT:
-            # self.cleaned_data["grade"] = 0
-            # 
-            # 
-        # if self.cleaned_data.get("status") == Answer.ALMOST_CORRECT:
-            # return 0.8
-        # 
-        # if self.cleaned_data.get("status") == Answer.ALMOST_INCORRECT:
-            # return 0.4
-        # 
-        # if self.cleaned_data.get("status") == Answer.INCORRECT:
-            # return 0.2
-        # 
-        # return self.cleaned_data.get("status")
     def is_valid(self):
         return True
 
@@ -574,3 +508,35 @@ class TeamForm(forms.ModelForm):
         team.members.set(self.cleaned_data['members'])
         team.save()
         return team
+
+class ClassroomForm(forms.ModelForm):
+    class Media:
+        # Django also includes a few javascript files necessary
+        # for the operation of this form element. You need to
+        # include <script src="/admin/jsi18n"></script>
+        # in the template.
+        css = {
+                'all': ('/static/admin/css/widgets.css',),
+            }
+        js = ('/admin/jsi18n',)
+
+    class Meta:
+        model = Classroom
+        fields = ['name', 'academic_site_id', 'students', 'disciplines', 'teachers']
+        widgets = {
+            'students': forms.CheckboxSelectMultiple(),
+            'disciplines': forms.CheckboxSelectMultiple()
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super(ClassroomForm, self).__init__(*args, **kwargs)
+        self.fields['students'] = forms.ModelMultipleChoiceField(queryset=User.objects.all(), widget=UserMultipleChoiceField("Estudantes", is_stacked=False), required=False)
+        self.fields['disciplines'] = forms.ModelMultipleChoiceField(queryset=Discipline.objects.all(), widget=UserMultipleChoiceField("Disciplinas", is_stacked=False))
+        self.fields['teachers'] = forms.ModelMultipleChoiceField(queryset=User.objects.all(), widget=UserMultipleChoiceField("Professores Responsáveis", is_stacked=False))
+    
+    def save(self, *args, **kwargs):
+        classroom = super(ClassroomForm, self).save(*args, **kwargs)
+        classroom.students.set(self.cleaned_data['students'])
+        classroom.disciplines.set(self.cleaned_data['disciplines'])
+        classroom.save()
+        return classroom

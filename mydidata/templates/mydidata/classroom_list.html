@@ -1,0 +1,14 @@
+{% extends 'mydidata/base.html' %}
+{% block title %}Nova Turma{% endblock title %}
+
+{% block content %}
+  <h1>Classrooms</h1>
+  <ul>
+    {% for classroom in classrooms %}
+      <li><a href="{% url 'mydidata:classroom_detail' uuid=classroom.uuid %}">{{ classroom.name }}</a></li>
+    {% empty %}
+      <li>No classrooms yet.</li>
+    {% endfor %}
+  </ul>
+  <a href="{% url 'mydidata:classroom_create' %}">Create a new classroom</a>
+{% endblock %}

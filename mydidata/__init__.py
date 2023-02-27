@@ -1,4 +1,8 @@
 
+from .celery import app as celery_app
+
+__all__ = ['celery_app']
+
 def autodiscover():
     """
     Autodiscover tasks.py files in much the same way as admin app

@@ -1,7 +1,9 @@
 from django.conf.urls import url, include
+from django.urls import path
+
 from mydidata import views
 from django.contrib.auth import views as auth_views
-from mydidata.views import HomePage, TopicList, DisciplineList, ClassList, ResourceRoomList
+from mydidata.views import HomePage, TopicList, DisciplineList, ClassList, ResourceRoomList, Deadline
 
 app_name = 'mydidata'
 urlpatterns = [
@@ -122,5 +124,18 @@ urlpatterns = [
     url(r'^forum/reply/delete/(?P<id>[0-9]+)/$',views.reply_delete, name='reply_delete'),
     url(r'^forum/reply/detail/(?P<id>[0-9]+)/$',views.reply_detail, name='reply_detail'),
     url(r'^forum/reply/create-form/(?P<post_id>[0-9]+)/$',views.reply_create_form, name='reply_create_form'),
+
+    url(r'^classroom/create/', views.classroom_create, name='classroom_create'),
+    
+    url(r'^classroom/(?P<uuid>[\w-]+)/update/', views.classroom_update, name='classroom_update'),
+    url(r'^classroom/(?P<uuid>[\w-]+)/delete/', views.classroom_delete, name='classroom_delete'),
+    
+    url(r'^get_classroom_diagnostics/(?P<class_id>[\w-]+)/$', views.get_classroom_diagnostics, name='get_classroom_diagnostics'),
+
+    url(r'^record_duration/(?P<topic_id>[0-9]+)/$',views.record_duration, name='record_duration'),
+
+    url(r'^create-deadline/(?P<topic_id>[0-9]+)/$', views.create_deadline, name='create_deadline'),
+    url(r'^edit-deadline/(?P<pk>\d+)/$', views.edit_deadline, name='edit_deadline'),
+    url(r'^delete-deadline/(?P<deadline_id>\d+)/$', views.delete_deadline, name='delete_deadline'),
 
 ]

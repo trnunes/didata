@@ -25,6 +25,20 @@
         {% csrf_token %}
         {{form.media}}
         {{ form.as_p }}
+        <table>
+            {{ form.deadline.management_form }}
+            {% for form in form.deadline.forms %}
+                <tr>
+                    {% for field in form.visible_fields %}
+                        <td>
+                            {{ field.errors }}
+                            {{ field }}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+
 
         <input id="gi-form-submit" class="btn btn-primary" type="submit" value="Salvar">
     </form>

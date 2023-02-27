@@ -7,14 +7,11 @@
         <div id="al-container" class="side-p">
             <div id="al-control">
                 <h3 class="ad-mh">Gerência de Turmas
-                    <span class="pull-right">
-                        <a href=""
-                           class="btn btn-link p-r-none">+ Criar Turma</a>
-                    </span>
                 </h3>
                 {# Account Search Form #}
             </div>
             {# List of Accounts #}
+            <a class="btn btn-lg btn-primary"href="{% url 'mydidata:classroom_create' %}">Criar Nova Turma</a>
             {% for classroom in class_list %}
             <div class="mt-3 py-3 px-3 bg-white shadow border border-gray-100">
     
@@ -29,6 +26,8 @@
                     <a type="button" class="btn btn-primary" href="{% url 'mydidata:tests' classroom.id %}">Avaliações</a>
                 </div>
             </div>
+            {%empty%}
+                <h4>Não há turmas cadastradas para você ainda</h4>
             {%endfor%}
 
             {# Pagination Section #}

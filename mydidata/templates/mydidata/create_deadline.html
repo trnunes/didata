@@ -1,0 +1,14 @@
+{% extends 'mydidata/base.html' %}
+
+{% block content %}
+<div id="content-container" class="container p-none">
+  <h1>Definição de Prazo</h1>
+  <h2>{{form.topic}}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.media }}
+    {{ form.as_p }}
+    <button type="submit">Salvar</button>
+  </form>
+</div>
+{% endblock %}

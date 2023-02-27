@@ -27,11 +27,27 @@
                 <div id="gi-container" class="ad-container2">
                     
                     
-                    <a href="/mydidata/version/{{topic.id}}/"> Editar </a>
+                    <a href={%if user.is_superuser%}"/mydidata/topic_edit/{{topic.uuid}}/" {%else%}"/mydidata/version/{{topic.id}}/"{%endif%}> Editar </a>
                     | <a href="/mydidata/version_list/{{topic.id}}/"> Versões </a>
                     | <a href="{% url 'mydidata:post_list' topic.id%}"> Fórum de Discussão </a>
-                    
-                    
+                    <h3>Prazos para Envio</h3>
+                    {%if user.is_superuser%}
+                    <a href="{% url 'mydidata:create_deadline' topic.id %}" class="btn btn-danger">Novo Prazo</a>
+                    {%endif%}
+                    <hr/>
+                    {%for deadline_remaining_time in deadlines%}
+                        
+                        - <span style="color: red; font-size: 14pt;">{{deadline_remaining_time.0}}</span>
+                        <br/>
+                        &nbsp;&nbsp;&nbsp; &nbsp; <span style="color: red">Vencimento em: <strong>{{deadline_remaining_time.1}}</strong></span>
+                        <br/><br/>
+                        &nbsp;&nbsp;&nbsp; &nbsp; <strong style="color:red"> Tempo Restante: {{deadline_remaining_time.2}}</strong>
+                        {%if user.is_superuser%}
+                            (<a href="{%url 'mydidata:edit_deadline' deadline_remaining_time.3%}">Editar</a> | <a href="{%url 'mydidata:delete_deadline' deadline_remaining_time.3%}">Remover</a>)
+                        {%endif%}
+                        <hr/>
+
+                    {%endfor%}
                     {% include 'mydidata/topic_item_view.html' %}
                     
                 </div>
@@ -106,5 +122,33 @@
 <script type="text/javascript" src="/static/ckeditor/ckeditor-init.js" data-ckeditor-basepath="/static/ckeditor/ckeditor/" id="ckeditor-init-script"></script>
 
 <script type="text/javascript" src="/static/ckeditor/ckeditor/ckeditor.js"></script>
+<script>
+    function formatDuration(duration) {
+        var seconds = Math.floor(duration / 1000);
+        var minutes = Math.floor(seconds / 60);
+        seconds = seconds % 60;
+        return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+    }
+
+    var startTime = new Date().getTime();
+    
+    window.addEventListener('beforeunload', function() {
+    var endTime = new Date().getTime();
+    var duration = endTime - startTime;
+    // Send an AJAX request to your Django view to record the duration
+    debugger;
+    $.ajax({
+      url: '/mydidata/record_duration/{{topic.id}}/',
+      type: 'POST',
+      data: {'duration': formatDuration(duration), 'topic_title': '{{topic.topic_title}}'},
+      success: function() {
+        // Duration recorded successfully
+      },
+      error: function() {
+        // Error recording the duration
+      }
+    });
+  });
+</script>
 
 {% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ classroom.name }}</h1>
+  <p>External ID: {{ classroom.external_id }}</p>
+  <h2>Students</h2>
+  <ul>
+    {% for student in classroom.students.all %}
+      <li>{{ student.username }}</li>
+    {% empty %}
+      <li>No students in this classroom.</li>
+    {% endfor %}
+  </ul>
+  <h2>Disciplines</h2>
+  <ul>
+    {% for discipline in classroom.disciplines.all %}
+      <li>{{ discipline.name }}</li>
+    {% empty %}
+      <li>No disciplines in this classroom.</li>
+    {% endfor %}
+  </ul>
+  <a href="{% url 'classroom_update' classroom.uuid %}">Update this classroom</a>
+  <form method="post" action="{% url 'classroom_delete' classroom.uuid %}">
+    {% csrf_token %}
+    <button type="submit">Delete this classroom</button>
+  </form>
+{% endblock %}
