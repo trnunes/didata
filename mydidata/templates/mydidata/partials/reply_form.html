@@ -13,7 +13,7 @@
         </div>
     {% endfor %}
 {% endif %}
-    <form method="POST">
+    <form id="reply_form" method="POST">
         {% csrf_token %}
         {{ form.media}}
         {{ form.as_p }}
@@ -45,6 +45,11 @@
         event.detail.parameters['{{ form.content.html_name }}'] = element.getEditor().getData();
         debugger;
     })
+
+    const element = document.getElementById('reply_form');
+
+    // scroll to the element
+    element.scrollIntoView({ behavior: 'smooth' });
 </script>
 
 {%endblock%}

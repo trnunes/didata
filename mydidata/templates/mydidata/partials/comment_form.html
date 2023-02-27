@@ -1,5 +1,5 @@
 <div hx-target="#comments_area" hx-swap="outerHTML" class="">
-    <form method="POST">
+    <form id="comment_form" method="POST">
         {% csrf_token %}
         {{ form.media}}
         {{ form.as_p }}
@@ -13,7 +13,7 @@
                 Cancelar
             </button>
         {% else %}
-            <button type="submit" hx-post="{% url 'mydidata:comment_create' topic.id %}"
+            <button class="btn btn-primary" id="submit_comment" type="submit" hx-post="{% url 'mydidata:comment_create' topic.id %}"
                 >
                 Enviar
             </button>
@@ -29,6 +29,11 @@
         event.detail.parameters['{{ form.body.html_name }}'] = element.getEditor().getData();
         debugger;
     })
+
+    const element = document.getElementById('comment_form');
+
+    // scroll to the element
+    element.scrollIntoView({ behavior: 'smooth' });
 </script>
 
 {%endblock%}
