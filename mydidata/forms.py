@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms.widgets import DateTimeInput
 from bootstrap_datepicker_plus.widgets import DateTimePickerInput
-
+import os
 
 from django.db.models import Q
 
@@ -319,7 +319,9 @@ class AnswerFormUploadOnly(forms.ModelForm):
         if question.file_types_accepted and not file_type in question.file_types_accepted and not "todos" in question.file_types_accepted:
             raise ValidationError(_("Arquivo de resposta inválido para esta questão. Apenas os tipos %(tipos)s são aceitos!"), 
                 params = {'tipos': str(question.file_types_accepted)},
-            )        
+            )    
+        new_file_name = f'{question.uuid}_{self.user.first_name}.{file_type}'
+        file.name = new_file_name
         return file
 
 class AnswerForm(forms.ModelForm):
@@ -407,6 +409,8 @@ class AnswerForm(forms.ModelForm):
             raise ValidationError(_("Arquivo de resposta inválido para esta questão. Apenas os tipos %(tipos)s são aceitos!"), 
                 params = {'tipos': str(self.question.file_types_accepted)},
             )
+        new_file_name = f'{self.question.uuid}_{self.user.first_name}.{file_type}'
+        file.name = new_file_name
         return file
     
     def clean_answer_text(self):

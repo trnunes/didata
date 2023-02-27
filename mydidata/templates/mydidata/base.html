@@ -45,56 +45,12 @@
         <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3262579547697172" -->
      <!-- crossorigin="anonymous"></script> -->
         <script src="https://unpkg.com/htmx.org@1.8.5"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
         <!-- <script data-ad-client="pub-3262579547697172" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> -->
         <!-- <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/fontawesome.min.css" rel="stylesheet"> -->
     </head>
     {% load badge_extras %}
     <body>
-        {% block footer_javascript %}
-    {% block footer_javascript_site %}
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <!-- <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script> -->
-    <script src="/static/js/popper.min.js"></script>
-    <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
-    <script src="/static/js/holder.min.js"></script>
-	<script type="text/javascript" src="/static/js/jquery.min.js"></script>
-    <script type="text/javascript" src="/static/js/jquery.init.js"></script>
-	    <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
-	
-        <!-- <script src="/static/js/jquery.min.js"></script>
-        <script src="/static/js/bootstrap.min.js"></script> -->
-        <script src="/static/js/mydidata.js"></script>
-        <script src="/static/ckeditor/ckeditor/plugins/codesnippet/lib/highlight/highlight.pack.js"></script>
-        
-        {# javascript to format all code snippets#}
-        <script>
-            snippets = $('pre code');   
-            snippets.each(function(i){hljs.highlightBlock(snippets[i]);});
-            function centerOnViewport(){
-            var scrollLeft = window.scrollX;
-
-            var scrollTop = window.scrollY;
-            // Adjust the left position of the element
-            debugger;
-            var element = document.getElementById("badge-container");
-            if (element){
-                element.style.left = "calc(50% + " + scrollLeft + "px)";
-                element.style.top = "calc(30% + " + scrollTop + "px)";
-
-            }
-            
-            
-            
-
-        }
-        centerOnViewport();
-
-        </script>
-        
-    {% endblock footer_javascript_site %}
-    {% block footer_javascript_section %}{% endblock footer_javascript_section %}
-    {% block footer_javascript_page %}{% endblock footer_javascript_page %}
-    {% endblock footer_javascript %}
         <script>
             document.body.addEventListener('htmx:configRequest', (event)=> {
                 event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}'
@@ -209,5 +165,50 @@
   <!-- Footer -->
     </body>
     {# Set of blocks that can be used to display JavaScript files #}
+    {% block footer_javascript %}
+        {% block footer_javascript_site %}
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <!-- <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script> -->
+        <script src="/static/js/popper.min.js"></script>
+        <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
+        <script src="/static/js/holder.min.js"></script>
+		<script type="text/javascript" src="/static/js/jquery.min.js"></script>
+        <script type="text/javascript" src="/static/js/jquery.init.js"></script>
+        <script type="text/javascript" src="/static/js/bootstrap.min.js"></script>
+		
+            <!-- <script src="/static/js/jquery.min.js"></script>
+            <script src="/static/js/bootstrap.min.js"></script> -->
+        <script src="/static/js/mydidata.js"></script>
+        <script src="/static/ckeditor/ckeditor/plugins/codesnippet/lib/highlight/highlight.pack.js"></script>
+        
+        {# javascript to format all code snippets#}
+        <script>
+            snippets = $('pre code');   
+            snippets.each(function(i){hljs.highlightBlock(snippets[i]);});
+            function centerOnViewport(){
+            var scrollLeft = window.scrollX;
+
+            var scrollTop = window.scrollY;
+            // Adjust the left position of the element
+            debugger;
+            var element = document.getElementById("badge-container");
+            if (element){
+                element.style.left = "calc(50% + " + scrollLeft + "px)";
+                element.style.top = "calc(30% + " + scrollTop + "px)";
+
+            }
+            
+            
+            
+
+        }
+        centerOnViewport();
+
+        </script>
+            
+        {% endblock footer_javascript_site %}
+        {% block footer_javascript_section %}{% endblock footer_javascript_section %}
+        {% block footer_javascript_page %}{% endblock footer_javascript_page %}
+    {% endblock footer_javascript %}
 </html>
 '
