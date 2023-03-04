@@ -319,9 +319,13 @@ class AnswerFormUploadOnly(forms.ModelForm):
         if question.file_types_accepted and not file_type in question.file_types_accepted and not "todos" in question.file_types_accepted:
             raise ValidationError(_("Arquivo de resposta inválido para esta questão. Apenas os tipos %(tipos)s são aceitos!"), 
                 params = {'tipos': str(question.file_types_accepted)},
-            )    
-        new_file_name = f'{question.uuid}_{self.user.first_name}.{file_type}'
-        file.name = new_file_name
+            )
+        
+        if file and f"__{self.instance.id}__" not in file.name:
+            file_name = file.name
+            file_name_without_extension = file_name.split(".")[0]
+            file.name = file_name_without_extension +  f"__{self.instance.id}__" + "." +  file_name.split(".")[-1]    
+        
         return file
 
 class AnswerForm(forms.ModelForm):
@@ -409,8 +413,11 @@ class AnswerForm(forms.ModelForm):
             raise ValidationError(_("Arquivo de resposta inválido para esta questão. Apenas os tipos %(tipos)s são aceitos!"), 
                 params = {'tipos': str(self.question.file_types_accepted)},
             )
-        new_file_name = f'{self.question.uuid}_{self.user.first_name}.{file_type}'
-        file.name = new_file_name
+        if file and f"__{self.instance.id}__" not in file.name:
+            file_name = file.name
+            file_name_without_extension = file_name.split(".")[0]
+            file.name = file_name_without_extension +  f"__{self.instance.id}__" + "." +  file_name.split(".")[-1]
+
         return file
     
     def clean_answer_text(self):

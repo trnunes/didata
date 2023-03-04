@@ -140,7 +140,7 @@
                     <div class="overlay" onclick="this.style.display = 'none'">
                         <div id="badge-container">
                             <p>{{badge_name}}</p>
-                            <img  onclick="this.style.animation = 'fadeout-and-spin 3s ease-in-out forwards'" src="{{badge_path}}" alt="Second slide">
+                            <img  onclick="this.style.display = 'none';" src="{{badge_path}}" alt="Second slide">
                             {% if user.is_authenticated%}
                                 <p> <a href="{{user.profile.get_absolute_url}}">Ver Conquistas!</a></p>
                             {% endif %}

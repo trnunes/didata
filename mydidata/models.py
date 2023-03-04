@@ -1135,9 +1135,11 @@ class Answer(models.Model):
         
     def file_link(self):
          if self.assignment_file:
-             return "<a href='%s' target=\"_blank\">Baixar o Arquivo da Resposta</a>" % (self.assignment_file.url,)
+            print("FILE URL: ", self.assignment_file.url)
+
+            return "<a href='%s' target=\"_blank\">Baixar o Arquivo da Resposta</a>" % (self.assignment_file.url,)
          else:
-             return "Não possui arquivo"
+            return "Não possui arquivo"
     
     file_link.allow_tags = True
 

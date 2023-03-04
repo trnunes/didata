@@ -18,6 +18,8 @@
             <a type="button" href="{{ classroom.get_progress_url }}" class="btn btn-primary" href="">Progresso</a>
         
             <a type="button" class="btn btn-primary" href="{% url 'mydidata:tests' classroom.id %}">Avaliações</a>
+            
+            <a type="button" id="gerar_analise" class="btn btn-primary" href="{% url 'mydidata:get_classroom_diagnostics' classroom.id %}">Gerar Análise</a>
         </div>
 		<ul class="list-group">
 
@@ -33,3 +35,9 @@
         </ul>
     </div>
 {% endblock %}
+
+{% block footer_javascript_page %}
+    <script>
+        $("#gerar_analise").on("click", function(e){alert("Análise sendo gerada! Em breve você receberá por email ;-)");})
+    </script>
+{% endblock footer_javascript_page %}

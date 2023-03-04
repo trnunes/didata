@@ -18,7 +18,7 @@
                         {% if question == answer.question%}
                             <a class="btn btn-success btn-lg" role="button" href="{{answer_set.get_detail_url}}">Questão {{forloop.counter}}</a>
                         {% elif answer_sent %}
-                            <a class="btn btn-success btn-sm"href="{{answer_set.get_detail_url}}">Questão {{forloop.counter}}</a>
+                            <a class="btn btn-success btn-sm"href="{{answer_sent.get_detail_url}}">Questão {{forloop.counter}}</a>
                         {% else %}
                             <a class="btn btn-secondary btn-sm"href="{{question.get_answer_url}}">Questão {{forloop.counter}}</a>
                         {% endif %}
