@@ -2,6 +2,20 @@
 # https://www.npmjs.com/package/@renderinc/heroku-import
 # Schema documented at https://render.com/docs/yaml-spec
 services:
+ - type: worker
+    name: queue
+    region: ohio
+    env: python
+    buildCommand: "pipenv install"
+    startCommand: "celery --app tasks worker --loglevel info --concurrency 4"
+    autoDeploy: false
+    envVars:
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: celery-redis
+          type: redis
+          property: connectionString
+  
   - type: web # valid values: https://render.com/docs/yaml-spec#type
     name: aprendafazendo
     env: docker # valid values: https://render.com/docs/yaml-spec#environment
@@ -46,10 +60,21 @@ services:
         value: /usr/local/bin:/usr/bin:/bin:/app/vendor/
       - key: S3_BUCKET_NAME # Imported from Heroku app
         value: mydidata2
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: celery-redis
+          type: redis
+          property: connectionString
       - key: DATABASE_URL # Render PostgreSQL database
         fromDatabase:
           name: postgresql-encircled-74224
           property: connectionString
+ - type: redis
+    name: celery-redis
+    region: ohio
+    plan: starter # we choose a plan with persistence to ensure tasks are not lost upon restart
+    maxmemoryPolicy: noeviction # recommended policy for queues
+    ipAllowList: [] # only allow internal connections    
 
 databases: # Render PostgreSQL database
   - name: postgresql-encircled-74224
