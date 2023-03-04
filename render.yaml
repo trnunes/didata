@@ -2,7 +2,7 @@
 # https://www.npmjs.com/package/@renderinc/heroku-import
 # Schema documented at https://render.com/docs/yaml-spec
 services:
- - type: worker
+  - type: worker
     name: queue
     region: ohio
     env: python
@@ -69,7 +69,7 @@ services:
         fromDatabase:
           name: postgresql-encircled-74224
           property: connectionString
- - type: redis
+  - type: redis
     name: celery-redis
     region: ohio
     plan: starter # we choose a plan with persistence to ensure tasks are not lost upon restart
