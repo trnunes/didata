@@ -7,7 +7,7 @@ services:
     region: ohio
     env: python
     buildCommand: "pipenv install"
-    startCommand: "celery --app tasks worker --loglevel info --concurrency 4"
+    startCommand: "worker: celery -A mydidata worker -l info --concurrency 4"
     autoDeploy: false
     envVars:
       - key: CELERY_BROKER_URL
