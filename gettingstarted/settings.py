@@ -141,12 +141,16 @@ print("REDIS CONN: ", CELERY_RESULT_BACKEND)
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": REDIS_URL,
+        "LOCATION": os.environ.get('REDIS_URL'),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "CONNECTION_POOL_KWARGS": {
+                "ssl_cert_reqs": None
+            },
         }
     }
 }
+
 nltk.data.path.append('./nltk_data/')
 
 # Internationalization
