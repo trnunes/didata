@@ -15,6 +15,7 @@ import django_heroku
 from whitenoise import WhiteNoise
 import nltk
 from django.conf.global_settings import DATETIME_INPUT_FORMATS
+import redis
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -130,9 +131,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+redis_client = redis.from_url(REDIS_URL)
 
-BROKER_URL = os.environ.get('REDIS_URL')
-CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL')
+BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
 print("REDIS CONN: ", CELERY_RESULT_BACKEND)
 
 nltk.data.path.append('./nltk_data/')
