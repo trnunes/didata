@@ -133,6 +133,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 BROKER_URL = os.environ.get('REDIS_URL')
 CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL')
+print("REDIS CONN: ", CELERY_RESULT_BACKEND)
 
 nltk.data.path.append('./nltk_data/')
 
