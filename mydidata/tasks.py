@@ -11,7 +11,7 @@ import codecs
 import re
 import unidecode
 from django.conf import settings
-from background_task import background
+# from background_task import background
 from .models import Answer, Profile
 import requests
 from django.shortcuts import get_object_or_404
@@ -148,7 +148,7 @@ def detect_text_uri(uri):
     return full_text
 
 
-@background(schedule=60)
+# @background(schedule=60)
 def count_words(text):
     return len(text.split(" "))
 
@@ -174,7 +174,7 @@ def detect_copies(answers):
 
 
 
-@background(schedule=0)
+# @background(schedule=0)
 def correct_answers(answers_list):
 
 

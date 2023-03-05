@@ -12,7 +12,7 @@ import itertools
 import pickle
 import pandas as pd
 from django.conf import settings
-from django_rq import job
+# from django_rq import job
 
 def read_lines(path, storage, include_header=False, useIOWrapper=True):
     
@@ -71,7 +71,7 @@ def check_spell(answers_matrix):
     return csv_content
 
 
-@job
+# @job
 def assess(answers_matrix, grade_file_path="", phrases_per_question=[], score_function=score_keywords):
     # global should_log 
     # answers_matrix = read_lines(answers_file_path, default_storage, True)

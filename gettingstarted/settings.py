@@ -29,7 +29,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'CHANGE_ME!!!! (P.S. the SECRET_KEY environment variable will be used, if set, instead).'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
+DEBUG = True
 SENDGRID_SANDBOX_MODE_IN_DEBUG = False
 ALLOWED_HOSTS = []
 
@@ -108,7 +108,7 @@ import dj_database_url
 DATABASES['default'] =  dj_database_url.config()
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = True
+# SECURE_SSL_REDIRECT = True
 # Allow all host headers
 ALLOWED_HOSTS = ['*']        
 
@@ -130,38 +130,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-RQ_QUEUES = {
-    'default': {
-        'HOST': 'localhost',
-        'PORT': 6379,
-        'DB': 0,
-        'DEFAULT_TIMEOUT': 360,
-    },
-    'with-sentinel': {
-        'SENTINELS': [('localhost', 26736), ('localhost', 26737)],
-        'MASTER_NAME': 'redismaster',
-        'DB': 0,
-        'PASSWORD': 'secret',
-        'SOCKET_TIMEOUT': None,
-        'CONNECTION_KWARGS': {
-            'socket_connect_timeout': 0.3
-        },
-    },
-    'high': {
-        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'), # If you're on Heroku
-        'DEFAULT_TIMEOUT': 500,
-    },
-    'default': {
-        'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'), # If you're on Heroku
-        'DEFAULT_TIMEOUT': 500,
-    },
-
-    'low': {
-        'HOST': 'localhost',
-        'PORT': 6379,
-        'DB': 0,
-    }
-}
 
 BROKER_URL = os.environ.get('REDIS_URL')
 CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL')
