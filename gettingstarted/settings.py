@@ -138,6 +138,15 @@ BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
 print("REDIS CONN: ", CELERY_RESULT_BACKEND)
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
 nltk.data.path.append('./nltk_data/')
 
 # Internationalization
