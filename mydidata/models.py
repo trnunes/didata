@@ -984,10 +984,10 @@ class Answer(models.Model):
 
     EVAL_CHOICES = [
         (CORRECT, 'Excelente! (1.0)'),
-        (ALMOST_CORRECT, 'Quase Perfeita (0.6 - 0.8)'),
-        (ACCEPTABLE, 'Aceitável (0.3 - 0.6)'),
-        (ALMOST_INCORRECT, 'Apresenta muitos erros (0.1 - 0.3)'),
-        (INCORRECT, 'Errada (0.0)'),
+        (ALMOST_CORRECT, 'Quase Perfeita (0.8 - 0.9)'),
+        (ACCEPTABLE, 'Apresenta erros, porém OK (0.6 - 0.7)'),
+        (ALMOST_INCORRECT, 'Apresenta muitos erros (0.4 - 0.5)'),
+        (INCORRECT, 'Errada (0.0 - 0.3)'),
     ]
 
     answer_text = RichTextUploadingField(null=True, blank=True, verbose_name="Texto")
@@ -1000,7 +1000,7 @@ class Answer(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, verbose_name="Equipe", related_name='answers', null=True, blank=True)
     test = models.ForeignKey(Test, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Avaliação", related_name="answers")
     choice = models.ForeignKey(Choice, null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name="Alternativa")
-    graphic_annotations = models.TextField(blank=True)
+    graphic_annotations = models.TextField(blank=True, null=True)
     
     
 
@@ -1124,15 +1124,28 @@ class Answer(models.Model):
         if status == self.CORRECT:
             self.grade = 1.0
         if status == self.ALMOST_CORRECT:
-            self.grade = 0.8
+            self.grade = 0.9
         if status == self.ACCEPTABLE:
-            self.grade = 0.6
+            self.grade = 0.7
         if status == self.ALMOST_INCORRECT:
-            self.grade = 0.3
+            self.grade = 0.4
         if status == self.INCORRECT:
             self.grade = 0.0
         self.save()
-        
+    
+    
+    def get_status(self):
+        if self.grade == 1.0:
+            return self.CORRECT
+        elif self.grade >= 0.8:
+            return self.ALMOST_CORRECT
+        elif self.grade >= 0.6:
+            return self.ACCEPTABLE
+        elif self.grade >= 0.4:
+            return self.ALMOST_INCORRECT
+        elif self.grade >= 0.0:
+            return self.INCORRECT
+    
     def file_link(self):
          if self.assignment_file:
             print("FILE URL: ", self.assignment_file.url)

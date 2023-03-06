@@ -789,7 +789,8 @@ def graphic_feedback(request, answer_id):
 def feedback(request, answer_id):
     answer = get_object_or_404(Answer, pk=answer_id)
     question = answer.question
-    form = SuperuserAnswerFormSimplified(instance=answer, initial={"status": Answer.CORRECT, "grade": 1.0}, )
+
+    form = SuperuserAnswerFormSimplified(instance=answer, initial={"status": answer.get_status, "grade": answer.grade}, )
     classroom = Classroom.objects.filter(students__id=answer.student.id).first()
 
     next_answer_for_student_url = reverse('mydidata:class_progress', args=(classroom.id,))
@@ -804,17 +805,18 @@ def feedback(request, answer_id):
 
     if request.method == "POST":
         form = SuperuserAnswerFormSimplified(request.POST, instance=answer)
-        form.save()
-        context = {
-            'question': question,
-            'form': form,
-            'answer': answer,
-            'classroom': classroom,
-            'next_student_answer_url': next_student_answer,
-            'next_answer_url': next_answer_for_student_url,
-            'action_url': reverse('mydidata:feedback', args=(answer_id,)),
-        }
-        return HttpResponseRedirect(request.POST.get("redirect_to"))
+        if form.is_valid():
+            form.save()
+            context = {
+                'question': question,
+                'form': form,
+                'answer': answer,
+                'classroom': classroom,
+                'next_student_answer_url': next_student_answer,
+                'next_answer_url': next_answer_for_student_url,
+                'action_url': reverse('mydidata:feedback', args=(answer_id,)),
+            }
+            return HttpResponseRedirect(request.POST.get("redirect_to"))
 
     context = {
         'question': question,

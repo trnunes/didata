@@ -454,7 +454,7 @@ class AnswerForm(forms.ModelForm):
 
 class SuperuserAnswerFormSimplified(forms.ModelForm):
     status = forms.ChoiceField(widget=forms.RadioSelect, choices=Answer.EVAL_CHOICES)
-    graphic_annotations = forms.CharField(widget=forms.HiddenInput())
+    graphic_annotations = forms.CharField(widget=forms.HiddenInput(),required=False)
     class Meta:
         model = Answer
         fields = [ "assignment_file", 'feedback', "status", 'grade', 'graphic_annotations' ]
@@ -462,8 +462,6 @@ class SuperuserAnswerFormSimplified(forms.ModelForm):
         labels = {}
         labels['feedback'] = 'Correções Aqui'
     
-    def is_valid(self):
-        return True
 
 def get_answer_form(*args, **kwargs):
     user = kwargs.get("user", None)

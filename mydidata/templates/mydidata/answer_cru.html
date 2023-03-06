@@ -63,6 +63,32 @@
 			$('input[type=hidden][name=redirect_to]').val("{{next_student_answer_url}}")
 		    $('#form_feedback').submit();
 		});
+		var gradeInput = document.getElementById("id_grade");
+		var statusRadio = document.getElementsByName("status");
+
+		gradeInput.addEventListener("change", function() {
+		  var grade = parseFloat(gradeInput.value);
+		
+		  if (grade >= 0.8 && grade <= 0.9) {
+		    statusRadio[1].value = 5;
+		    statusRadio[1].checked = true;
+		  } else if (grade >= 0.6 && grade <= 0.7) {
+		    statusRadio[2].value = 7;
+		    statusRadio[2].checked = true;
+		  } else if (grade >= 0.4 && grade <= 0.5) {
+		    statusRadio[3].value = 6;
+		    statusRadio[3].checked = true;
+		  } else if (grade >= 0.0 && grade <= 0.3) {
+		    statusRadio[4].value = 3;
+		    statusRadio[4].checked = true;
+		  } else {
+		    statusRadio[0].value = 2;
+		    statusRadio[0].checked = true;
+		  }
+		  debugger;
+		});
+
+
 		$('input[type=radio][name=status]').change(function(e){
 
 			switch(parseInt(this.value)){
@@ -70,13 +96,13 @@
 					$('#id_grade').val("1.0");
 					break;
 				case 5:
-					$('#id_grade').val("0.8");
+					$('#id_grade').val("0.9");
 					break;
 				case 7:
-					$('#id_grade').val("0.6");
+					$('#id_grade').val("0.7");
 					break
 				case 6:
-					$('#id_grade').val("0.3");
+					$('#id_grade').val("0.4");
 					break
 				default:
 					$('#id_grade').val("0.0");
