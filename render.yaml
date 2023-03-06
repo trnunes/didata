@@ -18,7 +18,6 @@ services:
   - type: web # valid values: https://render.com/docs/yaml-spec#type
     name: aprendafazendo
     env: docker # valid values: https://render.com/docs/yaml-spec#environment
-    region: ohio
     dockerfilePath: Dockerfile.render
     plan: starter # optional; defaults to starter
     numInstances: 1
