@@ -23,6 +23,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.core.mail import send_mail
 from django.template import Template, Context
+import re
 
 def send_alert_email(classroom, students):
     # Get the teachers related to the classroom
@@ -69,8 +70,8 @@ def diagnose(classroom_id):
         if student.last_login < one_week_ago:
             # Do something if the last login was more than a week ago
             alert_msg = "Usuário não acessa há mais de uma semana;"
-            print(student.first_name)
-            print(alert_msg)
+            # print(student.first_name)
+            # print(alert_msg)
             student.profile.alerts += "Usuário não acessa há mais de uma semana;"
             student_alerts.append(student)
     
@@ -78,8 +79,8 @@ def diagnose(classroom_id):
         for deadline in deadlines:
             if deadline.due_datetime < current_datetime and not deadline.topic.has_completed(student):
                 alert_msg = f"Estudante não cumpriu prazo limite de envio de atividades para o tópico:  {deadline.topic.topic_title};"
-                print(student.first_name)
-                print(alert_msg)
+                # print(student.first_name)
+                # print(alert_msg)
                 student.profile.alerts += alert_msg
                 student_alerts.append(student)
         
@@ -101,13 +102,15 @@ def analyze_time_spent_on_topics(user):
     if user.profile and user.profile.actions_log:
         actions = user.profile.actions_log.split(";")
         topic_time_actions = [a for a in actions if "Tempo gasto" in a]
+        # print("TOPIC TIME ACTIONS: ", topic_time_actions)
         for time_action in topic_time_actions:
             minute_seconds = time_action.split("=")[-1].split(" s")[0].split("em")[0].strip()
-            topic = time_action.split('"')[-1].split('"')[0]
+            topic = re.findall(r'"(.*?)"', time_action)[0]
+            # print("TOPIC: ", topic)
             if not topic_times_dict.get(topic, None):
                 topic_times_dict[topic] = 0
-            print("TIME ACTION: ", time_action)
-            print("MINUTES AND SECONDS: ", minute_seconds)
+            # print("TIME ACTION: ", time_action)
+            # print("MINUTES AND SECONDS: ", minute_seconds)
             
             topic_times_dict[topic] += time_to_seconds(minute_seconds)
         
