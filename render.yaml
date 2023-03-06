@@ -5,7 +5,6 @@ services:
   - type: worker
     name: queue
     env: python
-    region: oregon
     buildCommand: "pipenv install"
     startCommand: "celery -A mydidata worker -l info --concurrency 4"
     autoDeploy: false
@@ -19,6 +18,7 @@ services:
   - type: web # valid values: https://render.com/docs/yaml-spec#type
     name: aprendafazendo
     env: docker # valid values: https://render.com/docs/yaml-spec#environment
+    region: ohio
     dockerfilePath: Dockerfile.render
     plan: starter # optional; defaults to starter
     numInstances: 1
@@ -71,7 +71,6 @@ services:
           property: connectionString
   - type: redis
     name: celery-redis
-    region: oregon
     plan: starter # we choose a plan with persistence to ensure tasks are not lost upon restart
     maxmemoryPolicy: noeviction # recommended policy for queues
     ipAllowList: [] # only allow internal connections    
