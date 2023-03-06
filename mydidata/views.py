@@ -498,7 +498,7 @@ def test_assess(request, uuid, class_id):
     
     student_list = classroom.students.all().order_by('first_name')
     answers = Answer.objects.filter(student__in=student_list, question__in=test.questions.all(), test=test).select_related("question").all()
-    correct_answers.now(answers)
+    correct_answers(answers)
 
     
     return redirect('mydidata:test_progress', class_id=class_id, uuid=test.uuid)
@@ -931,7 +931,7 @@ def calculate_student_grades(request, test_id, student_id):
     test = get_object_or_404(Test.objects.prefetch_related("answers__student"), pk=test_id)
     student = get_object_or_404(User, pk=student_id)
     student_answers = [a for a in list(test.answers.all()) if a.student == student]
-    correct_answers.now(student_answers)
+    correct_answers(student_answers)
     grades = test.calculate_grades_for_student(student)
     test_user = TestUserRelation.objects.get(test=test, student=student)
     return render(request, 'mydidata/test_progress.html', {'students': [student], 'test_user': test_user, 'test': test, 'student_grades': grades,})
@@ -1412,7 +1412,7 @@ def test_job(request, answer_id):
 
 def get_corrections(request, answer_id):
     answer_obj = get_object_or_404(Answer, pk=answer_id)
-    correct_answers.now([answer_obj])
+    correct_answers([answer_obj])
     
     if request.user.is_authenticated:
         request.user.profile.register_action(f"Obtendo feedback para resposta da questão {answer_obj.question.get_absolute_url()}")
@@ -1427,7 +1427,7 @@ def correct_topic(request, class_id, topic_uuid):
     topic = get_object_or_404(Topic, uuid=topic_uuid)
     klass = get_object_or_404(Classroom, pk=class_id)
     
-    correct_answers.now([a for a in klass.get_answers_for_topic(topic)])
+    correct_answers([a for a in klass.get_answers_for_topic(topic)])
     
     return HttpResponseRedirect(topic.get_absolute_url())
 
