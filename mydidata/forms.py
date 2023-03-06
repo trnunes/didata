@@ -330,10 +330,10 @@ class AnswerFormUploadOnly(forms.ModelForm):
 
 class AnswerForm(forms.ModelForm):
     # choice = forms.ModelChoiceField(widget=forms.RadioSelect(), queryset=Choice.objects, label="Selecione a sua resposta", empty_label=None)
-
+    graphic_annotations = forms.CharField(widget=forms.HiddenInput(),required=False)
     class Meta:
         model = Answer
-        fields = ('assignment_file','answer_text', 'choice', 'team',)
+        fields = ('assignment_file','answer_text', 'choice', 'team', 'graphic_annotations')
 
         widgets = {
             'answer_text' : forms.CharField(widget=CKEditorUploadingWidget(), label="Resposta", required=False),
