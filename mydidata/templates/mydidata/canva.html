@@ -151,7 +151,7 @@
                     }
                     
                     context.strokeRect(rect.x, rect.y, rect.width, rect.height);
-                    context.fillStyle = "black";
+                    context.fillStyle = rect.color;
                     context.font = "12px Arial";
                     context.fillText(rect.text, rect.x + 10, rect.y + 20);
                     document.getElementById("id_graphic_annotations").value = JSON.stringify(context.rectangles);
