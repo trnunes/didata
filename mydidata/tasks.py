@@ -356,8 +356,8 @@ def csv_to_academico(file, login, password):
 
 
 def go_academico(students_grades, assessment, milestone, diary, login, password):
-    import undetected_chromedriver.v2 as uc
-    browser = uc.Chrome()
+    # import undetected_chromedriver.v2 as uc
+    browser = webdriver.Chrome()
     # browser = webdriver.Firefox(executable_path="./geckodriver")
     #login    
     try:
