@@ -2,6 +2,7 @@
 # https://www.npmjs.com/package/@renderinc/heroku-import
 # Schema documented at https://render.com/docs/yaml-spec
   # Install Chrome and ChromeDriver
+version: 1
 services:
   - type: worker
     name: queue
